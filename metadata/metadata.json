@@ -1,0 +1,11 @@
+{
+	"dev": {
+		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
+        "subscription_id": "520d638a-7b1b-4143-a625-fcf6e0f59fcf",
+        "synonyms": ["Dev", "Development"] 
+	},
+	"global": {
+		"keyVault": "wr-kv-dev-svfab",
+		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172"
+	}
+}
