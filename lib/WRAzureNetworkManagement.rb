@@ -39,7 +39,7 @@ class WRAzureNetworkManagement
 			end
 			ips_to_check.each do |ip|
 				if ips_to_check.include?(ip)
-					#puts "checking IP: #{ip}"
+					@csrelog.debug("checking IP: #{ip}")
 				  resp = @client.virtual_networks.check_ipaddress_availability(resource_group, vnet, ip)
 				  available_ips << ip if resp.available
 				  unless resp.available

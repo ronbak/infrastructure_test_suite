@@ -21,8 +21,9 @@ class WRAzureCredentials
 		if ENV['AZURE_CLIENT_SECRET']
 			return ENV['AZURE_CLIENT_SECRET']
 		else
-			@csrelog.info("No Secret Found\nPlease set the secret in the environment variable 'AZURE_CLIENT_SECRET'")
-			#exit 1
+			@csrelog.error("No Secret Found")
+			@csrelog.error("Please set the secret in the environment variable 'AZURE_CLIENT_SECRET'")
+			exit 1
 		end
 	end
 
