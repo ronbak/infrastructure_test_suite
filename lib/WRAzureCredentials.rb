@@ -1,13 +1,16 @@
 require 'json'
 require 'azure_mgmt_resources'
 require_relative 'global_methods'
+require_relative 'CSRELogger'
 
 class WRAzureCredentials
 
 	def initialize (options = {})
+		@csrelog = CSRELogger.new(log_level, 'STDOUT')
 		environment = options[:environment]
 		metadata = wrmetadata()
 		@client_id = options[:client_id]
+		@client_id = determine_client_id(options[:client_name]) if @client_id.nil?
 		@tenant_id = metadata['global']['tenant_id']
 		@client_secret = get_client_secret()
 	end
@@ -16,9 +19,13 @@ class WRAzureCredentials
 		if ENV['AZURE_CLIENT_SECRET']
 			return ENV['AZURE_CLIENT_SECRET']
 		else
-			puts "No Secret Found\nPlease set the secret in the environment variable 'AZURE_CLIENT_SECRET'"
+			@csrelog.info("No Secret Found\nPlease set the secret in the environment variable 'AZURE_CLIENT_SECRET'")
 			#exit 1
 		end
+	end
+
+	def determine_client_id(client_name)
+		wrmetadata()['global']['service_principals'][client_name]
 	end
 
 	def authenticate()

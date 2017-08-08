@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="TestWRAzureNetworkManagement" skipped="0" failures="0" errors="0" tests="1" assertions="3" time="13.970977000004495">
-  <testcase name="test_available_ips" classname="TestWRAzureNetworkManagement" assertions="3" time="13.970977000004495">
-  </testcase>
-</testsuite>

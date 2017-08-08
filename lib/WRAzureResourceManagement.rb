@@ -2,8 +2,9 @@ require_relative 'global_methods'
 
 class WRAzureResourceManagement
 
-	def initialize(credentials: nil, environment: nil, client_id: nil)
-		options = {environment: environment, client_id: client_id}
+	def initialize(environment: nil, client_name: nil)
+		@csrelog = CSRELogger.new(log_level, 'STDOUT')
+		options = {environment: environment, client_name: client_name}
 		@credentials = WRAzureCredentials.new(options).authenticate()
 		@environment = environment
 	end

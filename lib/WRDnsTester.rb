@@ -3,6 +3,7 @@ require 'resolv'
 class WRDnsTester
 
 	def initialize(dns_servers: nil, external: false)
+		@csrelog = CSRELogger.new(log_level, 'STDOUT')
 		@dns_servers = dns_servers
 		@search_domain = if ENV['DNS_SEARCH_DOMAIN'].nil?
 			'wrhammersmith.worldremit.com'
@@ -18,7 +19,7 @@ class WRDnsTester
 		begin
 			dcs = x.getaddresses('')
 			if @external
-				puts 'Testing external domain lookup'
+				@csrelog.info('Testing external domain lookup')
 				x.getaddress('www.google.com')
 			end
 			return true if dcs.count > 1

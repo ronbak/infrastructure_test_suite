@@ -10,8 +10,8 @@ require_relative '../lib/WRAzureNetworkManagement'
 def parse_args(args)
   opt_parser = OptionParser.new do |opts|
     opts.banner = 'Usage: tester.rb [options]'
-    opts.on('-c ClientId', '--clientid ClientId', 'ClientId to run tests with - Required') do |clientid|
-      @options[:clientid] = clientid
+    opts.on('-c client_name', '--client_name ClientName', 'The Servie Principal name in Azure AD - Required') do |client_name|
+      @options[:client_name] = client_name
     end
     opts.on('-e Environment', '--environment Environment', 'Environment you are testing, i.e. dev, prod etc etc') do |environment|
       @options[:environment] = environment
@@ -25,8 +25,8 @@ def parse_args(args)
   end
   opt_parser.parse!(args)
 
-  if @options[:clientid].nil? || @options[:environment].nil?
-    puts 'you\'re missing the --clientid or --environment option. You must specify --clientid and --environment'
+  if @options[:client_name].nil? || @options[:environment].nil?
+    puts 'you\'re missing the --client_name or --environment option. You must specify --clientid and --environment'
     exit
   end
   # raise OptionParser::MissingArgument if @options[:cname].nil?
@@ -34,7 +34,7 @@ end
 
 parse_args(ARGV)
 
-clientid = @options.clientid
+client_name = @options.client_name
 environment = @options.environment
 vnet = @options.vnet
 resource_group = @options.resource_group
@@ -42,7 +42,7 @@ resource_group = @options.resource_group
 
 # test network
 if resource_group && vnet
-  net_tester = WRAzureNetworkManagement.new(client_id: clientid, environment: environment)
+  net_tester = WRAzureNetworkManagement.new(client_name: client_name, environment: environment)
   subnet_status = net_tester.list_available_ips(resource_group: resource_group, vnet: vnet)
   puts subnet_status
 end

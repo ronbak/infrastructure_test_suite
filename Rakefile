@@ -6,8 +6,9 @@ require 'rake/testtask'
 # Unit Tests
 Rake::TestTask.new task :unit_tests do |t|
   t.libs.push "lib"
-  t.test_files = FileList['tests/tc_wr_azure*.rb']
+  t.test_files = FileList['tests/tc_wr_*.rb']
   t.verbose = true
+  t.warning = false
 end
 
 # desc 'Execute Rubocop'

@@ -1,11 +1,13 @@
 require_relative 'global_methods'
 require_relative 'WRAzureCredentials'
+require_relative 'CSRELogger'
 require 'azure_mgmt_network'
 
 class WRAzureNetworkManagement
 
-	def initialize(environment: nil, client_id: nil)
-		options = {environment: environment, client_id: client_id}
+	def initialize(environment: nil, client_name: nil)
+		@csrelog = CSRELogger.new(log_level, 'STDOUT')
+		options = {environment: environment, client_name: client_name}
 		@credentials = WRAzureCredentials.new(options).authenticate()
 		@environment = environment
 		@client = Azure::ARM::Network::NetworkManagementClient.new(@credentials)
@@ -47,7 +49,7 @@ class WRAzureNetworkManagement
 			  end
 			end
 			vnet_ip_availability[subnet.name] = available_ips.count
-			puts "there are: #{available_ips.count} available IP addresses in #{subnet.name}"
+			@csrelog.info("there are: #{available_ips.count} available IP addresses in #{subnet.name}")
 	  end
 	  return vnet_ip_availability
   end
