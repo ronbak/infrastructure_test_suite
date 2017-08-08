@@ -100,6 +100,8 @@ class CSRELogger
 end 
 
 # ExampleUsage:
+# log_level = 'INFO'
+# log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 # @csrelog = CSRELogger.new(log_level, 'STDOUT')
 # @csrelog.info("This is an info log message")
 # @csrelog.debug("This is a debug log message")

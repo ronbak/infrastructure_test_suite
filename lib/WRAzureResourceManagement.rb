@@ -3,6 +3,8 @@ require_relative 'global_methods'
 class WRAzureResourceManagement
 
 	def initialize(environment: nil, client_name: nil)
+		log_level = 'INFO'
+    	log_level = ENV['FPS_LOG_LEVEL'] unless ENV['FPS_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
 		options = {environment: environment, client_name: client_name}
 		@credentials = WRAzureCredentials.new(options).authenticate()

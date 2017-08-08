@@ -6,6 +6,8 @@ require_relative 'CSRELogger'
 class WRAzureCredentials
 
 	def initialize (options = {})
+		log_level = 'INFO'
+    	log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?		
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
 		environment = options[:environment]
 		metadata = wrmetadata()
