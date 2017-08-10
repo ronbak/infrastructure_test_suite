@@ -9,6 +9,46 @@
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
 		"service_principals": {
 			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
+		},
+		"naming_standards":{
+			"regexes": [
+				{
+					"name": "virtual_machines",
+					"pattern": "wr(.*)",
+					"resource_types": ["Microsoft.ClassicCompute/virtualMachines", "Microsoft.Compute/virtualMachines"]
+				},
+				{
+					"name": "vnets",
+					"pattern": "wr-(dev|prd|ppd|int|uat|tst)-(eurw|eurn|ause|use|asis)",
+					"resource_types": ["Microsoft.ClassicNetwork/virtualNetworks", "Microsoft.Network/virtualNetworks"]
+				},
+				{
+					"name": "subnets",
+					"pattern": "wr-(dev|prd|ppd|int|uat|tst)-(eurw|eurn|ause|use|asis)-(pub|prv|frt|bck|web|app|dat|data)",
+					"resource_types": []
+				},
+				{
+					"name": "network_interfaces",
+					"pattern": "wr-(dev|prd|ppd|int|uat|tst)-(eurw|eurn|ause|use|asis)-nic[0-9]-(pub|prv|frt|bck|web|app|dat|data)-(public|private)",
+					"resource_types": []
+				},
+				{
+					"name": "network_security_groups",
+					"pattern": "wr-nsg[0-9]*-(dev|prd|ppd|int|uat|tst)-(eurw|eurn|ause|use|asis)-(pub|prv|frt|bck|web|app|dat|data)",
+					"resource_types": ["Microsoft.ClassicNetwork/networkSecurityGroups", "Microsoft.Network/networkSecurityGroups"]
+				},	
+				{
+					"name": "default_pattern",
+					"pattern": "wr-(dev|prd|ppd|int|uat|tst)-[a-z]*-[a-zA-Z0-9]*",
+					"resource_types": ["default_pattern"]
+				},
+				{
+					"name": "storage",
+					"pattern": "po(.*)",
+					"resource_types": ["Microsoft.ClassicStorage/storageAccounts", "Microsoft.Storage/storageAccounts"]
+				}
+			]
 		}
 	}
 }
+

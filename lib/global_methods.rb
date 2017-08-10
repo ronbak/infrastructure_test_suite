@@ -5,6 +5,13 @@ def wrmetadata()
   return JSON.parse(File.read("#{File.dirname(__FILE__)}/../metadata/metadata.json"))
 end
 
+def wrmetadata_regex(resource_type)
+  data = JSON.parse(File.read("#{File.dirname(__FILE__)}/../metadata/metadata.json"))
+  regex_obj = data['global']['naming_standards']['regexes'].find { |obj| obj['resource_types'].include?(resource_type) }
+  return regex_obj['pattern'] unless regex_obj.nil?
+  return nil
+end
+
 def valid_json?(json)
   begin
     JSON.parse(json)
