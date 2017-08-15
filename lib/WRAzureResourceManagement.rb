@@ -34,6 +34,18 @@ class WRAzureResourceManagement
   	@rg_client.deployments.get(rg_name, deployment_name).properties.provisioning_state
   end
 
+  def get_resource_group(rg_name)
+    @rg_client.resourcegroups.get(rg_name)
+  end
+
+  def list_resources(rg_name)
+    @rg_client.resources.list_by_resource_group(rg_name)
+  end
+
+  def get_resource_by_id(id, api_version: '2016-11-01')
+    @rg_client.resources.get_by_id(id, api_version)
+  end
+
 	def list_resource_groups()
 		response = @rg_client.resource_groups.list
 		resources_array = []

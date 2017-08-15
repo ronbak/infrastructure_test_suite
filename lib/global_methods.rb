@@ -14,6 +14,11 @@ def wrmetadata_regex(resource_type)
   return nil
 end
 
+def wrenvironmentdata(environment)
+  data = wrmetadata()
+  data.find { |stanza| stanza[1]['synonyms'].include?(environment.downcase)}[1]
+end
+
 def valid_json?(json)
   begin
     JSON.parse(json)
@@ -59,4 +64,34 @@ def get_data_from_url(url)
   req = Net::HTTP::Get.new(uri.request_uri)
   res = https.request(req)
   return res
+end
+
+def query_wr_web_servers(ip_counter, host_header)
+  response = {up: [], down: []}
+  ip_counter.each do |ip|
+    uri = URI("https://#{ip}")
+    https = Net::HTTP.new(uri.host, uri.port)
+    https.use_ssl = true
+    https.open_timeout = 2
+    https.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    req = Net::HTTP::Get.new(uri.request_uri)
+    req['Host'] = host_header
+    begin 
+      res = https.request(req)
+      if res.body.length >= 3500
+        puts "Server #{ip} is up and running"
+        response[:up] << ip
+      else
+        puts "\n\n*********************\nit doesn't look good for\n#{ip}\n*********************\n\n#{res.body}\n*********************\n\n"
+        response[:down] << ip
+      end
+    rescue Net::OpenTimeout => e
+      puts "\nERROR: #{ip} timed out\n#{e}\n"
+      response[:down] << ip
+    rescue => e
+      puts "There was another error check it\n#{e}"
+      response[:down] << ip
+    end
+  end
+  return response
 end
