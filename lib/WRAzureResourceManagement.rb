@@ -22,6 +22,18 @@ class WRAzureResourceManagement
     @rg_client.resource_groups.create_or_update(rg_name, params).properties.provisioning_state
   end
 
+  def delete_resource_group(rg_name)
+  	@rg_client.resource_groups.delete_async(rg_name)
+  end
+
+  def create_update_deployment(resource_group, deployment_name, deployment)
+  	return @rg_client.deployments.create_or_update(resource_group, deployment_name, deployment)
+  end
+
+  def get_deployment_status(rg_name, deployment_name)
+  	@rg_client.deployments.get(rg_name, deployment_name).properties.provisioning_state
+  end
+
 	def list_resource_groups()
 		response = @rg_client.resource_groups.list
 		resources_array = []
@@ -68,5 +80,5 @@ end
 # ENV['AZURE_CLIENT_SECRET'] = 'F9Ci6PVKnrHYoMJ2QN+iP1k/REWVuKV8N4idWhnkcGA='
 # x = WRAzureResourceManagement.new(environment: 'dev', client_id: 'f03b94d9-6086-4570-808b-45b4a81af751')
 
-client_name = 'armTemplateAutomation'
-environment = 'dev'
+# client_name = 'armTemplateAutomation'
+# environment = 'dev'

@@ -1,5 +1,7 @@
 require 'json'
 require 'uri'
+require 'net/http'
+require 'openssl'
 
 def wrmetadata()
   return JSON.parse(File.read("#{File.dirname(__FILE__)}/../metadata/metadata.json"))
@@ -19,6 +21,10 @@ def valid_json?(json)
   rescue
   end
   return false
+end
+
+def create_deployment_name()
+  "armRubyAutomation-#{Time.now.strftime("%d%m%y%H%M%S")}"
 end
 
 def uri?(string)
@@ -43,4 +49,14 @@ def caesar_cipher(s, step: 1, decrypt: false)
     end
   end
   return process_str
+end
+
+def get_data_from_url(url)
+  uri = URI(url)
+  https = Net::HTTP.new(uri.host, uri.port, nil)
+  https.use_ssl = true
+  https.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  req = Net::HTTP::Get.new(uri.request_uri)
+  res = https.request(req)
+  return res
 end
