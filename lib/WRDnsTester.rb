@@ -4,7 +4,7 @@ class WRDnsTester
 
 	def initialize(dns_servers: nil, external: false)
 		log_level = 'INFO'
-    	log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
+    log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
 		@dns_servers = dns_servers
 		@search_domain = if ENV['DNS_SEARCH_DOMAIN'].nil?

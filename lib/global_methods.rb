@@ -3,6 +3,34 @@ require 'uri'
 require 'net/http'
 require 'openssl'
 
+def encrypt(string)
+  cipher = OpenSSL::Cipher::Cipher.new('aes-256-cfb8').encrypt
+  cipher.key = Digest::SHA256.hexdigest key()
+  s = cipher.update(string) + cipher.final
+
+  s.unpack('H*')[0].upcase
+end
+
+def decrypt(enc_txt)
+  cipher = OpenSSL::Cipher::Cipher.new('aes-256-cfb8').decrypt
+  cipher.key = Digest::SHA256.hexdigest key()
+  s = [enc_txt].pack("H*").unpack("C*").pack("c*")
+
+  cipher.update(s) + cipher.final
+end
+
+def key()
+  key_file = "#{ENV['HOME']}/.ssh/azure_ruby_key" 
+  if File.exist?(key_file)
+    key = File.read(key_file)
+  else
+    key = OpenSSL::PKey::RSA.new 2048
+    open key_file, 'w' do |io| io.write key.to_pem end
+    key = key.to_pem
+  end
+  return key
+end
+
 def wrmetadata()
   return JSON.parse(File.read("#{File.dirname(__FILE__)}/../metadata/metadata.json"))
 end

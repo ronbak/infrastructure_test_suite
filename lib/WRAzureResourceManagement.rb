@@ -8,9 +8,9 @@ class WRAzureResourceManagement
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
-		options = {environment: environment, client_name: client_name}
+    @environment = wrenvironmentdata(environment)['name']
+		options = {environment: @environment, client_name: client_name}
 		@credentials = WRAzureCredentials.new(options).authenticate()
-		@environment = environment
 		@rg_client = Azure::ARM::Resources::ResourceManagementClient.new(@credentials)
 		@rg_client.subscription_id = wrmetadata()[@environment]['subscription_id']
 	end
@@ -88,9 +88,3 @@ class WRAzureResourceManagement
 	end
 
 end
- 
-# ENV['AZURE_CLIENT_SECRET'] = 'F9Ci6PVKnrHYoMJ2QN+iP1k/REWVuKV8N4idWhnkcGA='
-# x = WRAzureResourceManagement.new(environment: 'dev', client_id: 'f03b94d9-6086-4570-808b-45b4a81af751')
-
-# client_name = 'armTemplateAutomation'
-# environment = 'dev'

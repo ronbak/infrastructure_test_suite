@@ -9,12 +9,12 @@ class WRAzureWebServers
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
-		options = {environment: environment, client_name: client_name}
+    @environment = wrenvironmentdata(environment)['name']
+		options = {environment: @environment, client_name: client_name}
 		@credentials = WRAzureCredentials.new(options).authenticate()
-		@environment = environment
 		#@rg_client = Azure::ARM::Resources::ResourceManagementClient.new(@credentials)
 		#@rg_client.subscription_id = wrmetadata()[@environment]['subscription_id']
-    @client = WRAzureResourceManagement.new(environment: environment, client_name: client_name)
+    @client = WRAzureResourceManagement.new(environment: @environment, client_name: client_name)
 	end
 
 	def get_vms_in_cs(cloud_service, type: 'classic')
@@ -27,8 +27,9 @@ class WRAzureWebServers
       vm_type = 'Microsoft.Compute/virtualMachines'
     end
     resources = @client.list_all_resources()
-    cloud_service = resources.find { |resource| resource.name == cloud_service && resource.type == resource_type }
-    #cloud_service = @rg_client.resources.get_by_id(cloud_service.id, '2016-11-01')
+    cloud_service = resources.find { |resource| resource.name.downcase() == cloud_service.downcase() && resource.type == resource_type }
+    @csrelog.error("We could not find the cloud service in the list of all rsources in this environment: #{@environment}") if cloud_service.nil?
+    return nil if cloud_service.nil?
     rg_name = cloud_service.id.match('resourceGroups/(.*)/providers')[1] unless cloud_service.id.match('resourceGroups/(.*)/providers').nil?
     resources = @client.list_resources(rg_name)
     #vms = vms.select { |resource| resource.type == 'Microsoft.ClassicCompute/virtualMachines' && @rg_client.resources.get_by_id(resource.id, '2016-11-01').properties['domainName']['name'] == cloud_service.name }
@@ -46,33 +47,39 @@ class WRAzureWebServers
     return ip_list
   end
 
-  def 
-
   def query_webservers_directly(host: 'www.worldremit.com', ips: [])
     query_wr_web_servers(ips, host)
   end
 
-  def get_live_cluster()
+  def get_live_cloud_service()
+    x = @client.get_resource_by_id("/subscriptions/76d26251-cc91-46f7-9459-4bc76ea9a2ae/resourceGroups/Default-TrafficManager/providers/Microsoft.Network/trafficmanagerprofiles/WorldRemit", api_version: '2017-05-01')
+    live_service = x.properties['endpoints'].find { |ep| ep['properties']['endpointStatus'] == "Enabled" && ep['properties']['endpointMonitorStatus'] == "Online" }
+    cloud_service = live_service['properties']['targetResourceId'].split('/')[-1]
   end
 
-  def get_cs_from_colour(colour, env: 'prod')
-    wrenvironmentdata(env)['web_clusters']['classic'][colour]['cloud_service']
+  def get_colour_from_cs(cloud_service)
+     obj = wrenvironmentdata(@environment)['web_clusters']['classic'].find { |cs| cs[1]['cloud_service'] == cloud_service }
+     return obj[0] unless obj.nil?
   end
 
-  def check_wr_prod_server_cluster(cluster_colour)
-    cs = get_cs_from_colour(cluster_colour)
-    vms_in_cs = get_vms_in_cs(cs)
+  def get_cs_from_colour(colour)
+    wrenvironmentdata(@environment)['web_clusters']['classic'][colour]['cloud_service']
+  end
+
+  def check_wr_web_server_cluster(cloud_service)
+    #cloud_service = get_cs_from_colour(cluster_colour)
+    vms_in_cs = get_vms_in_cs(cloud_service)
     return query_webservers_directly(ips: vms_in_cs.values)
   end
+
+  def check_wr_web_servers()
+    cloud_service = get_live_cloud_service()
+    return check_wr_web_server_cluster(cloud_service)
+  end
+
+  def get_live_colour()
+    cloud_service = get_live_cloud_service()
+    return get_colour_from_cs(cloud_service)
+  end
+
 end
- 
-
-# require_relative 'global_methods'
-# require_relative 'CSRELogger'
-# require_relative 'WRAzureCredentials'
-# require_relative 'WRAzureResourceManagement'
-# ENV['AZURE_CLIENT_SECRET'] = 'F9Ci6PVKnrHYoMJ2QN+iP1k/REWVuKV8N4idWhnkcGA='
-# client_name = 'armTemplateAutomation'
-# environment = 'dev'
-
-# x = WRAzureResourceManagement.new(environment: 'dev', client_id: 'f03b94d9-6086-4570-808b-45b4a81af751')
