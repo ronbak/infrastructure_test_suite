@@ -8,7 +8,7 @@ class TestWRAzureNetworkManagement < MiniTest::Test
 
 	def test_available_ips
 		environment = 'dev'
-		client_name = 'armTemplateAutomation'
+		#client_name = 'armTemplateAutomation'
 		vnet = 'armtestvnet1'
 		resource_group = 'armtestnetwork1'
 

@@ -12,7 +12,7 @@ class WRAzureCredentials
 		environment = wrenvironmentdata(options[:environment])['name']
 		metadata = wrmetadata()
 		@client_id = options[:client_id]
-		@client_id = determine_client_id(options[:client_name]) if @client_id.nil?
+		@client_id = determine_client_id(environment) if @client_id.nil?
 		@tenant_id = metadata[environment]['tenant_id']
 		@client_secret = get_client_secret()
 	end
@@ -40,8 +40,8 @@ class WRAzureCredentials
 		open key_file, 'w' do |io| io.write x end
 	end
 
-	def determine_client_id(client_name)
-		wrmetadata()['global']['service_principals'][client_name]
+	def determine_client_id(environment)
+		wrenvironmentdata(environment)['service_principal'].values[0]
 	end
 
 	def authenticate()

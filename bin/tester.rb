@@ -33,10 +33,10 @@ def parse_args(args)
   end
   opt_parser.parse!(args)
 
-  if @options[:client_name].nil? || @options[:environment].nil?
-    puts 'you\'re missing the --client_name or --environment option. You must specify --client_name and --environment'
-    exit
-  end
+  # if @options[:client_name].nil? || @options[:environment].nil?
+  #   puts 'you\'re missing the --client_name or --environment option. You must specify --client_name and --environment'
+  #   exit
+  # end
   # raise OptionParser::MissingArgument if @options[:cname].nil?
 end
 
