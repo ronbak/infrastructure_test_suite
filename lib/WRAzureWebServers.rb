@@ -36,13 +36,11 @@ class WRAzureWebServers
     vms = resources.each do |resource|
       if resource.type == vm_type
         @csrelog.debug("resource type matched - #{resource.name}")
-        Thread.new{
-          vm = @client.get_resource_by_id(resource.id)
-          if vm.properties['domainName']['name'] == cloud_service.name && vm.properties['instanceView']['powerState'] == 'Started'
-            @csrelog.debug("cloudService/DomainName matched - #{cloud_service.name}")
-            ip_list[resource.name] = vm.properties['instanceView']['privateIpAddress']
-          end
-        }
+        vm = @client.get_resource_by_id(resource.id)
+        if vm.properties['domainName']['name'] == cloud_service.name && vm.properties['instanceView']['powerState'] == 'Started'
+          @csrelog.debug("cloudService/DomainName matched - #{cloud_service.name}")
+          ip_list[resource.name] = vm.properties['instanceView']['privateIpAddress']
+        end
       end
     end
     return ip_list
