@@ -59,7 +59,7 @@ class WRAzureWebServers
   end
 
   def get_colour_from_cs(cloud_service)
-     obj = wrenvironmentdata(@environment)['web_clusters']['classic'].find { |cs| cs[1]['cloud_service'] == cloud_service }
+     obj = wrenvironmentdata(@environment)['web_clusters']['classic'].find { |cs| cs[1]['cloud_service'] == cloud_service.downcase() }
      return obj[0] unless obj.nil?
   end
 
