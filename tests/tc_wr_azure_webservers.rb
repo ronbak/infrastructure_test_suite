@@ -8,7 +8,7 @@ class TestWRAzureWebServers < MiniTest::Test
 
 	def test_servers_up
 		environment = 'prod'
-		webserver_tester = WRAzureWebServers.new(client_name: client_name, environment: environment)
+		webserver_tester = WRAzureWebServers.new(environment: environment)
 		results = webserver_tester.check_wr_web_servers()
 		assert_operator results[:up].count, :>=, 2
 		assert_operator results[:down].count, :==, 0

@@ -2,13 +2,13 @@ require 'resolv'
 
 class WRDnsTester
 
-	def initialize(dns_servers: nil, external: false)
+	def initialize(dns_servers: nil, search_domain: 'worldremit.ukfast', external: false)
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
 		@dns_servers = dns_servers
 		@search_domain = if ENV['DNS_SEARCH_DOMAIN'].nil?
-			'wrhammersmith.worldremit.com'
+			'worldremit.ukfast'
 		else
 			ENV['DNS_SEARCH_DOMAIN']
 		end
@@ -20,11 +20,19 @@ class WRDnsTester
 		x.timeouts = 1
 		begin
 			dcs = x.getaddresses('')
+			external = true
 			if @external
+				external = false
 				@csrelog.info('Testing external domain lookup')
-				x.getaddress('www.google.com')
+				begin
+					z = x.getaddress('www.google.com')
+					if z
+						external = true
+					end
+				rescue
+				end
 			end
-			return true if dcs.count > 1
+			return true if dcs.count > 1 && external == true
 		rescue
 			return false
 		end
