@@ -32,16 +32,17 @@ class WRAzureWebServers
     return nil if cloud_service.nil?
     rg_name = cloud_service.id.match('resourceGroups/(.*)/providers')[1] unless cloud_service.id.match('resourceGroups/(.*)/providers').nil?
     resources = @client.list_resources(rg_name)
-    #vms = vms.select { |resource| resource.type == 'Microsoft.ClassicCompute/virtualMachines' && @rg_client.resources.get_by_id(resource.id, '2016-11-01').properties['domainName']['name'] == cloud_service.name }
     ip_list = {}
     vms = resources.each do |resource|
       if resource.type == vm_type
         @csrelog.debug("resource type matched - #{resource.name}")
-        vm = @client.get_resource_by_id(resource.id)
-        if vm.properties['domainName']['name'] == cloud_service.name && vm.properties['instanceView']['powerState'] == 'Started'
-          @csrelog.debug("cloudService/DomainName matched - #{cloud_service.name}")
-          ip_list[resource.name] = vm.properties['instanceView']['privateIpAddress']
-        end
+        Thread.new{
+          vm = @client.get_resource_by_id(resource.id)
+          if vm.properties['domainName']['name'] == cloud_service.name && vm.properties['instanceView']['powerState'] == 'Started'
+            @csrelog.debug("cloudService/DomainName matched - #{cloud_service.name}")
+            ip_list[resource.name] = vm.properties['instanceView']['privateIpAddress']
+          end
+        }
       end
     end
     return ip_list
