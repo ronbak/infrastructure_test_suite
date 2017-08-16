@@ -73,6 +73,7 @@ class WRAzureWebServers
 
   def check_wr_web_servers()
     cloud_service = get_live_cloud_service()
+    @csrelog.info("The current live cluster is: #{cloud_service}\nSometimes referred to as: #{get_colour_from_cs(cloud_service)}")
     return check_wr_web_server_cluster(cloud_service)
   end
 
