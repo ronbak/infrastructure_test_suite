@@ -46,6 +46,39 @@ class WRAzureWebServers
     return ip_list
   end
 
+  def get_vms_in_cs2(cloud_service, type: 'classic')
+    case type.downcase
+    when 'classic'
+      resource_type = 'Microsoft.ClassicCompute/domainNames'
+      vm_type = 'Microsoft.ClassicCompute/virtualMachines'
+    when 'resourcemanager'
+      resource_type = 'Microsoft.Compute/domainNames'
+      vm_type = 'Microsoft.Compute/virtualMachines'
+    end
+    resources = @client.list_all_resources()
+    cloud_service = resources.find { |resource| resource.name.downcase() == cloud_service.downcase() && resource.type == resource_type }
+    @csrelog.error("We could not find the cloud service in the list of all rsources in this environment: #{@environment}") if cloud_service.nil?
+    return nil if cloud_service.nil?
+    rg_name = cloud_service.id.match('resourceGroups/(.*)/providers')[1] unless cloud_service.id.match('resourceGroups/(.*)/providers').nil?
+    resources = @client.list_resources(rg_name)
+    ip_list = {}
+    arr = []
+    vms = resources.each do |resource|
+      arr[resource.name] = Thread.new{
+        if resource.type == vm_type
+          @csrelog.debug("resource type matched - #{resource.name}")
+          vm = @client.get_resource_by_id(resource.id)
+          if vm.properties['domainName']['name'] == cloud_service.name && vm.properties['instanceView']['powerState'] == 'Started'
+            @csrelog.debug("cloudService/DomainName matched - #{cloud_service.name}")
+            ip_list[resource.name] = vm.properties['instanceView']['privateIpAddress']
+          end
+        end
+      }
+    arr.each { |t| t.join}
+    end
+    return ip_list
+  end
+
   def query_webservers_directly(host: 'www.worldremit.com', ips: [])
     query_wr_web_servers(ips, host)
   end

@@ -1,6 +1,7 @@
 require_relative 'global_methods'
 require_relative 'CSRELogger'
 require_relative 'WRAzureCredentials'
+require 'pry-byebug'
 
 class WRAzureResourceManagement
 
@@ -23,6 +24,7 @@ class WRAzureResourceManagement
   end
 
   def delete_resource_group(rg_name)
+    binding.pry
   	@rg_client.resource_groups.delete_async(rg_name)
   end
 
@@ -32,6 +34,10 @@ class WRAzureResourceManagement
 
   def get_deployment_status(rg_name, deployment_name)
   	@rg_client.deployments.get(rg_name, deployment_name).properties.provisioning_state
+  end
+
+  def get_deployment_operations(rg_name, deployment_name)
+    @rg_client.deployment_operations.list(rg_name, deployment_name)
   end
 
   def get_resource_group(rg_name)

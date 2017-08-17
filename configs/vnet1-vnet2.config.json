@@ -1,0 +1,20 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "../../Templates/vnet1-vnet2-peering.json"
+    },
+    "dev": {
+      "resource_group_name": "armRubyAutomationTest",
+      "subscription_name": "Dev-MSDN"
+    }
+  },
+  "parameters": {
+        "vNet1Name":
+        {
+            "value": "vNet1peeringtest"
+        },
+        "vNet2Name": {
+            "value": "vNet2peeringtest"
+        }
+    }
+}

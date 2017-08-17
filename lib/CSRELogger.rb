@@ -66,10 +66,11 @@ class CSRELogger
     end
   end
 
-  def initialize (level, stream = 'STDOUT')
+  def initialize (level = 'INFO', stream = 'STDOUT')
     $stdout.sync = true unless !stream.eql?('STDOUT')
     @logger = nil
     @logger = set_stream(stream)
+    level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     set_level(level)
     set_format()
   end
