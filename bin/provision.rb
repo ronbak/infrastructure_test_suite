@@ -67,7 +67,8 @@ class Provisioner
     # config_manager.parameters()
     # config_manager.template
     @csrelog.debug(@opts[:environment].to_s)
-    deployer = WRAzureDeployer.new(action: @opts[:action].to_s, environment: @opts[:environment].to_s, rg_name: config_manager.rg_name(@opts[:environment].to_s), parameters: config_manager.parameters(), template: config_manager.template()).process_deployment()
+    if @opts[:complete_deployment] then @csrelog.info("Running deployment in 'Complete' mode, let's hope you meant that!!!") end
+    deployer = WRAzureDeployer.new(action: @opts[:action].to_s, environment: @opts[:environment].to_s, rg_name: config_manager.rg_name(@opts[:environment].to_s), parameters: config_manager.parameters(), template: config_manager.template(), complete_deployment: @opts[:complete_deployment]).process_deployment()
   end
 end
 
@@ -89,6 +90,9 @@ def parse_args(args)
             "Environment to deploy your template in to") do |environment|
       @options.environment = environment
     end
+    opts.on("--complete", "runs an Azure ARm Complete deployment, use wisely", "true or false.") do |complete_deployment|
+      @options.complete_deployment = complete_deployment
+    end
   end
 
   opt_parser.parse!(args)
@@ -105,6 +109,7 @@ if __FILE__ == $PROGRAM_NAME
   @options.config = nil
   @options.verbose = false
   @options.environment = nil
+  @options.complete_deployment = false
 
   parse_args(ARGV)
 

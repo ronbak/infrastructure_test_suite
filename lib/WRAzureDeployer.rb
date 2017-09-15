@@ -6,10 +6,11 @@ require 'pry-byebug'
 
 class WRAzureDeployer
 
-  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil)
+  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil, complete_deployment: false)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
+    @complete_deployment = complete_deployment
     @environment = wrenvironmentdata(environment)['name']
     options = {environment: @environment, client_name: client_name}
     @credentials = WRAzureCredentials.new(options).authenticate()
@@ -52,35 +53,43 @@ class WRAzureDeployer
     
     # put the deployment to the resource group
     @csrelog.debug("Creating a new thread for the deployment")
-    t = Thread.new {
-      @client.create_update_deployment(@rg_name, deployment_name, deployment)
-      @csrelog.debug("Deployment accepted")
+    t1 = Thread.new {
+      begin 
+        @client.create_update_deployment(@rg_name, deployment_name, deployment)
+        @csrelog.debug("Deployment accepted")
+      rescue => e
+        @csrelog.error("we hit an issue deploying your template.....")
+        @csrelog.error(e.error_message)
+        @csrelog.error("We will now exit, please try harder next time! :) ")
+        exit 1
+      end
     }
-    t.join
     sleep 5
     deploy_status(deployment_name)
   end
 
   def deploy_status(deployment_name)
-    begin
-      x = @client.get_deployment_status(@rg_name, deployment_name)
-      while x == "Running"
-        @csrelog.info("deploying status is: #{x}")
-        sleep 30
+      unless deployment_name.nil?
+      begin
         x = @client.get_deployment_status(@rg_name, deployment_name)
-      end
-      @csrelog.info("Deployment complete")
-      @csrelog.info(x)
-      if x == 'Failed'
-        operations = @client.get_deployment_operations(@rg_name, deployment_name)
-        operations_messages = operations.select { |operation| operation.properties.status_message.class == Hash }
-        operations_messages.each do |operation|
-          @csrelog.error(operation.properties.status_message['error']['code'])
-          @csrelog.error(operation.properties.status_message['error']['message'])
+        while x == "Running"
+          @csrelog.info("deploying status is: #{x}")
+          sleep 30
+          x = @client.get_deployment_status(@rg_name, deployment_name)
         end
+        @csrelog.info("Deployment complete")
+        @csrelog.info(x)
+        if x == 'Failed'
+          operations = @client.get_deployment_operations(@rg_name, deployment_name)
+          operations_messages = operations.select { |operation| operation.properties.status_message.class == Hash }
+          operations_messages.each do |operation|
+            @csrelog.error(operation.properties.status_message['error']['code'])
+            @csrelog.error(operation.properties.status_message['error']['message'])
+          end
+        end
+      rescue => e
+        @csrelog.debug("for some reason we crashed out, not sure why\n\n#{e}\n\n\n\n")
       end
-    rescue => e
-      @csrelog.debug("for some reason we crashed out, not sure why\n\n#{e}\n\n\n\n")
     end
   end
 
@@ -88,9 +97,16 @@ class WRAzureDeployer
     deployment = Azure::ARM::Resources::Models::Deployment.new
     deployment.properties = Azure::ARM::Resources::Models::DeploymentProperties.new
     deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Incremental
+    deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Complete if @complete_deployment
+    @parameters = add_environment_value()
     deployment.properties.parameters = @parameters
     deployment.properties.template = @template
     return deployment
+  end
+
+  def add_environment_value()
+    @parameters['environment'] = { "value" => @environment } if @template.dig('parameters', 'environment')
+    @parameters
   end
 
   def get_params(string) 

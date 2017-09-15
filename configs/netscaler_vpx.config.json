@@ -1,7 +1,7 @@
 {
   "environments": {
     "global": {
-      "arm_template": "../../Templates/vnet1-vnet2-peering.json"
+      "arm_template": "../../Templates/netscaler_vpx.json"
     },
     "dev": {
       "resource_group_name": "armRubyAutomationTest",
@@ -9,36 +9,41 @@
     }
   },
   "parameters": {
-        "vNet1Name":
-        {
-            "value": "vNet1peeringtest"
-        },
-        "vNet2Name": {
-            "value": "vNet2peeringtest"
-        },
         "location": {
             "value": "westeurope"
         },
         "virtualMachineName": {
-            "value": "wr-dev-vm-csre1"
+            "value": "armtest-vpx-dev-wr"
         },
         "virtualMachineSize": {
-            "value": "Standard_D1_v2"
+            "value": "Standard_DS2_v2"
         },
         "adminUsername": {
             "value": "wradmin"
         },
+        "virtualNetworkName": {
+            "value": "vNet1peeringtest"
+        },
         "networkInterfaceName": {
-            "value": "wr-dev-vm-csre1-nic592"
+            "value": "armtest-vpx-dev-wr292"
         },
         "networkSecurityGroupName": {
-            "value": "wr-dev-vm-csre1-nsg"
+            "value": "armtest-vpx-dev-wr-nsg"
         },
         "adminPublicKey": {
             "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGE2laYlhwaQ8wWwEY2Fk8eFtAs+boMVw0CgFxWr6gBnLZu7jkqpxT8TaeTqzbfPypn93DozWIuh+fpyTII9Nm+Kcg78j0XOtU6OmI4q3w3UEMj/sObYIqGpBZwpW+feITUK4YHlyoFc7Xptibg9BnVcTK+VNcDwikOMVjhRUyVu/DEDnOylBfT5TWnmD8FopwwpySjfPegfCS/NXq4uEYPwTDed/dKO8GG8cplgqFlgOTIXMJmmblk60bqbuoEtntqZxOjnaGmOXy3F4FIedwOcF4eGX8KVRVVfhMOWuZwH+wJBvdyqsmKfhKUV9cx4W3/ThsBoEU8JTOfuba9qUD"
         },
+        "diagnosticsStorageAccountName": {
+            "value": "wrdevsacsre1"
+        },
+        "diagnosticsStorageAccountId": {
+            "value": "/subscriptions/520d638a-7b1b-4143-a625-fcf6e0f59fcf/resourceGroups/wr-dev-sa-csre1/providers/Microsoft.Storage/storageAccounts/wrdevsacsre1"
+        },
+        "subnetName": {
+            "value": "public"
+        },
         "publicIpAddressName": {
-            "value": "wr-dev-pip-csre1"
+            "value": "armtest-vpx-dev-wr-ip"
         },
         "publicIpAddressType": {
             "value": "Dynamic"

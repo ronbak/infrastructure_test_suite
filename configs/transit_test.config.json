@@ -1,0 +1,72 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "../../Templates/transit_test/complete_environment.json"
+    },
+    "dev": {
+      "resource_group_name": "armtransit-rg-dev-wr",
+      "subscription_name": "Dev-MSDN"
+    }
+  },
+   "parameters": {
+        "location": {
+            "value": "westeurope"
+        },
+        "project_name": {
+            "value": "transittst"
+        },
+        "environment": {
+            "value": "dev"
+        },
+        "classic_name": {
+            "value": "transittst-classic-vnet-dev-wr"
+        },
+        "classic_addressSpaceCidr": {
+            "value": "10.20.0.0/16"
+        },
+        "subnetName": {
+            "value": "default"
+        },
+        "classic_subnetAddressCidr": {
+            "value": "10.20.0.0/24"
+        },
+        "classic_gatewaySubnetCidr": {
+            "value": "10.20.1.0/24"
+        },
+        "mid_name": {
+            "value": "transittst-mid-vnet-dev-wr"
+        },
+        "mid_addressSpaceCidr": {
+            "value": "10.30.0.0/16"
+        },
+        "mid_subnetAddressCidr": {
+            "value": "10.30.0.0/24"
+        },
+        "mid_gatewaySubnetCidr": {
+            "value": "10.30.1.0/24"
+        },
+        "final_name": {
+            "value": "transittst-final-vnet-dev-wr"
+        },
+        "final_addressSpaceCidr": {
+            "value": "10.40.0.0/16"
+        },
+        "final_subnetAddressCidr": {
+            "value": "10.40.0.0/24"
+        },
+        "final_gatewaySubnetCidr": {
+            "value": "10.40.1.0/24"
+        },
+        "gatewayIpAddress": {
+            "value": "80.169.91.82"
+        },
+        "localNetworkGatewayName": {
+            "value": "wr-bg"
+        },
+        "addressPrefixes": {
+            "value": [
+                "10.1.50.0/24"
+            ]
+        }        
+    }
+}

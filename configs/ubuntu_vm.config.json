@@ -1,26 +1,30 @@
 {
   "environments": {
     "global": {
-      "arm_template": "../../Templates/vnet1-vnet2-peering.json"
+      "arm_template": "../../Templates/ubuntu_vm.json"
     },
     "dev": {
-      "resource_group_name": "armRubyAutomationTest",
+      "resource_group_name": "ubuntuvms-rg-dev-wr",
       "subscription_name": "Dev-MSDN"
     }
   },
   "parameters": {
-        "vNet1Name":
+        "vNetName":
         {
-            "value": "vNet1peeringtest"
+            "value": "armtestvnet1"
         },
-        "vNet2Name": {
-            "value": "vNet2peeringtest"
+        "vNetResourceGroup": {
+            "value": "armtestnetwork1"
+        },
+        "subnet_name":
+        {
+            "value": "subnet-1"
         },
         "location": {
             "value": "westeurope"
         },
-        "virtualMachineName": {
-            "value": "wr-dev-vm-csre1"
+        "project_name": {
+            "value": "csreubuntu1"
         },
         "virtualMachineSize": {
             "value": "Standard_D1_v2"
@@ -28,20 +32,8 @@
         "adminUsername": {
             "value": "wradmin"
         },
-        "networkInterfaceName": {
-            "value": "wr-dev-vm-csre1-nic592"
-        },
-        "networkSecurityGroupName": {
-            "value": "wr-dev-vm-csre1-nsg"
-        },
         "adminPublicKey": {
             "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGE2laYlhwaQ8wWwEY2Fk8eFtAs+boMVw0CgFxWr6gBnLZu7jkqpxT8TaeTqzbfPypn93DozWIuh+fpyTII9Nm+Kcg78j0XOtU6OmI4q3w3UEMj/sObYIqGpBZwpW+feITUK4YHlyoFc7Xptibg9BnVcTK+VNcDwikOMVjhRUyVu/DEDnOylBfT5TWnmD8FopwwpySjfPegfCS/NXq4uEYPwTDed/dKO8GG8cplgqFlgOTIXMJmmblk60bqbuoEtntqZxOjnaGmOXy3F4FIedwOcF4eGX8KVRVVfhMOWuZwH+wJBvdyqsmKfhKUV9cx4W3/ThsBoEU8JTOfuba9qUD"
-        },
-        "publicIpAddressName": {
-            "value": "wr-dev-pip-csre1"
-        },
-        "publicIpAddressType": {
-            "value": "Dynamic"
         }
     }
 }

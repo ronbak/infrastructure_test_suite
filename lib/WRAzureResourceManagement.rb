@@ -24,8 +24,7 @@ class WRAzureResourceManagement
   end
 
   def delete_resource_group(rg_name)
-    binding.pry
-  	@rg_client.resource_groups.delete_async(rg_name)
+  	@rg_client.resource_groups.delete(rg_name)
   end
 
   def create_update_deployment(resource_group, deployment_name, deployment)

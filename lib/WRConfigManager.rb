@@ -32,7 +32,6 @@ class WRConfigManager
       @csrelog.debug("object is assumed to be a json string: #{config}")
       config_hash = JSON.parse(config)
     end
-    @csrelog.debug(config_hash)
     return config_hash
   end
 
@@ -57,9 +56,6 @@ class WRConfigManager
   end
 
   def rg_name(env)
-    @csrelog.debug(env)
-    @csrelog.debug("**********************************\n#{@config['environments']}\n*************************************\n\n")
-    @csrelog.debug("**********************************\n#{@config['environments'][env.to_s]}\n*************************************\n\n")
     @config['environments'][env.to_s]['resource_group_name']
   end
 
