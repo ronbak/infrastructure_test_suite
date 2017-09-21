@@ -1,0 +1,188 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "../../arm_templates/networking_master.json"
+    },
+    "dev": {
+      "resource_group_name": "armRubyVNetTest",
+      "subscription_name": "Dev-MSDN"
+    }
+  },
+  "parameters": {
+        "vNetName":
+        {
+            "value": "nonprod-vnet-test"
+        },
+        "vNet": {
+            "value": {
+                "addressSpacePrefix": "10.24.0.0/16",
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "landscape": "nonprod",
+                        "landscapeAddressPrefix": "10.24.0.0/16",
+                        "addressPrefix": "10.24.0.0/24"
+                    },
+                    {
+                        "name": "private",
+                        "landscape": "dev",
+                        "landscapeAddressPrefix": "10.24.16.0/20",
+                        "addressPrefix": "10.24.16.0/23"
+                    },
+                    {
+                        "name": "private-partner",
+                        "landscape": "dev",
+                        "landscapeAddressPrefix": "10.24.16.0/20",
+                        "addressPrefix": "10.24.18.0/23"
+                    },
+                    {
+                        "name": "public-client",
+                        "landscape": "dev",
+                        "landscapeAddressPrefix": "10.24.16.0/20",
+                        "addressPrefix": "10.24.20.0/23"
+                    },
+                    {
+                        "name": "public-partner",
+                        "landscape": "dev",
+                        "landscapeAddressPrefix": "10.24.16.0/20",
+                        "addressPrefix": "10.24.22.0/23"
+                    },
+                    {
+                        "name": "private",
+                        "landscape": "tst",
+                        "landscapeAddressPrefix": "10.24.32.0/20",
+                        "addressPrefix": "10.24.32.0/23"
+                    },
+                    {
+                        "name": "private-partner",
+                        "landscape": "tst",
+                        "landscapeAddressPrefix": "10.24.32.0/20",
+                        "addressPrefix":"10.24.34.0/23"
+                    },
+                    {
+                        "name": "public-client",
+                        "landscape": "tst",
+                        "landscapeAddressPrefix": "10.24.32.0/20",
+                        "addressPrefix": "10.24.36.0/23"
+                    },
+                    {
+                        "name": "public-partner",
+                        "landscape": "tst",
+                        "landscapeAddressPrefix": "10.24.32.0/20",
+                        "addressPrefix": "10.24.38.0/23"
+                    },
+                    {
+                        "name": "private",
+                        "landscape": "uat",
+                        "landscapeAddressPrefix": "10.24.48.0/20",
+                        "addressPrefix": "10.24.48.0/23"
+                    },
+                    {
+                        "name": "private-partner",
+                        "landscape": "uat",
+                        "landscapeAddressPrefix": "10.24.48.0/20",
+                        "addressPrefix": "10.24.50.0/23"
+                    },
+                    {
+                        "name": "public-client",
+                        "landscape": "uat",
+                        "landscapeAddressPrefix": "10.24.48.0/20",
+                        "addressPrefix": "10.24.52.0/23"
+                    },
+                    {
+                        "name": "public-partner",
+                        "landscape": "uat",
+                        "landscapeAddressPrefix": "10.24.48.0/20",
+                        "addressPrefix": "10.24.54.0/23"
+                    },
+                    {
+                        "name": "private",
+                        "landscape": "int",
+                        "landscapeAddressPrefix": "10.24.64.0/20",
+                        "addressPrefix": "10.24.64.0/23"
+                    },
+                    {
+                        "name": "private-partner",
+                        "landscape": "int",
+                        "landscapeAddressPrefix": "10.24.64.0/20",
+                        "addressPrefix": "10.24.66.0/23"
+                    },
+                    {
+                        "name": "public-client",
+                        "landscape": "int",
+                        "landscapeAddressPrefix": "10.24.64.0/20",
+                        "addressPrefix": "10.24.68.0/23"
+                    },
+                    {
+                        "name": "public-partner",
+                        "landscape": "int",
+                        "landscapeAddressPrefix": "10.24.64.0/20",
+                        "addressPrefix": "10.24.70.0/23"
+                    },
+                    {
+                        "name": "private",
+                        "landscape": "ci",
+                        "landscapeAddressPrefix": "10.24.80.0/20",
+                        "addressPrefix": "10.24.80.0/23"
+                    },
+                    {
+                        "name": "private-partner",
+                        "landscape": "ci",
+                        "landscapeAddressPrefix": "10.24.80.0/20",
+                        "addressPrefix": "10.24.82.0/23"
+                    },
+                    {
+                        "name": "public-client",
+                        "landscape": "ci",
+                        "landscapeAddressPrefix": "10.24.80.0/20",
+                        "addressPrefix": "10.24.84.0/23"
+                    },
+                    {
+                        "name": "public-partner",
+                        "landscape": "ci",
+                        "landscapeAddressPrefix": "10.24.80.0/20",
+                        "addressPrefix": "10.24.86.0/23"
+                    },
+                    {
+                        "name": "private",
+                        "landscape": "ppd",
+                        "landscapeAddressPrefix": "10.24.96.0/20",
+                        "addressPrefix": "10.24.96.0/23"
+                    },
+                    {
+                        "name": "private-partner",
+                        "landscape": "ppd",
+                        "landscapeAddressPrefix": "10.24.96.0/20",
+                        "addressPrefix": "10.24.98.0/23"
+                    },
+                    {
+                        "name": "public-client",
+                        "landscape": "ppd",
+                        "landscapeAddressPrefix": "10.24.96.0/20",
+                        "addressPrefix": "10.24.100.0/23"
+                    },
+                    {
+                        "name": "public-partner",
+                        "landscape": "ppd",
+                        "landscapeAddressPrefix": "10.24.96.0/20",
+                        "addressPrefix": "10.24.102.0/23"
+                    }
+                ],
+                "subnetAddressprefix": {
+                    "dev": "10.24.16.0/20",
+                    "tst": "10.24.32.0/20",
+                    "uat": "10.24.48.0/20",
+                    "int": "10.24.64.0/20",
+                    "ci": "10.24.80.0/20",
+                    "ppd": "10.24.96.0/20"
+                },
+                "landscapeAddressPrefixs": [
+                  "dev", "tst", "uat", "int", "ci", "ppd"
+                ]
+            }
+        },
+        "location": {
+            "value": "westeurope"
+        }
+    }
+}

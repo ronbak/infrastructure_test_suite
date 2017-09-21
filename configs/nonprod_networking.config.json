@@ -1,0 +1,99 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "../../Templates/nonprod_networking2.json"
+    },
+    "dev": {
+      "resource_group_name": "armRubyVNetTest",
+      "subscription_name": "Dev-MSDN"
+    }
+  },
+  "parameters": {
+        "vNetName":
+        {
+            "value": "nonprod-vnet-test"
+        },
+        "vNet": {
+            "value": {
+                "addressSpacePrefix": "10.24.0.0/16",
+                "landscapes": [
+                    {
+                        "name" : "dev",
+                        "description": "Development environment subnet, 10.24.16.0/20",
+                        "subnets": {
+                            "private": "10.24.16.0/23",
+                            "privatepartner": "10.24.18.0/23",
+                            "publicclient": "10.24.20.0/23",
+                            "publicpartner": "10.24.22.0/23"
+                        }
+                    },
+                    {
+                        "name" : "dev2",
+                        "description": "Development2 environment subnet, 10.24.112.0/20",
+                        "subnets": {
+                            "private": "10.24.112.0/23",
+                            "privatepartner": "10.24.114.0/23",
+                            "publicclient": "10.24.116.0/23",
+                            "publicpartner": "10.24.118.0/23"
+                        }
+                    },
+                    {
+                        "name" : "tst",
+                        "description": "test environment subnet, 10.24.32.0/20",
+                        "subnets": {
+                            "private": "10.24.32.0/23",
+                            "privatepartner": "10.24.34.0/23",
+                            "publicclient": "10.24.36.0/23",
+                            "publicpartner": "10.24.38.0/23"
+                        }
+                    },
+                    {
+                        "name" : "uat",
+                        "description": "UAT environment subnet, 10.24.48.0/20",
+                        "subnets": {
+                            "private": "10.24.48.0/23",
+                            "privatepartner": "10.24.50.0/23",
+                            "publicclient": "10.24.52.0/23",
+                            "publicpartner": "10.24.54.0/23"
+                        }
+                    },
+                    {
+                        "name" : "int",
+                        "description": "Integrations environment subnet, 10.24.64.0/20",
+                        "subnets": {
+                            "private": "10.24.64.0/23",
+                            "privatepartner": "10.24.66.0/23",
+                            "publicclient": "10.24.68.0/23",
+                            "publicpartner": "10.24.70.0/23"
+                        }
+                    },
+                    {
+                        "name" : "ci",
+                        "description": "Continous Integration environment subnet, 10.24.80.0/20",
+                        "subnets": {
+                            "private": "10.24.80.0/23",
+                        "privatepartner": "10.24.82.0/23",
+                            "publicclient": "10.24.84.0/23",
+                            "publicpartner": "10.24.86.0/23"
+                        }
+                    },
+                    {
+                        "name" : "ppd",
+                        "description": "Pre-Prod environment subnet, 10.24.96.0/20",
+                        "subnets": {
+                            "private": "10.24.96.0/23",
+                            "privatepartner": "10.24.98.0/23",
+                            "publicclient": "10.24.100.0/23",
+                            "publicpartner": "10.24.102.0/23"
+                        }
+                    }
+                ],
+                "subnetName": "GatewaySubnet",
+                "subnetPrefix": "10.24.0.0/24"
+            }
+        },
+        "location": {
+            "value": "westeurope"
+        }
+    }
+}

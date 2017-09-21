@@ -1,0 +1,82 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "../../arm_templates/networking_master2_prod.json"
+    },
+    "dev": {
+      "resource_group_name": "armRubyVNetTest2Prod",
+      "subscription_name": "Dev-MSDN"
+    }
+  },
+  "parameters": {
+    "vNetName": {
+      "value": "prod-vnet-test"
+    },
+    "vNet": {
+      "value": {
+        "addressSpacePrefix": "10.20.0.0/16",
+        "landscapes": {
+          "gateway": {
+            "name" : "GatewaySubnet",
+            "description": "Gateway environment subnet, 10.20.0.0/24",
+            "addressSpacePrefix": "10.20.0.0/20",
+            "subnets": {
+              "GatewaySubnet": "10.20.0.0/24"
+            }
+          },
+          "core": {
+            "name" : "core",
+            "description": "Core network for shared services in this region, 10.16.0.0/16",
+            "addressSpacePrefix": "10.16.0.0/16",
+            "subnets": {
+              "coreprivate": "10.16.0.0/20",
+              "corepublic": "10.16.16.0/20"
+            }
+          },
+          "prd": {
+            "name" : "prd",
+            "description": "Prod environment subnet, 10.20.16.0/20",
+            "addressSpacePrefix": "10.20.16.0/20",
+            "subnets": {
+              "private": "10.20.16.0/23",
+              "privatepartner": "10.20.18.0/23",
+              "publicclient": "10.20.20.0/23",
+              "publicpartner": "10.20.22.0/23"
+            }
+          }
+        }
+      }
+    },
+    "subnets_array": {
+      "value": [
+        {
+          "name": "private",
+          "landscape": "prd",
+          "landscapeAddressPrefix": "[parameters('vNet').landscapes.prd.addressSpacePrefix]",
+          "addressPrefix": "[parameters('vNet').landscapes.prd.subnets.private]"
+        },
+        {
+          "name": "privatepartner",
+          "landscape": "prd",
+          "landscapeAddressPrefix": "[parameters('vNet').landscapes.prd.addressSpacePrefix]",
+          "addressPrefix": "[parameters('vNet').landscapes.prd.subnets.privatepartner]"
+        },
+        {
+          "name": "publicclient",
+          "landscape": "prd",
+          "landscapeAddressPrefix": "[parameters('vNet').landscapes.prd.addressSpacePrefix]",
+          "addressPrefix": "[parameters('vNet').landscapes.prd.subnets.publicclient]"
+        },
+        {
+          "name": "publicpartner",
+          "landscape": "prd",
+          "landscapeAddressPrefix": "[parameters('vNet').landscapes.prd.addressSpacePrefix]",
+          "addressPrefix": "[parameters('vNet').landscapes.prd.subnets.publicpartner]"
+        }
+      ]
+    },
+    "location": {
+      "value": "westeurope"
+    }
+  }
+}

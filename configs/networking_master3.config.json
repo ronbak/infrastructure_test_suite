@@ -1,0 +1,257 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "../../arm_templates/networking_master3.json"
+    },
+    "dev": {
+      "resource_group_name": "armRubyVNetTest2",
+      "subscription_name": "Dev-MSDN"
+    }
+  },
+  "parameters": {
+    "vNetName": {
+      "value": "nonprod-vnet-test"
+    },
+    "vNet": {
+      "value": {
+        "addressSpacePrefix": "10.24.0.0/16",
+        "landscapes": {
+          "gateway": {
+            "name" : "GatewaySubnet",
+            "description": "Gateway environment subnet, 10.24.0.0/24",
+            "addressSpacePrefix": "10.24.0.0/20",
+            "subnets": {
+              "GatewaySubnet": "10.24.0.0/24"
+            }
+          },
+          "core": {
+            "name" : "core",
+            "description": "Core network for shared services in this region, 10.16.0.0/16",
+            "addressSpacePrefix": "10.16.0.0/16",
+            "subnets": {
+              "coreprivate": "10.16.0.0/20",
+              "corepublic": "10.16.16.0/20"
+            }
+          },
+          "dev": {
+            "name" : "dev",
+            "description": "Development environment subnet, 10.24.16.0/20",
+            "addressSpacePrefix": "10.24.16.0/20",
+            "subnets": {
+              "private": "10.24.16.0/23",
+              "privatepartner": "10.24.18.0/23",
+              "publicclient": "10.24.20.0/23",
+              "publicpartner": "10.24.22.0/23"
+            }
+          },
+          "tst": {
+            "name" : "tst",
+            "description": "test environment subnet, 10.24.32.0/20",
+            "addressSpacePrefix": "10.24.32.0/20",
+            "subnets": {
+              "private": "10.24.32.0/23",
+              "privatepartner": "10.24.34.0/23",
+              "publicclient": "10.24.36.0/23",
+              "publicpartner": "10.24.38.0/23"
+            }
+          },
+          "uat": {
+            "name" : "uat",
+            "description": "UAT environment subnet, 10.24.48.0/20",
+            "addressSpacePrefix": "10.24.48.0/20",
+            "subnets": {
+              "private": "10.24.48.0/23",
+              "privatepartner": "10.24.50.0/23",
+              "publicclient": "10.24.52.0/23",
+              "publicpartner": "10.24.54.0/23"
+            }
+          },
+          "int": {
+            "name" : "int",
+            "description": "Integrations environment subnet, 10.24.64.0/20",
+            "addressSpacePrefix": "10.24.64.0/20",
+            "subnets": {
+              "private": "10.24.64.0/23",
+              "privatepartner": "10.24.66.0/23",
+              "publicclient": "10.24.68.0/23",
+              "publicpartner": "10.24.70.0/23"
+            }
+          },
+          "ci": {
+            "name" : "ci",
+            "description": "Continous Integration environment subnet, 10.24.80.0/20",
+            "addressSpacePrefix": "10.24.80.0/20",
+            "subnets": {
+              "private": "10.24.80.0/23",
+              "privatepartner": "10.24.82.0/23",
+              "publicclient": "10.24.84.0/23",
+              "publicpartner": "10.24.86.0/23"
+            }
+          },
+          "ppd": {
+            "name" : "ppd",
+            "description": "Pre-Prod environment subnet, 10.24.96.0/20",
+            "addressSpacePrefix": "10.24.96.0/20",
+            "subnets": {
+              "private": "10.24.96.0/23",
+              "privatepartner": "10.24.98.0/23",
+              "publicclient": "10.24.100.0/23",
+              "publicpartner": "10.24.102.0/23"
+            }
+          }
+        }
+      }
+    },
+    "subnets_array": {
+      "value": [
+        {
+            "name": "private",
+            "landscape": "dev",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.dev.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.dev.subnets.private]"
+        },
+        {
+            "name": "privatepartner",
+            "landscape": "dev",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.dev.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.dev.subnets.privatepartner]"
+        },
+        {
+            "name": "publicclient",
+            "landscape": "dev",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.dev.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.dev.subnets.publicclient]"
+        },
+        {
+            "name": "publicpartner",
+            "landscape": "dev",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.dev.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.dev.subnets.publicpartner]"
+        },
+        {
+            "name": "private",
+            "landscape": "tst",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.tst.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.tst.subnets.private]"
+        },
+        {
+            "name": "privatepartner",
+            "landscape": "tst",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.tst.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.tst.subnets.privatepartner]"
+        },
+        {
+            "name": "publicclient",
+            "landscape": "tst",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.tst.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.tst.subnets.publicclient]"
+        },
+        {
+            "name": "publicpartner",
+            "landscape": "tst",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.tst.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.tst.subnets.publicpartner]"
+        },
+        {
+            "name": "private",
+            "landscape": "uat",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.uat.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.uat.subnets.private]"
+        },
+        {
+            "name": "privatepartner",
+            "landscape": "uat",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.uat.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.uat.subnets.privatepartner]"
+        },
+        {
+            "name": "publicclient",
+            "landscape": "uat",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.uat.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.uat.subnets.publicclient]"
+        },
+        {
+            "name": "publicpartner",
+            "landscape": "uat",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.uat.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.uat.subnets.publicpartner]"
+        },
+        {
+            "name": "private",
+            "landscape": "int",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.int.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.int.subnets.private]"
+        },
+        {
+            "name": "privatepartner",
+            "landscape": "int",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.int.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.int.subnets.privatepartner]"
+        },
+        {
+            "name": "publicclient",
+            "landscape": "int",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.int.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.int.subnets.publicclient]"
+        },
+        {
+            "name": "publicpartner",
+            "landscape": "int",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.int.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.int.subnets.publicpartner]"
+        },
+        {
+            "name": "private",
+            "landscape": "ci",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ci.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ci.subnets.private]"
+        },
+        {
+            "name": "privatepartner",
+            "landscape": "ci",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ci.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ci.subnets.privatepartner]"
+        },
+        {
+            "name": "publicclient",
+            "landscape": "ci",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ci.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ci.subnets.publicclient]"
+        },
+        {
+            "name": "publicpartner",
+            "landscape": "ci",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ci.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ci.subnets.publicpartner]"
+        },
+        {
+            "name": "private",
+            "landscape": "ppd",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ppd.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ppd.subnets.private]"
+        },
+        {
+            "name": "privatepartner",
+            "landscape": "ppd",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ppd.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ppd.subnets.privatepartner]"
+        },
+        {
+            "name": "publicclient",
+            "landscape": "ppd",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ppd.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ppd.subnets.publicclient]"
+        },
+        {
+            "name": "publicpartner",
+            "landscape": "ppd",
+            "landscapeAddressPrefix": "[parameters('vNet').landscapes.ppd.addressSpacePrefix]",
+            "addressPrefix": "[parameters('vNet').landscapes.ppd.subnets.publicpartner]"
+        }
+      ]
+    },
+    "location": {
+      "value": "westeurope"
+    }
+  }
+}

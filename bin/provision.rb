@@ -2,6 +2,7 @@
 require 'optparse'
 require 'ostruct'
 require 'json'
+require 'pry-byebug'
 require_relative '../lib/WRAzureCredentials'
 require_relative '../lib/WRAzureDeployer'
 require_relative '../lib/WRConfigManager'
@@ -20,7 +21,7 @@ class Provisioner
   end
 
   def self.actions
-    return ['deploy', 'delete']
+    return ['deploy', 'delete', 'output']
   end
 
   def supported_action(action)
@@ -68,7 +69,18 @@ class Provisioner
     # config_manager.template
     @csrelog.debug(@opts[:environment].to_s)
     if @opts[:complete_deployment] then @csrelog.info("Running deployment in 'Complete' mode, let's hope you meant that!!!") end
-    deployer = WRAzureDeployer.new(action: @opts[:action].to_s, environment: @opts[:environment].to_s, rg_name: config_manager.rg_name(@opts[:environment].to_s), parameters: config_manager.parameters(), template: config_manager.template(), complete_deployment: @opts[:complete_deployment]).process_deployment()
+    options = {
+      action: @opts[:action].to_s, 
+      environment: @opts[:environment].to_s, 
+      rg_name: config_manager.rg_name(@opts[:environment].to_s), 
+      parameters: config_manager.parameters(), 
+      template: config_manager.template(), 
+      complete_deployment: @opts[:complete_deployment], 
+      rules_template: @opts[:rules],
+      skip_deploy: @opts[:skip_deploy],
+      output: @opts[:output]
+    }
+    deployer = WRAzureDeployer.new(options).process_deployment()
   end
 end
 
@@ -86,6 +98,9 @@ def parse_args(args)
     opts.on('-c', '--config PATH', 'Config File path argument or JSON config as String') do |cfg|
       @options.config = cfg
     end
+    opts.on('-r', '--rules PATH', 'NSG Rules template file path argument or JSON String') do |rules|
+      @options.rules = rules
+    end
     opts.on('--environment [TYPE]', [:production, :dev, :services, :preprod, :sandbox],
             "Environment to deploy your template in to") do |environment|
       @options.environment = environment
@@ -93,6 +108,12 @@ def parse_args(args)
     opts.on("--complete", "runs an Azure ARm Complete deployment, use wisely", "true or false.") do |complete_deployment|
       @options.complete_deployment = complete_deployment
     end
+    opts.on("--skip_deploy", "Skips the main deployment step, useful for testing or validating configs", "true or false.") do |skip_deploy|
+      @options.skip_deploy = skip_deploy
+    end
+    opts.on('-o', '--output PATH', 'Outputs the created ARM Template to the parth specified and does not run the deployment') do |output|
+      @options.output = output
+    end 
   end
 
   opt_parser.parse!(args)
@@ -110,7 +131,8 @@ if __FILE__ == $PROGRAM_NAME
   @options.verbose = false
   @options.environment = nil
   @options.complete_deployment = false
-
+  @options.rules = nil
+  @options.skip_deploy = false
   parse_args(ARGV)
 
   provisioner = Provisioner.new(@options.to_h())

@@ -2,11 +2,12 @@ require 'azure_mgmt_resources'
 require_relative 'WRAzureCredentials'
 require_relative 'WRAzureResourceManagement'
 require_relative 'CSRELogger'
+require_relative 'WRAzureNsgRulesMgmt'
 require 'pry-byebug'
 
 class WRAzureDeployer
 
-  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil, complete_deployment: false)
+  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
@@ -20,7 +21,10 @@ class WRAzureDeployer
     @resource_group_location = resource_group_location
     @rg_name = rg_name
     @template = template
+    @rules_template = rules_template
     @parameters = parameters
+    @skip_deploy = skip_deploy
+    @output = output
   end
 
   # Main orchestration method
@@ -33,39 +37,71 @@ class WRAzureDeployer
     when 'delete'
       @csrelog.info("Deleting the resource group and all it's resources: #{@rg_name}")
       delete_rg()
+    when 'output'
+      @csrelog.info("Building deployment object and saving to #{@output}")
+      deployment_name = deploy()
     end
   end
       
-
   # Deploy the template to a resource group
   def deploy()
-    # ensure the resource group is created
-    @csrelog.debug("Creating or updating the resource group: #{@rg_name}")
-    @client.create_resource_group(@resource_group_location, @rg_name)
+    unless @skip_deploy
+      # ensure the resource group is created
+      @csrelog.debug("Creating or updating the resource group: #{@rg_name}") unless @action == 'output'
+      @client.create_resource_group(@resource_group_location, @rg_name) unless @action == 'output'
+      if @rules_template
+        add_rules_to_exisitng_template()
+      end
+      deployment_name = run_deployment(@template, @complete_deployment)
+      deploy_status(deployment_name) unless @action == 'output'
+    end
+  end
 
-    # build the deployment from a json file template from parameters
+  def add_rules_to_exisitng_template()
+    #binding.pry
+    # build the rules resourecs
+    rules_expanded_resources = build_rules_template(@parameters, @rules_template)
+    # add dependsOn to each rule resource
+    base_resources = []
+    @template['resources'].each do |resource|
+      base_resources << resource['name']
+    end
+    rules_expanded_resources.each do |rules_resource|
+      rules_resource['dependsOn'] = base_resources
+    end
+    # add rules resources to existing template
+    @template['resources'] += rules_expanded_resources
+  end
+
+  def run_deployment(template, complete_deployment = false)
     @csrelog.debug("Creating the deployment object")
-    deployment = build_deployment_object()
+    deployment = build_deployment_object(template, complete_deployment)
     @csrelog.debug(deployment)
 
     deployment_name = create_deployment_name()
     @csrelog.debug("Deployment name: #{deployment_name}")
-    
-    # put the deployment to the resource group
+    output_deployment_object(@output, deployment) if @output
+
     @csrelog.debug("Creating a new thread for the deployment")
-    t1 = Thread.new {
-      begin 
-        @client.create_update_deployment(@rg_name, deployment_name, deployment)
-        @csrelog.debug("Deployment accepted")
-      rescue => e
-        @csrelog.error("we hit an issue deploying your template.....")
-        @csrelog.error(e.error_message)
-        @csrelog.error("We will now exit, please try harder next time! :) ")
-        exit 1
-      end
-    }
+    unless @action == 'output'
+      t1 = Thread.new {
+        begin 
+          @client.create_update_deployment(@rg_name, deployment_name, deployment)
+          @csrelog.info("Deployment accepted")
+        rescue => e
+          @csrelog.error("we hit an issue deploying your template.....")
+          @csrelog.error(e.error_message)
+          @csrelog.error("We will now exit, please try harder next time! :) ")
+          exit 1
+        end
+      }
+    end
     sleep 5
-    deploy_status(deployment_name)
+    return deployment_name
+  end
+
+  def build_rules_template(parameters, base_template)
+    WRAzureNsgRulesMgmt.new(parameters, base_template, @csrelog).process_rules
   end
 
   def deploy_status(deployment_name)
@@ -74,7 +110,7 @@ class WRAzureDeployer
         x = @client.get_deployment_status(@rg_name, deployment_name)
         while x == "Running"
           @csrelog.info("deploying status is: #{x}")
-          sleep 30
+          sleep 15
           x = @client.get_deployment_status(@rg_name, deployment_name)
         end
         @csrelog.info("Deployment complete")
@@ -93,20 +129,36 @@ class WRAzureDeployer
     end
   end
 
-  def build_deployment_object() # TODO
+  def build_deployment_object(template, complete_deployment = false)
+    @csrelog.info('We\'re running in Incremental mode...this might be forced if doing a rules deployment') unless complete_deployment
+    @csrelog.debug('We\'re running in Complete mode.') if complete_deployment
     deployment = Azure::ARM::Resources::Models::Deployment.new
     deployment.properties = Azure::ARM::Resources::Models::DeploymentProperties.new
     deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Incremental
-    deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Complete if @complete_deployment
+    deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Complete if complete_deployment
+    @csrelog.debug(deployment.properties.mode)
     @parameters = add_environment_value()
     deployment.properties.parameters = @parameters
-    deployment.properties.template = @template
+    deployment.properties.template = template
     return deployment
   end
 
   def add_environment_value()
     @parameters['environment'] = { "value" => @environment } if @template.dig('parameters', 'environment')
     @parameters
+  end
+
+  def output_deployment_object(file_path, deployment_object)
+    output_hash = {}
+    output_hash[:parameters] = deployment_object.properties.parameters
+    output_hash[:template] = deployment_object.properties.template
+    write_hash_to_disk(output_hash, file_path)
+  end
+
+  def write_hash_to_disk(hash, file_path)
+    File.open(file_path, 'w') do |file|
+      file.write JSON.pretty_generate(hash)
+    end
   end
 
   def get_params(string) 

@@ -26,8 +26,11 @@ class WRAzureNetworkManagement
 		return resources_array
 	end
 
-	def list_available_ips(resource_group: nil, vnet: nil)
+	def list_available_ips(resource_group: nil, vnet: nil, subnet: nil)
 		subnets = @client.subnets.list(resource_group, vnet)
+		if subnet
+			subnets = subnets.select { |net| net.name == subnet }
+		end
 		vnet_ip_availability = {}
 		subnets.each do |subnet|
 			#puts "\nQuerying #{subnet.name}\n"
