@@ -149,9 +149,14 @@ class WRAzureDeployer
   end
 
   def output_deployment_object(file_path, deployment_object)
-    output_hash = {}
-    output_hash[:parameters] = deployment_object.properties.parameters
-    output_hash[:template] = deployment_object.properties.template
+    output_params_hash = {
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0"}
+    output_params_hash[:parameters] = deployment_object.properties.parameters
+    params_file = File.dirname(file_path) + '/' + file_path.split('/')[-1].split('.')[0] + '.parameters.json'
+    write_hash_to_disk(output_params_hash, params_file)
+    output_hash = deployment_object.properties.template
+    file_path = "#{file_path}.json" unless file_path[-5..-1] == '.json'
     write_hash_to_disk(output_hash, file_path)
   end
 
