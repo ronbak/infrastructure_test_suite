@@ -14,27 +14,45 @@ class WRAzureCredentials
 		@client_id = options[:client_id]
 		@client_id = determine_client_id(environment) if @client_id.nil?
 		@tenant_id = metadata[environment]['tenant_id']
+		@azure_creds_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
+		@github_pac_file = "#{ENV['HOME']}/git_ruby_pac"
 		@client_secret = get_client_secret()
 	end
 
 	def get_client_secret()
 		if ENV['AZURE_CLIENT_SECRET']
 			return ENV['AZURE_CLIENT_SECRET']
-		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?("#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}")
+		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@azure_creds_file)
 			@csrelog.debug("found a creds file, attempting to decrypt the info")
-			return decrypt(File.read("#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"))
+			return decrypt(File.read(@azure_creds_file))
 		else
 			@csrelog.info("No Secret Found")
 			@csrelog.info("Please set the secret in the environment variable 'AZURE_CLIENT_SECRET'")
 			puts 'Please paste your secret here:'
 			secret = gets.chomp
-			write_creds_file(secret)
-			return decrypt(File.read("#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"))
+			write_creds_file(secret, @azure_creds_file)
+			return decrypt(File.read(@azure_creds_file))
 		end
 	end
 
-	def write_creds_file(creds)
-		key_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
+  def get_git_access_token()
+  	if ENV['GIT_ACCESS_TOKEN']
+			return ENV['GIT_ACCESS_TOKEN']
+		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@github_pac_file )
+			@csrelog.debug("found a creds file, attempting to decrypt the info")
+			return decrypt(File.read(@github_pac_file ))
+		else
+			@csrelog.info("No Git PAC found")
+			@csrelog.info("Please set the Git PAC in the environment variable 'GIT_ACCESS_TOKEN' or add below")
+			puts 'Please paste your secret here:'
+			secret = gets.chomp
+			write_creds_file(secret, @github_pac_file )
+			return decrypt(File.read(@github_pac_file ))
+		end
+  end
+
+	def write_creds_file(creds, key_file)
+		#key_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
 		x = encrypt(creds)
 		json = 
 		open key_file, 'w' do |io| io.write x end

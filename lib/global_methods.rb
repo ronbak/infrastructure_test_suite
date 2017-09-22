@@ -94,6 +94,19 @@ def get_data_from_url(url)
   return res
 end
 
+def retrieve_from_github_api(url, access_token)
+  uri = URI(url)
+  https = Net::HTTP.new(uri.host, uri.port)
+  https.use_ssl = true
+  https.open_timeout = 5
+  https.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  req = Net::HTTP::Get.new(uri.request_uri)
+  req['Authorization'] = "token #{access_token}"
+  req['Accept'] = 'application/vnd.github.v3.raw'
+  res = https.request(req)
+  return res.body
+end
+
 def query_wr_web_servers(ip_counter, host_header)
   response = {up: [], down: []}
   ip_counter.each do |ip|
