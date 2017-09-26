@@ -29,6 +29,7 @@ class WRAzureNsgRulesMgmt
   end
 
   def list_template_files(templates_string)
+    return templates_string if templates_string.is_a? Array
     return [templates_string] if File.file?(templates_string)
     templates_string += '/' unless templates_string[-1] == '/'
     return Dir["#{templates_string}*"] if File.directory?(templates_string)
