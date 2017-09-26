@@ -1,0 +1,46 @@
+=> [{[31m[1;31m"[0m[31mapiVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m2017-05-10[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mname[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mnsgs-linked-template[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mtype[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mMicrosoft.Resources/deployments[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mproperties[1;31m"[0m[31m[0m=>
+   {[31m[1;31m"[0m[31mmode[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mincremental[1;31m"[0m[31m[0m,
+    [31m[1;31m"[0m[31mtemplateLink[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31muri[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mhttps://raw.githubusercontent.com/chudsonwr/arm_templates/master/networks/nsgs.json[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mcontentVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m1.0.0.0[1;31m"[0m[31m[0m},
+    [31m[1;31m"[0m[31mparameters[1;31m"[0m[31m[0m=>
+     {[31m[1;31m"[0m[31mvNetName[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNetName')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mvNet[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNet')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31msubnets_array[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('subnets_array')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mlocation[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('location')][1;31m"[0m[31m[0m}}}},
+ {[31m[1;31m"[0m[31mapiVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m2017-05-10[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mname[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mgateway-nsgs-linked-template[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mtype[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mMicrosoft.Resources/deployments[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mproperties[1;31m"[0m[31m[0m=>
+   {[31m[1;31m"[0m[31mmode[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mincremental[1;31m"[0m[31m[0m,
+    [31m[1;31m"[0m[31mtemplateLink[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31muri[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mhttps://raw.githubusercontent.com/chudsonwr/arm_templates/master/networks/gateway_nsgs.json[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mcontentVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m1.0.0.0[1;31m"[0m[31m[0m},
+    [31m[1;31m"[0m[31mparameters[1;31m"[0m[31m[0m=>
+     {[31m[1;31m"[0m[31mvNetName[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNetName')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mvNet[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNet')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31msubnets_array[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('subnets_array')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mlocation[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('location')][1;31m"[0m[31m[0m}}}},
+ {[31m[1;31m"[0m[31mapiVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m2017-05-10[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mname[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mvnets-linked-template[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mtype[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mMicrosoft.Resources/deployments[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mdependsOn[1;31m"[0m[31m[0m=>[[31m[1;31m"[0m[31mnsgs-linked-template[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mgateway-nsgs-linked-template[1;31m"[0m[31m[0m],
+  [31m[1;31m"[0m[31mproperties[1;31m"[0m[31m[0m=>
+   {[31m[1;31m"[0m[31mmode[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mincremental[1;31m"[0m[31m[0m,
+    [31m[1;31m"[0m[31mtemplateLink[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31muri[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mhttps://raw.githubusercontent.com/chudsonwr/arm_templates/master/networks/vnets_subnets.json[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mcontentVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m1.0.0.0[1;31m"[0m[31m[0m},
+    [31m[1;31m"[0m[31mparameters[1;31m"[0m[31m[0m=>
+     {[31m[1;31m"[0m[31mvNetName[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNetName')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mvNet[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNet')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31msubnets_array[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('subnets_array')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mlocation[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('location')][1;31m"[0m[31m[0m}}}},
+ {[31m[1;31m"[0m[31mapiVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m2017-05-10[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mname[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mgateway-subnet-linked-template[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mtype[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mMicrosoft.Resources/deployments[1;31m"[0m[31m[0m,
+  [31m[1;31m"[0m[31mdependsOn[1;31m"[0m[31m[0m=>[[31m[1;31m"[0m[31mnsgs-linked-template[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mgateway-nsgs-linked-template[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mvnets-linked-template[1;31m"[0m[31m[0m],
+  [31m[1;31m"[0m[31mproperties[1;31m"[0m[31m[0m=>
+   {[31m[1;31m"[0m[31mmode[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mincremental[1;31m"[0m[31m[0m,
+    [31m[1;31m"[0m[31mtemplateLink[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31muri[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31mhttps://raw.githubusercontent.com/chudsonwr/arm_templates/master/networks/gateway_subnets.json[1;31m"[0m[31m[0m, [31m[1;31m"[0m[31mcontentVersion[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m1.0.0.0[1;31m"[0m[31m[0m},
+    [31m[1;31m"[0m[31mparameters[1;31m"[0m[31m[0m=>
+     {[31m[1;31m"[0m[31mvNetName[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNetName')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mvNet[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('vNet')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31msubnets_array[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('subnets_array')][1;31m"[0m[31m[0m},
+      [31m[1;31m"[0m[31mlocation[1;31m"[0m[31m[0m=>{[31m[1;31m"[0m[31mvalue[1;31m"[0m[31m[0m=>[31m[1;31m"[0m[31m[parameters('location')][1;31m"[0m[31m[0m}}}}]

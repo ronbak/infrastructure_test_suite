@@ -78,7 +78,8 @@ class Provisioner
       complete_deployment: @opts[:complete_deployment], 
       rules_template: @opts[:rules],
       skip_deploy: @opts[:skip_deploy],
-      output: @opts[:output]
+      output: @opts[:output],
+      prep_templates: @opts[:prep_templates]
     }
     deployer = WRAzureDeployer.new(options).process_deployment()
   end
@@ -111,6 +112,9 @@ def parse_args(args)
     opts.on("--skip_deploy", "Skips the main deployment step, useful for testing or validating configs", "true or false.") do |skip_deploy|
       @options.skip_deploy = skip_deploy
     end
+    opts.on("--prep_templates", "Uploads linked templates to Azure Storage", "true or false.") do |prep_templates|
+      @options.prep_templates = prep_templates
+    end
     opts.on('-o', '--output PATH', 'Outputs the created ARM Template to the parth specified and does not run the deployment') do |output|
       @options.output = output
     end 
@@ -133,6 +137,7 @@ if __FILE__ == $PROGRAM_NAME
   @options.complete_deployment = false
   @options.rules = nil
   @options.skip_deploy = false
+  @options.prep_templates = false
   parse_args(ARGV)
 
   provisioner = Provisioner.new(@options.to_h())

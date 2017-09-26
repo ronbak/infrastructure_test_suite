@@ -1,7 +1,7 @@
 {
   "environments": {
     "global": {
-      "arm_template": "https://raw.githubusercontent.com/chudsonwr/arm_templates/master/networks/networking_master.json"
+      "arm_template": "https://source.worldremit.com/chris/arm_templates_secure/raw/master/networks/networking_master.json"
     },
     "dev": {
       "resource_group_name": "armRubyVNetTest2",

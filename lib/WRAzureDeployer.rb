@@ -3,11 +3,12 @@ require_relative 'WRAzureCredentials'
 require_relative 'WRAzureResourceManagement'
 require_relative 'CSRELogger'
 require_relative 'WRAzureNsgRulesMgmt'
+require_relative 'WRAzureTemplateManagement'
 require 'pry-byebug'
 
 class WRAzureDeployer
 
-  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil)
+  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil, prep_templates: false)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
@@ -25,12 +26,14 @@ class WRAzureDeployer
     @parameters = parameters
     @skip_deploy = skip_deploy
     @output = output
+    @prep_templates = prep_templates
   end
 
   # Main orchestration method
   def process_deployment()
     case @action
     when 'deploy'
+      prepare_linked_templates() if @prep_templates
       @csrelog.info("Deploying to resource group: #{@rg_name}")
       deployment_name = deploy()
       deploy_status(deployment_name)
@@ -55,6 +58,10 @@ class WRAzureDeployer
       deployment_name = run_deployment(@template, @complete_deployment)
       deploy_status(deployment_name) unless @action == 'output'
     end
+  end
+
+  def prepare_linked_templates()
+    @template = WRAzureTemplateManagement.new(@template, @environment, @csrelog).process_templates()
   end
 
   def add_rules_to_exisitng_template()

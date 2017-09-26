@@ -84,14 +84,31 @@ def caesar_cipher(s, step: 1, decrypt: false)
   return process_str
 end
 
-def get_data_from_url(url)
+def retrieve_from_internet_anonymous(url)
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port, nil)
   https.use_ssl = true
   https.verify_mode = OpenSSL::SSL::VERIFY_NONE
   req = Net::HTTP::Get.new(uri.request_uri)
   res = https.request(req)
-  return res
+  return res.body
+end
+
+def convert_git_raw_to_api(url)
+  github_api_url = 'https://api.github.com/repos'
+  github_raw_url = 'https://raw.githubusercontent.com'
+  if url[0..32] == github_raw_url
+    url.sub! github_raw_url, github_api_url
+    url.sub! url.split(github_api_url)[-1].split('/')[3], 'contents'
+    return url
+  elsif url[0..27] == github_api_url
+    return url
+  else
+    @csrelog.error("We couldn't convert the url supplied to use GitHub api. 
+      #{url}
+      Please use either a github api url or a github raw.usercontent url")
+    #exit 1
+  end
 end
 
 def retrieve_from_github_api(url, access_token)
@@ -102,6 +119,19 @@ def retrieve_from_github_api(url, access_token)
   https.verify_mode = OpenSSL::SSL::VERIFY_PEER
   req = Net::HTTP::Get.new(uri.request_uri)
   req['Authorization'] = "token #{access_token}"
+  req['Accept'] = 'application/vnd.github.v3.raw'
+  res = https.request(req)
+  return res.body
+end
+
+def retrieve_from_gitlab_api(url, access_token)
+  uri = URI(url)
+  https = Net::HTTP.new(uri.host, uri.port)
+  https.use_ssl = true
+  https.open_timeout = 5
+  https.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  req = Net::HTTP::Get.new(uri.request_uri)
+  req['PRIVATE-TOKEN'] = "#{access_token}"
   req['Accept'] = 'application/vnd.github.v3.raw'
   res = https.request(req)
   return res.body

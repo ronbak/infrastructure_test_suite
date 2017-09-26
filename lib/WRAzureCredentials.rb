@@ -9,13 +9,15 @@ class WRAzureCredentials
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
-		environment = wrenvironmentdata(options[:environment])['name']
+		environment = 'dev'
+		environment = wrenvironmentdata(options[:environment])['name'] unless options[:environment].nil?
 		metadata = wrmetadata()
 		@client_id = options[:client_id]
 		@client_id = determine_client_id(environment) if @client_id.nil?
 		@tenant_id = metadata[environment]['tenant_id']
 		@azure_creds_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
 		@github_pac_file = "#{ENV['HOME']}/git_ruby_pac"
+		@gitlab_token_file = "#{ENV['HOME']}/gitlab_ruby_token"
 		@client_secret = get_client_secret()
 	end
 
@@ -40,14 +42,30 @@ class WRAzureCredentials
 			return ENV['GIT_ACCESS_TOKEN']
 		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@github_pac_file )
 			@csrelog.debug("found a creds file, attempting to decrypt the info")
-			return decrypt(File.read(@github_pac_file ))
+			return decrypt(File.read(@github_pac_file))
 		else
 			@csrelog.info("No Git PAC found")
 			@csrelog.info("Please set the Git PAC in the environment variable 'GIT_ACCESS_TOKEN' or add below")
 			puts 'Please paste your secret here:'
 			secret = gets.chomp
-			write_creds_file(secret, @github_pac_file )
-			return decrypt(File.read(@github_pac_file ))
+			write_creds_file(secret, @github_pac_file)
+			return decrypt(File.read(@github_pac_file))
+		end
+  end
+
+  def get_gitlab_access_token()
+  	if ENV['GITLAB_ACCESS_TOKEN']
+			return ENV['GITLAB_ACCESS_TOKEN']
+		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@gitlab_token_file )
+			@csrelog.debug("found a creds file, attempting to decrypt the info")
+			return decrypt(File.read(@gitlab_token_file))
+		else
+			@csrelog.info("No Gitlab token found")
+			@csrelog.info("Please set the Gitlab token in the environment variable 'GITLAB_ACCESS_TOKEN' or add below")
+			puts 'Please paste your secret here:'
+			secret = gets.chomp
+			write_creds_file(secret, @gitlab_token_file)
+			return decrypt(File.read(@gitlab_token_file))
 		end
   end
 
