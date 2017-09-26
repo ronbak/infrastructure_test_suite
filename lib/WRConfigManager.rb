@@ -67,6 +67,10 @@ class WRConfigManager
     parse_config(@config['environments']['global']['arm_template'])
   end
 
+  def rules()
+    @config.dig('environments', 'global', 'arm_template_rules')
+  end
+
   def config()
     @config
   end

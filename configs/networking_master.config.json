@@ -1,7 +1,11 @@
 {
   "environments": {
     "global": {
-      "arm_template": "https://source.worldremit.com/chris/arm_templates_secure/raw/master/networks/networking_master.json"
+      "arm_template": "https://source.worldremit.com/chris/arm_templates_secure/raw/master/networks/networking_master.json",
+      "arm_template_rules": [
+        "https://source.worldremit.com/chris/arm_templates_secure/raw/master/networks/nsg_rules/nsg_rules_private.json",
+        "https://source.worldremit.com/chris/arm_templates_secure/raw/master/networks/nsg_rules/nsg_rules_publicclient.json"
+        ]
     },
     "dev": {
       "resource_group_name": "armRubyVNetTest2",

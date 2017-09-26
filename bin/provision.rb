@@ -63,10 +63,7 @@ class Provisioner
   def provision()
     @csrelog.debug(@opts[:config])
     config_manager = WRConfigManager.new(config: @opts[:config])
-    # config_manager.client_name
-    # config_manager.rg_name(environment)
-    # config_manager.parameters()
-    # config_manager.template
+    @opts[:rules] = config_manager.rules if config_manager.rules
     @csrelog.debug(@opts[:environment].to_s)
     if @opts[:complete_deployment] then @csrelog.info("Running deployment in 'Complete' mode, let's hope you meant that!!!") end
     options = {
