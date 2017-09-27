@@ -10,6 +10,8 @@
 
 - Works with authenticated GitHub or GitLab
 
+- Provides automated infrastructure testing in Azure (under construction)
+
 ## Prerequisites
 
 - Shell (BASH), Ruby.
