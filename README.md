@@ -19,13 +19,13 @@
 ### Deploy
 
   Main script takes command line arguments:-  
-  * --action  (deploy,delete,output)
-  * --config  (path or URL to config file)
-  * --environment  (dev,prd)
-  * --complete (deployment mode, boolean switch) - optional
-  * --prep_templates (upload any linked templates to Azure Storage, boolean switch) - optional
-  * --output (path to save built template and params to) - optional
-  * --rules (specify path to an arm template with rules) - optional
+  * `--action`  (deploy,delete,output)
+  * `--config`  (path or URL to config file)
+  * `--environment`  (dev,prd)
+  * `--complete` (deployment mode, boolean switch) - optional
+  * `--prep_templates` (upload any linked templates to Azure Storage, boolean switch) - optional
+  * `--output` (path to save built template and params to) - optional
+  * `--rules` (specify path to an arm template with rules) - optional
   
   Examples
 
@@ -51,7 +51,7 @@
   `--environment` - Required  
   Refers to elements specified within the config file as well as which Azure subscription to deploy to based on metadata file [here.](https://source.worldremit.com/chris/infrastructure_test_suite/blob/master/metadata/metadata.json#L22-29)  
 
-  `--complete` - Optional
+  `--complete` - Optional  
   Sets the Azure deployment mode to complete (rather than Incremental). Be careful with this setting as any resources not explicitly specified in the template being deployed will be removed from the resoure group. When deploying to prod this SHOULD be set to `--complete` as all resources should only ever be deployed via a pipeline/with a template. If you're not sure what you're doing leave this setting off.  
 
   `--prep_templates` - Optional  
@@ -143,7 +143,7 @@
     {
       "apiVersion": "2016-09-01",
       "type": "Microsoft.Network/networkSecurityGroups/securityRules",
-      "name": "sql-from-privpartner",
+      "name": "sql-from-publicclient",
       "location": "",
       "properties": {
         "description": "Rule to allow SQL in to private subnet from publicclient",
@@ -186,7 +186,7 @@
 {
   "apiVersion": "2016-09-01",
   "type": "Microsoft.Network/networkSecurityGroups/securityRules",
-  "name": "dev_private-nsg/sql-from-privpartner",
+  "name": "dev_private-nsg/sql-from-publicclient",
   "location": "",
   "properties": {
     "description": "Rule to allow SQL in to private subnet from publicclient in dev",
