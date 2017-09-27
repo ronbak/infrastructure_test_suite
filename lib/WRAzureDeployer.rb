@@ -6,26 +6,36 @@ require_relative 'WRAzureNsgRulesMgmt'
 require_relative 'WRAzureTemplateManagement'
 require 'pry-byebug'
 
+# Main orchestration class for building the deployment object and sending to Azure
 class WRAzureDeployer
 
-  def initialize(action: nil, environment: nil, client_name: nil, resource_group_location: 'WestEurope', rg_name: nil, parameters: nil, template: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil, prep_templates: false)
+  def initialize(action: nil, config_manager: nil, environment: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil, prep_templates: false)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
+    # Boolean deployment mode switch
     @complete_deployment = complete_deployment
     @environment = wrenvironmentdata(environment)['name']
-    options = {environment: @environment, client_name: client_name}
+    # Setup credentials object
+    options = {environment: @environment}
     @credentials = WRAzureCredentials.new(options).authenticate()
-    @client = WRAzureResourceManagement.new(environment: @environment, client_name: client_name)
-    #@client.subscription_id = wrmetadata()[@environment]['subscription_id']
+    # Setup Resource Manager object
+    @client = WRAzureResourceManagement.new(environment: @environment)
     @action = action
-    @resource_group_location = resource_group_location
-    @rg_name = rg_name
-    @template = template
+    @config_manager = config_manager
+    @rg_name = @config_manager.rg_name(@environment)
+    @template = @config_manager.template()
     @rules_template = rules_template
-    @parameters = parameters
+    @parameters = @config_manager.parameters()
+    # Merges environment specific parameters from the configuration object
+    @parameters = add_environment_values()
+    # Sets location if it exists in the parameters object
+    @resource_group_location = @config_manager.parameters.dig('location', 'value')
+    @resource_group_location = 'WestEurope' if @resource_group_location.nil?
+    # bool
     @skip_deploy = skip_deploy
     @output = output
+    # bool
     @prep_templates = prep_templates
   end
 
@@ -33,15 +43,21 @@ class WRAzureDeployer
   def process_deployment()
     case @action
     when 'deploy'
+      # Upload any linked templates in provided template to Azure Storage and updatelinked URl's
       prepare_linked_templates() if @prep_templates
       @csrelog.info("Deploying to resource group: #{@rg_name}")
+      # Run the dpeloyment
       deployment_name = deploy()
+      # Check status of deployment
       deploy_status(deployment_name)
     when 'delete'
       @csrelog.info("Deleting the resource group and all it's resources: #{@rg_name}")
+      # Deletes the entire Resource Group
       delete_rg()
     when 'output'
+      # Creates everything required for a deployment and saves the output (template and paramns files) without actually deploying. 
       @csrelog.info("Building deployment object and saving to #{@output}")
+      prepare_linked_templates() if @prep_templates
       deployment_name = deploy()
     end
   end
@@ -52,43 +68,29 @@ class WRAzureDeployer
       # ensure the resource group is created
       @csrelog.debug("Creating or updating the resource group: #{@rg_name}") unless @action == 'output'
       @client.create_resource_group(@resource_group_location, @rg_name) unless @action == 'output'
+      # If separate rules templates have been specified inject them to the master template.
       if @rules_template
-        add_rules_to_exisitng_template()
+        add_rules_to_existing_template()
       end
+      # Builds the deployment object and passes to Azure API
       deployment_name = run_deployment(@template, @complete_deployment)
+      # Checks the status of the deployment
       deploy_status(deployment_name) unless @action == 'output'
     end
   end
 
-  def prepare_linked_templates()
-    @template = WRAzureTemplateManagement.new(@template, @environment, @csrelog).process_templates()
-  end
-
-  def add_rules_to_exisitng_template()
-    #binding.pry
-    # build the rules resourecs
-    rules_expanded_resources = build_rules_template(@parameters, @rules_template)
-    # add dependsOn to each rule resource
-    base_resources = []
-    @template['resources'].each do |resource|
-      base_resources << resource['name']
-    end
-    rules_expanded_resources.each do |rules_resource|
-      rules_resource['dependsOn'] = base_resources
-    end
-    # add rules resources to existing template
-    @template['resources'] += rules_expanded_resources
-  end
-
   def run_deployment(template, complete_deployment = false)
     @csrelog.debug("Creating the deployment object")
+    # Builds the deployment object
     deployment = build_deployment_object(template, complete_deployment)
     @csrelog.debug(deployment)
-
+    # Creates a unique name for this deployment to track in Azure
     deployment_name = create_deployment_name()
     @csrelog.debug("Deployment name: #{deployment_name}")
+    #If an output path has been specified, save the template and params
     output_deployment_object(@output, deployment) if @output
 
+    # Create a new thread and pass the deployment to Azure API
     @csrelog.debug("Creating a new thread for the deployment")
     unless @action == 'output'
       t1 = Thread.new {
@@ -107,12 +109,9 @@ class WRAzureDeployer
     return deployment_name
   end
 
-  def build_rules_template(parameters, base_template)
-    WRAzureNsgRulesMgmt.new(parameters, base_template, @csrelog).process_rules
-  end
-
+  # Retrieves deployment status from Azure, runs as long as deployment is running. 
   def deploy_status(deployment_name)
-      unless deployment_name.nil?
+    unless deployment_name.nil?
       begin
         x = @client.get_deployment_status(@rg_name, deployment_name)
         while x == "Running"
@@ -144,17 +143,45 @@ class WRAzureDeployer
     deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Incremental
     deployment.properties.mode = Azure::ARM::Resources::Models::DeploymentMode::Complete if complete_deployment
     @csrelog.debug(deployment.properties.mode)
-    @parameters = add_environment_value()
     deployment.properties.parameters = @parameters
     deployment.properties.template = template
     return deployment
   end
 
-  def add_environment_value()
+  def add_environment_values()
+    # Adds environment to params object if it exists in the template parameters required list
     @parameters['environment'] = { "value" => @environment } if @template.dig('parameters', 'environment')
+    # Merges the environment specific and default parameters from the configuration file
+    @parameters = @parameters.deep_merge(@config_manager.environments[@environment]['parameters'])
     @parameters
   end
 
+  # Uploads any linked templates to Azure Storage and updates master template URL and adds SAS token. 
+  def prepare_linked_templates()
+    @template = WRAzureTemplateManagement.new(@template, @environment, @csrelog).process_templates()
+  end
+
+  def add_rules_to_existing_template()
+    # build the rules resources
+    rules_expanded_resources = build_rules_template(@parameters, @rules_template)
+    # add dependsOn to each rule resource
+    base_resources = []
+    @template['resources'].each do |resource|
+      base_resources << resource['name']
+    end
+    rules_expanded_resources.each do |rules_resource|
+      rules_resource['dependsOn'] = base_resources
+    end
+    # add rules resources to existing template
+    @template['resources'] += rules_expanded_resources
+  end
+
+  # Cycles through any rules in and creates them for each subnet in the subnet_array parameter
+  def build_rules_template(parameters, base_template)
+    WRAzureNsgRulesMgmt.new(parameters, base_template, @csrelog).process_rules
+  end
+
+  # Takes the final template and parameters objects and writes them to files
   def output_deployment_object(file_path, deployment_object)
     output_params_hash = {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
@@ -173,23 +200,23 @@ class WRAzureDeployer
     end
   end
 
-  def get_params(string) 
-    if uri?(string)
-      obj = get_data_from_url(string).body
-    else
-      obj = File.read(string)
-    end
-    return JSON.parse(obj)["parameters"]
-  end
+  # def get_params(string) 
+  #   if uri?(string)
+  #     obj = get_data_from_url(string).body
+  #   else
+  #     obj = File.read(string)
+  #   end
+  #   return JSON.parse(obj)["parameters"]
+  # end
 
-  def get_json_object(string)
-    if uri?(string)
-      obj = get_data_from_url(string).body
-    else
-      obj = File.read(string)
-    end
-    return JSON.parse(obj)
-  end
+  # def get_json_object(string)
+  #   if uri?(string)
+  #     obj = get_data_from_url(string).body
+  #   else
+  #     obj = File.read(string)
+  #   end
+  #   return JSON.parse(obj)
+  # end
 
   def delete_rg()
     @csrelog.debug(@rg_name)

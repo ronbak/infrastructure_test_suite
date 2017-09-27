@@ -5,12 +5,12 @@ require 'pry-byebug'
 
 class WRAzureResourceManagement
 
-	def initialize(environment: nil, client_name: nil)
+	def initialize(environment: nil)
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
     @environment = wrenvironmentdata(environment)['name']
-		options = {environment: @environment, client_name: client_name}
+		options = {environment: @environment}
 		@credentials = WRAzureCredentials.new(options).authenticate()
 		@rg_client = Azure::ARM::Resources::ResourceManagementClient.new(@credentials)
 		@rg_client.subscription_id = wrmetadata()[@environment]['subscription_id']

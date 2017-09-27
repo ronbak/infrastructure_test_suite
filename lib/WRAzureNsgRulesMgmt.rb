@@ -2,20 +2,38 @@ require 'json'
 require_relative 'WRConfigManager'
 require 'pry-byebug'
 
+# Builds rules resources based on input template
 class WRAzureNsgRulesMgmt
 
-  def initialize(parameters, templates_string, csrelogger)
+  def initialize(parameters, templates_array, csrelogger)
+    # Sanitize params input to hash
     @parameters = WRConfigManager.new(config: parameters).config
     # @template = WRConfigManager.new(config: template).config
     # @template_string = template
     @csrelog = csrelogger
-    @base_resources = retrieve_resources(templates_string)
+    # Create hash of base rule set
+    @base_resources = retrieve_resources(templates_array)
+    # Check whether sourec or dest address inputs are valid
     verify_resources_params(@base_resources)
+    # create hashes for each environment and subnets
     define_subnets(@parameters)
   end
 
-  def retrieve_resources(templates_string)
-    templates_files = list_template_files(templates_string)
+  # Create Array of populated rules for every subnet/NSG
+  def process_rules()
+    resources = []
+    @base_resources.each do |base_rule|
+      @landscapes.each do |subnet, data|
+        rule = update_rule_object(subnet, Marshal::load(Marshal.dump(base_rule)), subnet)
+        resources << rule
+      end
+    end
+    return resources
+  end
+
+  # build an array of rules resources from all the base rule templates supplied. 
+  def retrieve_resources(templates_array)
+    templates_files = list_template_files(templates_array)
     resources_array = []
     if templates_files.nil?
       @csrelog.fatal("There are no JSON rules templates to process")
@@ -28,14 +46,18 @@ class WRAzureNsgRulesMgmt
     return resources_array.uniq
   end
 
-  def list_template_files(templates_string)
-    return templates_string if templates_string.is_a? Array
-    return [templates_string] if File.file?(templates_string)
-    templates_string += '/' unless templates_string[-1] == '/'
-    return Dir["#{templates_string}*"] if File.directory?(templates_string)
-    return templates_string.split(' ') if templates_string.include?(' ')
+  # Sanitize input to be an array of templates
+  def list_template_files(templates_array)
+    return templates_array if templates_array.is_a? Array
+    return [templates_array] if File.file?(templates_array)
+    if File.directory?(templates_array)
+      templates_array += '/' unless templates_array[-1] == '/'
+      return Dir["#{templates_array}*"] 
+    end
+    return templates_array.split(' ') if templates_array.include?(' ')
   end
 
+  # create subnets hashes to iterate over or refer to for input rules
   def define_subnets(parameters)
     @priv_subnets = {}
     @privpart_subnets = {}
@@ -56,6 +78,7 @@ class WRAzureNsgRulesMgmt
     end
   end
 
+  # checks to ensure any addresses referenced are valid
   def verify_resources_params(resources)
     subnet_names_array = list_all_subnet_names(@parameters)
     resources.each do |resource|
@@ -88,6 +111,7 @@ class WRAzureNsgRulesMgmt
     end
   end
 
+  # creates array of all subnets to create rules for
   def list_all_subnet_names(parameters)
     subnet_names = []
     parameters['vNet']['value']['landscapes'].each do |landscape, data|
@@ -98,6 +122,7 @@ class WRAzureNsgRulesMgmt
     return subnet_names.uniq
   end
 
+  # retrieves the actual address prefix in CIDR notation for the given subnet and environment
   def retrieve_subnet_prefix(subnet, env)
     case subnet.downcase
     when 'private'
@@ -117,12 +142,14 @@ class WRAzureNsgRulesMgmt
     end
   end
   
+  # Updates the built rule with the correct values  
   def update_rule_object(subnet, new_rule, env)
     new_rule = update_rule_name(subnet, new_rule)
     new_rule = update_rule_addr_prefixes(subnet, new_rule, env)
     return new_rule
   end
 
+  # Updates the address prefix to be actual subnet in CIDR notation
   def update_rule_addr_prefixes(subnet, new_rule, env)
     subnet_names_array = list_all_subnet_names(@parameters)
     new_rule['properties']['description'] += " to #{subnet}"
@@ -131,6 +158,7 @@ class WRAzureNsgRulesMgmt
     return new_rule
   end
 
+  # Updates the rule object name to ensure it is applied to the correct NSG
   def update_rule_name(subnet, new_rule)
     case new_rule['properties']['direction'].downcase
     when 'inbound'
@@ -141,15 +169,4 @@ class WRAzureNsgRulesMgmt
     return new_rule
   end
 
-  def process_rules()
-    resources = []
-    @base_resources.each do |base_rule|
-      @landscapes.each do |subnet, data|
-        rule = update_rule_object(subnet, Marshal::load(Marshal.dump(base_rule)), subnet)
-        resources << rule
-      end
-    end
-    return resources
-    #write_config_to_disk(JSON.pretty_generate(template), 'generated_rules.json')
-  end
 end

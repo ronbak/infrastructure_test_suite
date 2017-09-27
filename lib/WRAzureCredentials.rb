@@ -3,6 +3,7 @@ require 'azure_mgmt_resources'
 require_relative 'global_methods'
 require_relative 'CSRELogger'
 
+# Manages Azure credentials
 class WRAzureCredentials
 
 	def initialize (options = {})
@@ -18,70 +19,67 @@ class WRAzureCredentials
 		@azure_creds_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
 		@github_pac_file = "#{ENV['HOME']}/git_ruby_pac"
 		@gitlab_token_file = "#{ENV['HOME']}/gitlab_ruby_token"
-		@client_secret = get_client_secret()
+		@storage_account_key = "#{ENV['HOME']}/azure_ruby_storage_key_#{environment}"
+		#@client_secret = get_client_secret()
 	end
 
-	def get_client_secret()
-		if ENV['AZURE_CLIENT_SECRET']
-			return ENV['AZURE_CLIENT_SECRET']
-		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@azure_creds_file)
-			@csrelog.debug("found a creds file, attempting to decrypt the info")
-			return decrypt(File.read(@azure_creds_file))
+
+	# Retrieves secret
+	def retrieve_secret(env_var, encryption_key, encrypted_file)
+  	# Use ENV Var if it exists
+		if ENV[env_var]
+			return ENV[env_var]
+		# Use encrypted creds file 
+		elsif File.exist?(encryption_key) && File.exist?(encrypted_file)
+			@csrelog.debug("found a creds file #{encrypted_file}, attempting to decrypt the info")
+			return decrypt(File.read(encrypted_file))
+		# Prompt user for secret and store locally encrypted
 		else
 			@csrelog.info("No Secret Found")
-			@csrelog.info("Please set the secret in the environment variable 'AZURE_CLIENT_SECRET'")
+			@csrelog.info("Please set the secret in the environment variable #{env_var}, or paste below")
 			puts 'Please paste your secret here:'
 			secret = gets.chomp
-			write_creds_file(secret, @azure_creds_file)
-			return decrypt(File.read(@azure_creds_file))
+			write_creds_file(secret, encrypted_file)
+			return decrypt(File.read(encrypted_file))
 		end
 	end
 
+	# Retrieves secret for Azure
+	def get_client_secret()
+		return retrieve_secret('AZURE_CLIENT_SECRET', "#{ENV['HOME']}/.ssh/azure_ruby_key", @azure_creds_file)
+	end
+
+  # Retrieves secret for Git Access token (PAC)
   def get_git_access_token()
-  	if ENV['GIT_ACCESS_TOKEN']
-			return ENV['GIT_ACCESS_TOKEN']
-		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@github_pac_file )
-			@csrelog.debug("found a creds file, attempting to decrypt the info")
-			return decrypt(File.read(@github_pac_file))
-		else
-			@csrelog.info("No Git PAC found")
-			@csrelog.info("Please set the Git PAC in the environment variable 'GIT_ACCESS_TOKEN' or add below")
-			puts 'Please paste your secret here:'
-			secret = gets.chomp
-			write_creds_file(secret, @github_pac_file)
-			return decrypt(File.read(@github_pac_file))
-		end
+  	retrieve_secret('GIT_ACCESS_TOKEN', "#{ENV['HOME']}/.ssh/azure_ruby_key", @github_pac_file)
   end
-
+  
+  # Retrieves secret for GitLab access token
   def get_gitlab_access_token()
-  	if ENV['GITLAB_ACCESS_TOKEN']
-			return ENV['GITLAB_ACCESS_TOKEN']
-		elsif File.exist?("#{ENV['HOME']}/.ssh/azure_ruby_key") && File.exist?(@gitlab_token_file )
-			@csrelog.debug("found a creds file, attempting to decrypt the info")
-			return decrypt(File.read(@gitlab_token_file))
-		else
-			@csrelog.info("No Gitlab token found")
-			@csrelog.info("Please set the Gitlab token in the environment variable 'GITLAB_ACCESS_TOKEN' or add below")
-			puts 'Please paste your secret here:'
-			secret = gets.chomp
-			write_creds_file(secret, @gitlab_token_file)
-			return decrypt(File.read(@gitlab_token_file))
-		end
+  	retrieve_secret('GITLAB_ACCESS_TOKEN', "#{ENV['HOME']}/.ssh/azure_ruby_key", @gitlab_token_file)
   end
 
+  # Retrieves storage account key
+  def get_storage_account_key()
+  	retrieve_secret('AZURE_STORAGE_ACCOUNT_KEY', "#{ENV['HOME']}/.ssh/azure_ruby_key", @storage_account_key)
+  end
+
+  # Writes secret to an encrypted file
 	def write_creds_file(creds, key_file)
-		#key_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
+		# Encrypt the secret first
 		x = encrypt(creds)
 		json = 
 		open key_file, 'w' do |io| io.write x end
 	end
 
+	# Get client id for the serviec you're using to authenticate to Azure with
 	def determine_client_id(environment)
 		wrenvironmentdata(environment)['service_principal'].values[0]
 	end
 
+	# return the creds object
 	def authenticate()
-		token_provider = MsRestAzure::ApplicationTokenProvider.new(@tenant_id, @client_id, @client_secret)
+		token_provider = MsRestAzure::ApplicationTokenProvider.new(@tenant_id, @client_id, get_client_secret())
 		return MsRest::TokenCredentials.new(token_provider)
 	end
 end

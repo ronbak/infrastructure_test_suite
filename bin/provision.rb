@@ -62,22 +62,23 @@ class Provisioner
 
   def provision()
     @csrelog.debug(@opts[:config])
+    # Create the configuration object from the supplied configuration
     config_manager = WRConfigManager.new(config: @opts[:config])
+    # Use rules if specified in the config file, override command line input.
     @opts[:rules] = config_manager.rules if config_manager.rules
     @csrelog.debug(@opts[:environment].to_s)
     if @opts[:complete_deployment] then @csrelog.info("Running deployment in 'Complete' mode, let's hope you meant that!!!") end
     options = {
       action: @opts[:action].to_s, 
-      environment: @opts[:environment].to_s, 
-      rg_name: config_manager.rg_name(@opts[:environment].to_s), 
-      parameters: config_manager.parameters(), 
-      template: config_manager.template(), 
+      environment: @opts[:environment].to_s,
+      config_manager: config_manager,
       complete_deployment: @opts[:complete_deployment], 
       rules_template: @opts[:rules],
       skip_deploy: @opts[:skip_deploy],
       output: @opts[:output],
       prep_templates: @opts[:prep_templates]
     }
+    # pass options to the deployer class
     deployer = WRAzureDeployer.new(options).process_deployment()
   end
 end
@@ -99,7 +100,7 @@ def parse_args(args)
     opts.on('-r', '--rules PATH', 'NSG Rules template file path argument or JSON String') do |rules|
       @options.rules = rules
     end
-    opts.on('--environment [TYPE]', [:production, :dev, :services, :preprod, :sandbox],
+    opts.on('--environment [TYPE]', [:prd, :dev, :services, :preprod, :sandbox],
             "Environment to deploy your template in to") do |environment|
       @options.environment = environment
     end
@@ -141,7 +142,5 @@ if __FILE__ == $PROGRAM_NAME
   provisioner.provision()
 end
 
-
-
-# environment = 'dev'
-# config = '../configs/jenkins2.config
+#ruby ../bin/provision.rb --action output --environment dev --config https://source.worldremit.com/chris/infrastructure_test_suite/raw/master/configs/networking_master.config.json --complete --prep_templates --output ../../testoutput.json
+#ruby ../bin/provision.rb --action deploy --environment dev --config https://source.worldremit.com/chris/infrastructure_test_suite/raw/master/configs/networking_master.config.json --complete --prep_templates

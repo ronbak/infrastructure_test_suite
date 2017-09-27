@@ -7,7 +7,7 @@
 			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
 		},
 		"storage_account": {
-			"name": "csresa1sadevwr",
+			"name": "csresa1saprdwr",
 			"resource_group": "csresa-rg-dev-wr"
 		},
     "synonyms": ["dev", "development"],
@@ -19,14 +19,14 @@
 			}
 		}
 	},
-	"prod": {
-		"name": "prod",
+	"prd": {
+		"name": "prd",
 		"tenant_id": "dfa9e765-3904-44f4-9511-e6b031bc3894",
 		"subscription_id": "76d26251-cc91-46f7-9459-4bc76ea9a2ae",
 		"service_principal": {
 			"wr-prd-app-csre-provision": "f0c36d5f-7782-40ae-8390-faa2910b3fdb"
 		},
-		"synonyms": ["production", "prod"],
+		"synonyms": ["production", "prod", "prd"],
 		"web_clusters": {
 			"classic": {
 				"blue": {
