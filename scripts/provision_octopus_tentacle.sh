@@ -3,7 +3,7 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BF
 echo "deb http://download.mono-project.com/repo/ubuntu xenial main" | tee /etc/apt/sources.list.d/mono-official.list
 apt-get update
 apt-get install -y mono-complete
-apt-get install -y libxml2-dev libxslt1-dev
+apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev liblzma-dev
 apt-get install -y ruby-full
 gem install pry-byebug -v 3.5.0
 gem install azure -v 0.7.10

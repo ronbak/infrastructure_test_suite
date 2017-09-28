@@ -1,7 +1,10 @@
 echo 'Setting up Deployment Tool'
 echo "$(get_octopusvariable "GIT_SSH_KEY")" > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
-echo "$(get_octopusvariable "GITHUB_FINGERPRINT")" > ~/.ssh/known_hosts
+ssh-keygen -F github.com
+if [ ! $? == 0 ]; then
+  echo "$(get_octopusvariable "GITHUB_FINGERPRINT")" > ~/.ssh/known_hosts
+fi
 
 
 REPOSRC=git@github.com:chudsonwr/infrastructure_test_suite.git
