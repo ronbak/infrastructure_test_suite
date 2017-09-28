@@ -27,7 +27,7 @@
 			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
 		},
 		"storage_account": {
-			"name": "csresa1saprdwr",
+			"name": "csresa1sadevwr",
 			"resource_group": "csresa-rg-dev-wr"
 		},
     "synonyms": ["core", "core-infra", "coreinfrastructure", "infra"]
