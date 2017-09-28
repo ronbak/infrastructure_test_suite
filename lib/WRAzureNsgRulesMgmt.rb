@@ -63,6 +63,7 @@ class WRAzureNsgRulesMgmt
     @privpart_subnets = {}
     @pubcli_subnets = {}
     @pubpart_subnets = {}
+    @pub_subnets = {}
     @gateway_subnets = {}
     @core_subnets = {}
     parameters['vNet']['value']['landscapes']['core']['subnets'].each { |name, subnet| @core_subnets[name] = subnet } if parameters['vNet']['value']['landscapes'].dig('core', 'subnets')
@@ -71,10 +72,18 @@ class WRAzureNsgRulesMgmt
       @privpart_subnets[value['name']] = value['subnets']['privatepartner'] if value['subnets']['privatepartner']
       @pubcli_subnets[value['name']] = value['subnets']['publicclient'] if value['subnets']['publicclient']
       @pubpart_subnets[value['name']] = value['subnets']['publicpartner'] if value['subnets']['publicpartner']
+      @pub_subnets[value['name']] = value['subnets']['public'] if value['subnets']['public']
       @gateway_subnets[value['name']] = value['subnets']['GatewaySubnet'] if value['subnets']['GatewaySubnet']
     end
     @landscapes = parameters['vNet']['value']['landscapes'].select do |landscape, value| 
       value['subnets']['private'] && value['subnets']['privatepartner'] && value['subnets']['publicclient'] && value['subnets']['publicpartner']
+    end
+    # This could be a params file for a core network, i.e. 
+    # it does not have all of publicclient, publicpartner, private and privatepartner, if so create all landscapes that are not Gateway
+    if @landscapes.empty?
+      @landscapes = parameters['vNet']['value']['landscapes'].select do |landscape, value| 
+         !value['subnets']['GatewaySubnet']
+      end
     end
   end
 
@@ -129,6 +138,8 @@ class WRAzureNsgRulesMgmt
       return @priv_subnets[env]
     when 'privatepartner'
       return @privpart_subnets[env]
+    when 'public'
+      return @pub_subnets[env]
     when 'publicclient'
       return @pubcli_subnets[env]
     when 'publicpartner'
