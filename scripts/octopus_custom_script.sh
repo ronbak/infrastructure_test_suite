@@ -1,7 +1,8 @@
 echo 'Setting up Deployment Tool'
 echo "$(get_octopusvariable "GIT_SSH_KEY")" > ~/.ssh/id_rsa
-# rm -rf ./infrastructure_test_suite
-# git clone git@github.com:chudsonwr/infrastructure_test_suite.git
+chmod 600 ~/.ssh/id_rsa
+echo "$(get_octopusvariable "GITHUB_FINGERPRINT")" > ~/.ssh/known_hosts
+
 
 REPOSRC=git@github.com:chudsonwr/infrastructure_test_suite.git
 LOCALREPO=~/infrastructure_test_suite

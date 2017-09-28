@@ -34,10 +34,14 @@
 	},
 	"prd": {
 		"name": "prd",
-		"tenant_id": "dfa9e765-3904-44f4-9511-e6b031bc3894",
-		"subscription_id": "76d26251-cc91-46f7-9459-4bc76ea9a2ae",
+		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
+		"subscription_id": "520d638a-7b1b-4143-a625-fcf6e0f59fcf",
 		"service_principal": {
-			"wr-prd-app-csre-provision": "f0c36d5f-7782-40ae-8390-faa2910b3fdb"
+			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
+		},
+		"storage_account": {
+			"name": "csresa1saprdwr",
+			"resource_group": "csresa-rg-dev-wr"
 		},
 		"synonyms": ["production", "prod", "prd"],
 		"web_clusters": {
