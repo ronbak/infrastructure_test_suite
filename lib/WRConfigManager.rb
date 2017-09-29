@@ -80,7 +80,10 @@ class WRConfigManager
   end
 
   def rg_name(env)
-    @config['environments'][env.to_s]['resource_group_name']
+    return @config['environments'][env.to_s]['resource_group_name'] unless @config['environments'].dig(env.to_s).nil?
+    @csrelog.fatal("The environment specified at the CLI (#{env}), does not exist in the config file supplied
+      #{JSON.pretty_generate(config())}")
+    exit 1
   end
 
 

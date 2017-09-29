@@ -4,6 +4,7 @@ require_relative 'WRAzureResourceManagement'
 require_relative 'CSRELogger'
 require_relative 'WRAzureNsgRulesMgmt'
 require_relative 'WRAzureTemplateManagement'
+require_relative 'WRSubnetsArrayBuilder'
 require 'pry-byebug'
 
 # Main orchestration class for building the deployment object and sending to Azure
@@ -29,6 +30,8 @@ class WRAzureDeployer
     @parameters = @config_manager.parameters()
     # Merges environment specific parameters from the configuration object
     @parameters = add_environment_values()
+    # Builds subnets_array if specified in the params section
+    @parameters = build_subnets_array()
     # Sets location if it exists in the parameters object
     @resource_group_location = @config_manager.parameters.dig('location', 'value')
     @resource_group_location = 'WestEurope' if @resource_group_location.nil?
@@ -154,6 +157,11 @@ class WRAzureDeployer
     # Merges the environment specific and default parameters from the configuration file
     @parameters = @parameters.deep_merge(@config_manager.environments[@environment]['parameters'])
     @parameters
+  end
+  
+  # builds an array of all subnets if required
+  def build_subnets_array()
+    WRSubnetsArrayBuilder.new(@parameters, @environment, @csrelog).parameters
   end
 
   # Uploads any linked templates to Azure Storage and updates master template URL and adds SAS token. 

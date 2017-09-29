@@ -65,7 +65,7 @@ class WRAzureTemplateManagement
     # If resource is a container, remove the last part (which is the filename)
     path = path.split('/').reverse.drop(1).reverse.join('/') if resource == 'c'
     canonicalizedResource = "/#{@storage_account}/#{path}"
-    wms_api_key = WRAzureCredentials.new().get_storage_account_key
+    wms_api_key = WRAzureCredentials.new(environment: @environment).get_storage_account_key
     stringToSign  = []
     stringToSign << permissions
     stringToSign << start

@@ -11,7 +11,7 @@ class WRAzureStorageManagement
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
     @environment = wrenvironmentdata(environment)['name']
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
-    @storage_access_key = WRAzureCredentials.new().get_storage_account_key
+    @storage_access_key = WRAzureCredentials.new(environment: environment).get_storage_account_key
     Azure.config.storage_account_name = wrmetadata()[@environment]['storage_account']['name']
     Azure.config.storage_access_key = @storage_access_key
     @storage_rg = wrmetadata()[@environment]['storage_account']['resource_group']
