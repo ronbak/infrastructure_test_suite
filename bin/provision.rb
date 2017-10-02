@@ -7,6 +7,7 @@ require_relative '../lib/WRAzureCredentials'
 require_relative '../lib/WRAzureDeployer'
 require_relative '../lib/WRConfigManager'
 require_relative '../lib/CSRELogger'
+require_relative '../lib/WRResourceGroupsManagement'
 
 
 # Shim for launching the WRAzureDeployer class from the command line
@@ -21,7 +22,7 @@ class Provisioner
   end
 
   def self.actions
-    return ['deploy', 'delete', 'output']
+    return ['deploy', 'delete', 'output', 'deploy_resource_groups']
   end
 
   def supported_action(action)
@@ -61,25 +62,29 @@ class Provisioner
   end
 
   def provision()
-    @csrelog.debug(@opts[:config])
-    # Create the configuration object from the supplied configuration
-    config_manager = WRConfigManager.new(config: @opts[:config])
-    # Use rules if specified in the config file, override command line input.
-    @opts[:rules] = config_manager.rules if config_manager.rules
-    @csrelog.debug(@opts[:environment].to_s)
-    if @opts[:complete_deployment] then @csrelog.info("Running deployment in 'Complete' mode, let's hope you meant that!!!") end
-    options = {
-      action: @opts[:action].to_s, 
-      environment: @opts[:environment].to_s,
-      config_manager: config_manager,
-      complete_deployment: @opts[:complete_deployment], 
-      rules_template: @opts[:rules],
-      skip_deploy: @opts[:skip_deploy],
-      output: @opts[:output],
-      prep_templates: @opts[:prep_templates]
-    }
-    # pass options to the deployer class
-    deployer = WRAzureDeployer.new(options).process_deployment()
+    if @opts[:action] == 'deploy_resource_groups'
+      WRResourceGroupsManagement.new(config: @opts[:config], location: @opts[:location]).process_groups
+    else
+      @csrelog.debug(@opts[:config])
+      # Create the configuration object from the supplied configuration
+      config_manager = WRConfigManager.new(config: @opts[:config])
+      # Use rules if specified in the config file, override command line input.
+      @opts[:rules] = config_manager.rules if config_manager.rules
+      @csrelog.debug(@opts[:environment].to_s)
+      if @opts[:complete_deployment] then @csrelog.info("Running deployment in 'Complete' mode, let's hope you meant that!!!") end
+      options = {
+        action: @opts[:action].to_s, 
+        environment: @opts[:environment].to_s,
+        config_manager: config_manager,
+        complete_deployment: @opts[:complete_deployment], 
+        rules_template: @opts[:rules],
+        skip_deploy: @opts[:skip_deploy],
+        output: @opts[:output],
+        prep_templates: @opts[:prep_templates]
+      }
+      # pass options to the deployer class
+      deployer = WRAzureDeployer.new(options).process_deployment()
+    end
   end
 end
 
@@ -115,7 +120,10 @@ def parse_args(args)
     end
     opts.on('-o', '--output PATH', 'Outputs the created ARM Template to the parth specified and does not run the deployment') do |output|
       @options.output = output
-    end 
+    end
+    opts.on('-l', '--location PATH', 'Azure region to deploy to') do |location|
+      @options.location = location
+    end
   end
 
   opt_parser.parse!(args)
@@ -136,6 +144,7 @@ if __FILE__ == $PROGRAM_NAME
   @options.rules = nil
   @options.skip_deploy = false
   @options.prep_templates = false
+  @options.location = 'WestEurope'
   parse_args(ARGV)
 
   provisioner = Provisioner.new(@options.to_h())

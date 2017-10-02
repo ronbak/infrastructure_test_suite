@@ -65,11 +65,6 @@ class WRResourceGroupsManagement
       rm_client = create_azure_rm_client(subscription) if rm_client.nil?
       rm_client = create_azure_rm_client(subscription) unless rm_client.subscription_id == wrenvironmentdata(subscription)['subscription_id']
       @csrelog.info("Creating resource group: #{tags_hash['name']}")
-      tags_hash['RunModel'] = 'm-f' if tags_hash['name'].include?('-dev-')
-      @csrelog.debug('Defaulting \'RunModel\' to \'m-f\' for Dev environment') if tags_hash['name'].include?('-dev-')
-      tags_hash['RunModel'] = '247' if tags_hash['name'].include?('-prd-')
-      @csrelog.debug('Defaulting \'RunModel\' to \'247\' for Prd environment') if tags_hash['name'].include?('-prd-')
-      tags_hash['RunModel'] = @config['tags']['RunModel'] unless tags_hash['name'].include?('-dev-') || tags_hash['name'].include?('-prd-')
       create_rg(rm_client, @location, tags_hash['name'], tags_hash)
       au_client = create_azure_au_client(subscription) if au_client.nil?
       au_client = create_azure_au_client(subscription) unless au_client.subscription_id == wrenvironmentdata(subscription)['subscription_id']
@@ -106,6 +101,11 @@ class WRResourceGroupsManagement
     tags['name'] = "#{@name}-rg-#{environment}-wr"
     tags['environment'] = environment
     tags['location'] = @location
+    tags['RunModel'] = 'm-f' if environment == 'dev'
+    @csrelog.debug('Defaulting \'RunModel\' to \'m-f\' for Dev environment') if environment.eql?('dev')
+    tags['RunModel'] = '247' if environment == 'prd'
+    @csrelog.debug('Defaulting \'RunModel\' to \'247\' for Prd environment') if environment.eql?('prd')
+    tags['RunModel'] = @config['tags']['RunModel'] unless environment.eql?('prd') || environment.eql?('dev')
     return tags
   end
 
