@@ -1,16 +1,16 @@
 {
-	"dev": {
-		"name": "dev",
+	"nonprod": {
+		"name": "nonprod",
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
-    "subscription_id": "520d638a-7b1b-4143-a625-fcf6e0f59fcf",
+    "subscription_id": "9c255757-a7c8-4c88-8476-0d7bf926dd6a",
     "service_principal": {
-			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
+			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
 		},
 		"storage_account": {
 			"name": "csresa1saprdwr",
 			"resource_group": "csresa-rg-dev-wr"
 		},
-    "synonyms": ["dev", "development"],
+    "synonyms": ["dev", "development", "nonprod", "non-prod", "tst", "uat", "ci", "int", "ppd"],
     "web_clusters": {
 			"classic": {
 				"blue": {
@@ -22,22 +22,22 @@
 	"core": {
 		"name": "core",
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
-    "subscription_id": "520d638a-7b1b-4143-a625-fcf6e0f59fcf",
+    "subscription_id": "d6073f2a-c097-48ab-a61f-b7f158c8ad4f",
     "service_principal": {
-			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
+			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
 		},
 		"storage_account": {
 			"name": "csresa1sadevwr",
 			"resource_group": "csresa-rg-dev-wr"
 		},
-    "synonyms": ["core", "core-infra", "coreinfrastructure", "infra"]
+    "synonyms": ["core", "core-infra", "coreinfrastructure", "infra", "sharedservices", "shared-services"]
 	},
 	"prd": {
 		"name": "prd",
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
-		"subscription_id": "520d638a-7b1b-4143-a625-fcf6e0f59fcf",
+		"subscription_id": "f602e3c0-bb9d-467b-8d41-f589477956ab",
 		"service_principal": {
-			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751"
+			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
 		},
 		"storage_account": {
 			"name": "csresa1saprdwr",
@@ -68,7 +68,21 @@
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
 		"service_principals": {
 			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751",
-			"wr-prd-app-csre-provision": "f0c36d5f-7782-40ae-8390-faa2910b3fdb"
+			"wr-prd-app-csre-provision": "f0c36d5f-7782-40ae-8390-faa2910b3fdb",
+			"octopus-dev-app-wr": "bfcfffcd-51d0-43ed-a976-605e0ef5d543",
+			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
+		},
+		"rbac_roles": {
+			"cust-Contributor-no-pip-sa-rg": "b79f2c3e-9d83-450a-80e1-6302b25622a6",
+			"Reader": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
+		},
+		"landscapes": {
+			"nonprod": [
+			  "dev", "tst", "uat", "int", "ci", "ppd"
+			],
+			"prod": [
+			  "prd"
+			]
 		},
 		"naming_standards":{
 			"regexes": [
