@@ -69,8 +69,11 @@ class WRAzureDeployer
   def deploy()
     unless @skip_deploy
       # ensure the resource group is created
-      @csrelog.debug("Creating or updating the resource group: #{@rg_name}") unless @action == 'output'
-      @client.create_resource_group(@resource_group_location, @rg_name) unless @action == 'output'
+      unless @action == 'output'
+        binding.pry
+        @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags
+        @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags) if  @config_manager.tags
+      end
       # If separate rules templates have been specified inject them to the master template.
       if @rules_template
         add_rules_to_existing_template()

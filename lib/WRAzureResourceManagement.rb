@@ -16,9 +16,12 @@ class WRAzureResourceManagement
 		@rg_client.subscription_id = wrmetadata()[@environment]['subscription_id']
 	end
 
-	def create_resource_group(location, rg_name)
+	def create_resource_group(location, rg_name, tags)
 	  params = Azure::ARM::Resources::Models::ResourceGroup.new().tap do |rg|
       rg.location = location
+      tags['environment'] = @environment
+      tags['Name'] = "#{tags['Name']}-#{@environment}-wr"
+      rg.tags = tags
     end
     @rg_client.resource_groups.create_or_update(rg_name, params).properties.provisioning_state
   end

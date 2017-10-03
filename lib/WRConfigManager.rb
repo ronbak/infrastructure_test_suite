@@ -75,6 +75,10 @@ class WRConfigManager
     @config
   end
 
+  def tags()
+    @config.dig('environments', 'global', 'tags')
+  end
+
   def client_name()
     @config['environments']['global']['client_name']
   end

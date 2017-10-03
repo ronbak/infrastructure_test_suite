@@ -15,7 +15,7 @@ class WRResourceGroupsManagement
     @location = location
     @name = @config['name']
     @environment = wrenvironmentdata(environment.to_s)['name']
-    @universal = @config['universal']
+    @config['universal'] = true unless @config['universal'].eql?(false)
   end
 
   def process_groups()
