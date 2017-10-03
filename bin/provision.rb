@@ -105,7 +105,7 @@ def parse_args(args)
     opts.on('-r', '--rules PATH', 'NSG Rules template file path argument or JSON String') do |rules|
       @options.rules = rules
     end
-    opts.on('--environment [TYPE]', [:prd, :dev, :services, :preprod, :sandbox, :core, :nonprod],
+    opts.on('--environment [TYPE]', [:prd, :dev, :services, :preprod, :sandbox, :core, :nonprd],
             "Environment to deploy your template in to") do |environment|
       @options.environment = environment
     end

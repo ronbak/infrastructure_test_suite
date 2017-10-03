@@ -15,6 +15,7 @@ class WRResourceGroupsManagement
     @location = location
     @name = @config['name']
     @environment = wrenvironmentdata(environment.to_s)['name']
+    @universal = @config['universal']
   end
 
   def process_groups()
@@ -58,11 +59,12 @@ class WRResourceGroupsManagement
     return obj
   end
 
-  def list_landscapes(environment = 'nonprod')
-    wrmetadata['global']['landscapes'][environment]
+  def list_landscapes(environment = 'nonprd')
+    return wrmetadata['global']['landscapes'][environment] if @config['universal']
+    [environment]
   end
 
-  def create_rgs(subscription = 'nonprod')
+  def create_rgs(subscription = 'nonprd')
     list_landscapes(subscription).each do |landscape|
       tags_hash = create_tags_hash(Marshal::load(Marshal.dump(@config['tags'])), landscape)
       rm_client = create_azure_rm_client(subscription) if rm_client.nil?

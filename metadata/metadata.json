@@ -1,16 +1,16 @@
 {
-	"nonprod": {
-		"name": "nonprod",
+	"nonprd": {
+		"name": "nonprd",
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
     "subscription_id": "9c255757-a7c8-4c88-8476-0d7bf926dd6a",
     "service_principal": {
 			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
 		},
 		"storage_account": {
-			"name": "csresa1saprdwr",
+			"name": "awcsrenonprd01",
 			"resource_group": "csresa-rg-dev-wr"
 		},
-    "synonyms": ["dev", "development", "nonprod", "non-prod", "tst", "uat", "ci", "int", "ppd"],
+    "synonyms": ["dev", "development", "nonprod", "non-prod", "tst", "uat", "ci", "int", "ppd", "nonprd"],
     "web_clusters": {
 			"classic": {
 				"blue": {
@@ -27,7 +27,7 @@
 			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
 		},
 		"storage_account": {
-			"name": "csresa1sadevwr",
+			"name": "xycsrecore01",
 			"resource_group": "csresa-rg-dev-wr"
 		},
     "synonyms": ["core", "core-infra", "coreinfrastructure", "infra", "sharedservices", "shared-services"]
@@ -40,7 +40,7 @@
 			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
 		},
 		"storage_account": {
-			"name": "csresa1saprdwr",
+			"name": "ntcsreprd01",
 			"resource_group": "csresa-rg-dev-wr"
 		},
 		"synonyms": ["production", "prod", "prd"],
@@ -77,7 +77,7 @@
 			"Reader": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
 		},
 		"landscapes": {
-			"nonprod": [
+			"nonprd": [
 			  "dev", "tst", "uat", "int", "ci", "ppd"
 			],
 			"prd": [

@@ -16,7 +16,7 @@ class WRSubnetsArrayBuilder
   attr_reader :parameters
 
   def verify_array_required()
-    @parameters.dig('subnets_array', 'value')[0..10] == 'build_from_'
+    return @parameters.dig('subnets_array', 'value')[0..10] == 'build_from_' if @parameters.dig('subnets_array', 'value')
   end
 
   def build_array()
