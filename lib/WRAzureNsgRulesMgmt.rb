@@ -17,6 +17,8 @@ class WRAzureNsgRulesMgmt
     verify_resources_params(@base_resources)
     # create hashes for each environment and subnets
     define_subnets(@parameters)
+    # shorthand for location/region
+    binding.pry
   end
 
   # Create Array of populated rules for every subnet/NSG
@@ -173,11 +175,11 @@ class WRAzureNsgRulesMgmt
   def update_rule_name(subnet, new_rule)
     case new_rule['properties']['direction'].downcase
     when 'inbound'
-      new_rule['name'] = "#{subnet}_#{new_rule['properties']['destinationAddressPrefix']}-nsg/" + new_rule['name']
+      new_rule['name'] = "nsg01-#{subnet}-#{@parameters['location_tag']['value']}-#{new_rule['properties']['destinationAddressPrefix']}/" + new_rule['name']
     when 'outbound'
-      new_rule['name'] = "#{subnet}_#{new_rule['properties']['sourceAddressPrefix']}-nsg/" + new_rule['name']
+      new_rule['name'] = "nsg01-#{subnet}-#{@parameters['location_tag']['value']}-#{new_rule['properties']['sourceAddressPrefix']}/" + new_rule['name']
     end
     return new_rule
   end
 
-end
+end 
