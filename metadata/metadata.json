@@ -70,7 +70,7 @@
 			"armTemplateAutomation": "f03b94d9-6086-4570-808b-45b4a81af751",
 			"wr-prd-app-csre-provision": "f0c36d5f-7782-40ae-8390-faa2910b3fdb",
 			"octopus-dev-app-wr": "bfcfffcd-51d0-43ed-a976-605e0ef5d543",
-			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
+			"octopus-csre-app-wr": "2f604c38-d82c-40c0-ba6a-c852eb3273cf"
 		},
 		"rbac_roles": {
 			"cust-Contributor-no-pip-sa-rg": "b79f2c3e-9d83-450a-80e1-6302b25622a6",
