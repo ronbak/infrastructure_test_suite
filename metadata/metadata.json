@@ -80,7 +80,7 @@
 			"nonprod": [
 			  "dev", "tst", "uat", "int", "ci", "ppd"
 			],
-			"prod": [
+			"prd": [
 			  "prd"
 			],
 			"core": [
