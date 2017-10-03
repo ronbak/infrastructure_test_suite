@@ -15,7 +15,7 @@ class WRAzureCredentials
 		metadata = wrmetadata()
 		@client_id = options[:client_id]
 		@client_id = determine_client_id(environment) if @client_id.nil?
-		@tenant_id = metadata[environment]['tenant_id']
+		@tenant_id = wrenvironmentdata(environment)['tenant_id']
 		@azure_creds_file = "#{ENV['HOME']}/azure_ruby_creds_#{@tenant_id}"
 		@github_pac_file = "#{ENV['HOME']}/git_ruby_pac"
 		@gitlab_token_file = "#{ENV['HOME']}/gitlab_ruby_token"
