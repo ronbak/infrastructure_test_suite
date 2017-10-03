@@ -17,8 +17,6 @@ class WRAzureNsgRulesMgmt
     verify_resources_params(@base_resources)
     # create hashes for each environment and subnets
     define_subnets(@parameters)
-    # shorthand for location/region
-    binding.pry
   end
 
   # Create Array of populated rules for every subnet/NSG
