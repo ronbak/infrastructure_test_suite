@@ -63,7 +63,7 @@ class Provisioner
 
   def provision()
     if @opts[:action] == 'deploy_resource_groups'
-      WRResourceGroupsManagement.new(config: @opts[:config], location: @opts[:location]).process_groups
+      WRResourceGroupsManagement.new(config: @opts[:config], location: @opts[:location], environment: @opts[:environment]).process_groups
     else
       @csrelog.debug(@opts[:config])
       # Create the configuration object from the supplied configuration
@@ -105,7 +105,7 @@ def parse_args(args)
     opts.on('-r', '--rules PATH', 'NSG Rules template file path argument or JSON String') do |rules|
       @options.rules = rules
     end
-    opts.on('--environment [TYPE]', [:prd, :dev, :services, :preprod, :sandbox, :core],
+    opts.on('--environment [TYPE]', [:prd, :dev, :services, :preprod, :sandbox, :core, :nonprod],
             "Environment to deploy your template in to") do |environment|
       @options.environment = environment
     end

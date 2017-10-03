@@ -7,23 +7,26 @@ require 'azure_mgmt_resources'
 
 class WRResourceGroupsManagement
 
-  def initialize(config: nil, location: 'WestEurope')
+  def initialize(config: nil, location: 'WestEurope', environment: nil)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
     @config = WRConfigManager.new(config: config).config
     @location = location
     @name = @config['name']
+    @environment = wrenvironmentdata(environment.to_s)['name']
   end
 
   def process_groups()
   # Create resource groups in all landscapes
     @csrelog.info('Beginning creation of user groups')
     create_rg_objects()
-  # assign user group to Dev resource group RBAC role etc
-    au_client = create_azure_au_client('nonprod') if au_client.nil?
-    au_client = create_azure_au_client('nonprod') unless au_client.subscription_id == wrenvironmentdata('nonprod')['subscription_id']
-    assign_usergroup_rg(au_client, @config['access_group_id'], "#{@name}-rg-dev-wr", 'cust-Contributor-no-pip-sa-rg')
+    if @environment.eql?('nonprod')
+   # assign user group to Dev resource group RBAC role etc
+      au_client = create_azure_au_client(@environment) if au_client.nil?
+      au_client = create_azure_au_client(@environment) unless au_client.subscription_id == wrenvironmentdata(@environment)['subscription_id']
+      assign_usergroup_rg(au_client, @config['access_group_id'], "#{@name}-rg-dev-wr", 'cust-Contributor-no-pip-sa-rg')
+    end
   end
 
   def assign_usergroup_rg(client, usergroup_id, rg_name, role_name)
@@ -70,13 +73,12 @@ class WRResourceGroupsManagement
       au_client = create_azure_au_client(subscription) unless au_client.subscription_id == wrenvironmentdata(subscription)['subscription_id']
       @csrelog.info("Assigning permissions for resource group: #{tags_hash['name']}")
       assign_usergroup_rg(au_client, @config['access_group_id'], tags_hash['name'], 'Reader')
-      assign_usergroup_rg(au_client, wrmetadata().dig('global', 'service_principals', 'octopus-dev-app-wr'), tags_hash['name'], 'cust-Contributor-no-pip-sa-rg')
+      assign_usergroup_rg(au_client, wrmetadata().dig('global', 'service_principals', 'octopus-dev-app-wr'), tags_hash['name'], 'cust-Contributor-no-pip-sa-rg') unless @environment.eql?('core')
     end
   end
 
   def create_rg_objects()
-    create_rgs('nonprod')
-    create_rgs('prod')
+    create_rgs(@environment)
   end
 
   def create_azure_rm_client(subscription)

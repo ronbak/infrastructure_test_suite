@@ -2,6 +2,7 @@ require 'json'
 require 'uri'
 require 'net/http'
 require 'openssl'
+require 'pry-byebug'
 
 class ::Hash
   def deep_merge(second)

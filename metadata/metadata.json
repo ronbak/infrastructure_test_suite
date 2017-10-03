@@ -82,6 +82,9 @@
 			],
 			"prod": [
 			  "prd"
+			],
+			"core": [
+			  "core"
 			]
 		},
 		"naming_standards":{
