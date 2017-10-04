@@ -24,7 +24,6 @@ class WRResourceGroupsManagement
   # Create resource groups in all landscapes
     @csrelog.info('Beginning creation of user groups')
     create_rg_objects()
-    binding.pry
     if (@environment.eql?('nonprd') && @config['universal']) || @landscape.eql?('dev')
    # assign user group to Dev resource group RBAC role etc
       au_client = create_azure_au_client(@environment) if au_client.nil?
