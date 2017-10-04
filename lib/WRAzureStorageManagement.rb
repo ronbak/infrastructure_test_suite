@@ -14,7 +14,7 @@ class WRAzureStorageManagement
     @storage_access_key = WRAzureCredentials.new(environment: environment).get_storage_account_key
     Azure.config.storage_account_name = wrmetadata()[@environment]['storage_account']['name']
     Azure.config.storage_access_key = @storage_access_key
-    @storage_rg = wrmetadata()[@environment]['storage_account']['resource_group']
+    #@storage_rg = wrmetadata()[@environment]['storage_account']['resource_group']
     @resource_group_location = resource_group_location
     @container_name = container
     @azure_blob_service = Azure::Blob::BlobService.new

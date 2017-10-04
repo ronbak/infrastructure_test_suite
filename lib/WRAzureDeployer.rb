@@ -17,18 +17,19 @@ class WRAzureDeployer
     # Boolean deployment mode switch
     @complete_deployment = complete_deployment
     @environment = wrenvironmentdata(environment)['name']
+    @landscape = environment
     # Setup credentials object
     options = {environment: @environment}
     @credentials = WRAzureCredentials.new(options).authenticate()
     # Setup Resource Manager object
-    @client = WRAzureResourceManagement.new(environment: @environment)
+    @client = WRAzureResourceManagement.new(environment: @environment, landscape: @landscape)
     @action = action
     @config_manager = config_manager
-    @rg_name = @config_manager.rg_name(@environment)
+    @rg_name = @config_manager.rg_name(@landscape)
     @template = @config_manager.template()
     @rules_template = rules_template
     @parameters = @config_manager.parameters()
-    # Merges environment specific parameters from the configuration object
+    # Merges landscape specific parameters from the configuration object
     @parameters = add_environment_values()
     # Builds subnets_array if specified in the params section
     @parameters = build_subnets_array()
@@ -70,7 +71,6 @@ class WRAzureDeployer
     unless @skip_deploy
       # ensure the resource group is created
       unless @action == 'output'
-        binding.pry
         @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags
         @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags) if  @config_manager.tags
       end
@@ -156,9 +156,9 @@ class WRAzureDeployer
 
   def add_environment_values()
     # Adds environment to params object if it exists in the template parameters required list
-    @parameters['environment'] = { "value" => @environment } if @template.dig('parameters', 'environment')
+    @parameters['environment'] = { "value" => @landscape } if @template.dig('parameters', 'environment')
     # Merges the environment specific and default parameters from the configuration file
-    @parameters = @parameters.deep_merge(@config_manager.environments[@environment]['parameters'])
+    @parameters = @parameters.deep_merge(@config_manager.environments[@landscape]['parameters']) if @config_manager.environments.dig(@landscape)
     @parameters
   end
   

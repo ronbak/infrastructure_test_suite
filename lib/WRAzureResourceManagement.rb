@@ -5,11 +5,12 @@ require 'pry-byebug'
 
 class WRAzureResourceManagement
 
-	def initialize(environment: nil)
+	def initialize(environment: nil, landscape: nil)
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
     @environment = wrenvironmentdata(environment)['name']
+    @landscape = landscape
 		options = {environment: @environment}
 		@credentials = WRAzureCredentials.new(options).authenticate()
 		@rg_client = Azure::ARM::Resources::ResourceManagementClient.new(@credentials)
@@ -19,8 +20,8 @@ class WRAzureResourceManagement
 	def create_resource_group(location, rg_name, tags)
 	  params = Azure::ARM::Resources::Models::ResourceGroup.new().tap do |rg|
       rg.location = location
-      tags['environment'] = @environment
-      tags['Name'] = "#{tags['Name']}-#{@environment}-wr"
+      tags['environment'] = @landscape
+      tags['Name'] = "#{tags['Name']}-#{@landscape}-wr"
       rg.tags = tags
     end
     @rg_client.resource_groups.create_or_update(rg_name, params).properties.provisioning_state

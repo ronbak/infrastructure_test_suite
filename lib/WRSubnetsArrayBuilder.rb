@@ -9,7 +9,7 @@ class WRSubnetsArrayBuilder
     # Sanitize params input to hash
     @parameters = WRConfigManager.new(config: parameters).config
     @csrelog = csrelogger
-    @environment = environment
+    #@environment = environment
     @parameters['subnets_array']['value'] = build_array() if verify_array_required()
   end
 
