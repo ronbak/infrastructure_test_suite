@@ -133,6 +133,7 @@ class WRAzureDeployer
           operations_messages.each do |operation|
             @csrelog.error(operation.properties.status_message['error']['code'])
             @csrelog.error(operation.properties.status_message['error']['message'])
+            exit 1
           end
         end
       rescue => e

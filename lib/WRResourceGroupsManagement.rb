@@ -4,6 +4,7 @@ require_relative 'WRAzureCredentials'
 require_relative 'WRConfigManager'
 require 'azure_mgmt_authorization'
 require 'azure_mgmt_resources'
+require 'pry-byebug'
 
 class WRResourceGroupsManagement
 
@@ -15,6 +16,7 @@ class WRResourceGroupsManagement
     @location = location
     @name = @config['name']
     @environment = wrenvironmentdata(environment.to_s)['name']
+    @landscape = environment.to_s
     @config['universal'] = true unless @config['universal'].eql?(false)
   end
 
@@ -22,11 +24,16 @@ class WRResourceGroupsManagement
   # Create resource groups in all landscapes
     @csrelog.info('Beginning creation of user groups')
     create_rg_objects()
-    if @environment.eql?('nonprod')
+    binding.pry
+    if (@environment.eql?('nonprd') && @config['universal']) || @landscape.eql?('dev')
    # assign user group to Dev resource group RBAC role etc
       au_client = create_azure_au_client(@environment) if au_client.nil?
       au_client = create_azure_au_client(@environment) unless au_client.subscription_id == wrenvironmentdata(@environment)['subscription_id']
-      assign_usergroup_rg(au_client, @config['access_group_id'], "#{@name}-rg-dev-wr", 'cust-Contributor-no-pip-sa-rg')
+      begin
+        assign_usergroup_rg(au_client, @config['access_group_id'], "#{@name}-rg-dev-wr", 'cust-Contributor-no-pip-sa-rg')
+      rescue => e
+        @csrelog.error(e)
+      end
     end
   end
 
@@ -60,19 +67,19 @@ class WRResourceGroupsManagement
   end
 
   def list_landscapes(environment = 'nonprd')
-    return wrmetadata['global']['landscapes'][environment] if @config['universal']
+    return wrmetadata['global']['landscapes'][wrenvironmentdata(environment.to_s).dig('name')] if @config['universal']
     [environment]
   end
 
   def create_rgs(subscription = 'nonprd')
     list_landscapes(subscription).each do |landscape|
       tags_hash = create_tags_hash(Marshal::load(Marshal.dump(@config['tags'])), landscape)
-      rm_client = create_azure_rm_client(subscription) if rm_client.nil?
-      rm_client = create_azure_rm_client(subscription) unless rm_client.subscription_id == wrenvironmentdata(subscription)['subscription_id']
+      rm_client = create_azure_rm_client(@environment) if rm_client.nil?
+      rm_client = create_azure_rm_client(@environment) unless rm_client.subscription_id == wrenvironmentdata(@environment)['subscription_id']
       @csrelog.info("Creating resource group: #{tags_hash['name']}")
       create_rg(rm_client, @location, tags_hash['name'], tags_hash)
-      au_client = create_azure_au_client(subscription) if au_client.nil?
-      au_client = create_azure_au_client(subscription) unless au_client.subscription_id == wrenvironmentdata(subscription)['subscription_id']
+      au_client = create_azure_au_client(@environment) if au_client.nil?
+      au_client = create_azure_au_client(@environment) unless au_client.subscription_id == wrenvironmentdata(@environment)['subscription_id']
       @csrelog.info("Assigning permissions for resource group: #{tags_hash['name']}")
       assign_usergroup_rg(au_client, @config['access_group_id'], tags_hash['name'], 'Reader')
       assign_usergroup_rg(au_client, wrmetadata().dig('global', 'service_principals', 'octopus-dev-app-wr'), tags_hash['name'], 'cust-Contributor-no-pip-sa-rg') unless @environment.eql?('core')
@@ -80,7 +87,7 @@ class WRResourceGroupsManagement
   end
 
   def create_rg_objects()
-    create_rgs(@environment)
+    create_rgs(@landscape)
   end
 
   def create_azure_rm_client(subscription)
