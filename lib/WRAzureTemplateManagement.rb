@@ -1,5 +1,6 @@
 require 'addressable'
 require 'time'
+require 'pry-byebug'
 require_relative 'global_methods'
 require_relative 'WRAzureCredentials'
 require_relative 'WRAzureStorageManagement'
@@ -7,9 +8,11 @@ require_relative 'WRConfigManager'
 
 class WRAzureTemplateManagement
 
-  def initialize(master_template, environment, logger = nil)
+  def initialize(master_template, environment, rules_template, parameters, logger = nil)
     @master_template = master_template #Should be in hash form
     @environment = environment
+    @rules_template = rules_template
+    @parameters = parameters
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
     @templates_container = 'templates' # Azure Storage container foor uploaded templates
     @csrelog = logger
@@ -28,6 +31,8 @@ class WRAzureTemplateManagement
         @csrelog.debug("retrieving linked template from #{template_url}")
         # raw_template = { resource['properties']['templateLink']['uri'] => retrieve_from_github_api(convert_git_raw_to_api(template_url), access_token)}
         raw_template = { resource['properties']['templateLink']['uri'] => JSON.pretty_generate(WRConfigManager.new(config: template_url).config) }
+        # inject the rules into the nsg template
+        raw_template = inject_rules_to_template(@rules_template, raw_template) if @rules_template 
         @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
         if upload_template_to_storage(raw_template)
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
@@ -42,6 +47,33 @@ class WRAzureTemplateManagement
       end
     end
     @master_template
+  end
+
+  def inject_rules_to_template(rules_array, raw_template)
+    nsg_template = JSON.parse(raw_template.values[0])
+    if nsg_template.dig('variables', 'inject_rules_here')
+      nsg_template = add_rules_to_existing_template(rules_array, nsg_template)
+      raw_template[raw_template.keys[0]] = JSON.pretty_generate(nsg_template)
+      return raw_template
+    end
+    return raw_template
+  end
+
+  def add_rules_to_existing_template(rules_array, nsg_template)
+    # build the rules resources
+    rules_expanded_resources = build_rules_template(@parameters, rules_array)
+    # Set DependsOn to NSG this rule is applied to
+    rules_expanded_resources.each do |rules_resource|
+      rules_resource['dependsOn'] = ["Microsoft.Network/networkSecurityGroups/#{rules_resource['name'].split('/')[0]}"]
+    end
+    # add rules resources to nsg_template
+    nsg_template['resources'] += rules_expanded_resources
+    return nsg_template
+  end
+
+  # Cycles through any rules in and creates them for each subnet in the subnet_array parameter
+  def build_rules_template(parameters, base_template)
+    WRAzureNsgRulesMgmt.new(parameters, base_template, @csrelog).process_rules
   end
 
   def upload_template_to_storage(raw_templates = {})

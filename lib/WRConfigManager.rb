@@ -48,7 +48,7 @@ class WRConfigManager
       @csrelog.debug("object is a valid json string, parsing now")
       config_hash = JSON.parse(config)
     else
-      @csrelog.fatal("We couldn't determine what your cponfig file is, please verify the path / string
+      @csrelog.fatal("We couldn't determine what your config file is, please verify the path / string
         #{config}")
       exit 1
     end

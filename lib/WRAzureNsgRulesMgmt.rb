@@ -19,6 +19,15 @@ class WRAzureNsgRulesMgmt
     define_subnets(@parameters)
   end
 
+  attr_reader :base_resources
+  attr_reader :priv_subnets
+  attr_reader :privpart_subnets
+  attr_reader :pubcli_subnets
+  attr_reader :pubpart_subnets
+  attr_reader :gateway_subnets
+  attr_reader :core_subnets
+  attr_reader :landscapes
+
   # Create Array of populated rules for every subnet/NSG
   def process_rules()
     resources = []

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "project_name": {
+      "value": "csreubuntu1"
+    },
+    "virtualMachineSize": {
+      "value": "Standard_D1_v2"
+    },
+    "adminUsername": {
+      "value": "wradmin"
+    },
+    "adminPublicKey": {
+      "value": "testkey"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "vNetName": {
+      "value": "armtestvnet1"
+    },
+    "vNetResourceGroup": {
+      "value": "armtestnetwork1"
+    },
+    "subnet_name": {
+      "value": "subnet-1"
+    }
+  }
+}

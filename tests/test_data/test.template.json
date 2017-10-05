@@ -1,0 +1,210 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "project_name": {
+            "type": "string"
+        },
+        "environment": {
+            "type": "string"
+        },
+        "vNetName": {
+            "type": "string"
+        },
+        "vNetResourceGroup": {
+            "type": "string"
+        },
+        "subnet_name": {
+            "type": "string"
+        },
+        "location": {
+            "type": "String",
+            "defaultValue": "WestEurope"
+        },
+        "virtualMachineSize": {
+            "type": "String"
+        },
+        "adminUsername": {
+            "type": "String",
+            "defaultValue": "wradmin"
+        },
+        "adminPublicKey": {
+            "type": "String"
+        }
+    },
+    "variables": {
+        "vnetId": "[resourceId(parameters('vNetresourceGroup'),'Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnet_name'))]",
+        "resources": {
+            "nic_name": "[concat(parameters('project_name'), '-nic-', parameters('environment'), '-wr')]",
+            "nsg_name": "[concat(parameters('project_name'), '-nsg-', parameters('environment'), '-wr')]",
+            "vm_name": "[concat(parameters('project_name'), '-vm-', parameters('environment'), '-wr')]"
+        }
+    },
+    "resources": [{
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('resources').vm_name]",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[parameters('location')]",
+            "properties": {
+                "osProfile": {
+                    "computerName": "[variables('resources').vm_name]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": "true",
+                        "ssh": {
+                            "publicKeys": [{
+                                "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                                "keyData": "[parameters('adminPublicKey')]"
+                            }]
+                        }
+                    }
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [{
+                        "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('resources').nic_name)]"
+                    }]
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('resources').nic_name)]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('resources').nic_name]",
+            "apiVersion": "2016-09-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [{
+                    "name": "ipconfig1",
+                    "properties": {
+                        "subnet": {
+                            "id": "[variables('subnetRef')]"
+                        },
+                        "privateIPAllocationMethod": "Dynamic"
+                    }
+                }],
+                "networkSecurityGroup": {
+                    "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('resources').nsg_name)]"
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('resources').nsg_name)]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[variables('resources').nsg_name]",
+            "apiVersion": "2016-09-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": [{
+                        "name": "default-allow-ssh",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "80.169.91.80/29",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "allow-http",
+                        "properties": {
+                            "priority": 1100,
+                            "sourceAddressPrefix": "80.169.91.80/29",
+                            "protocol": "TCP",
+                            "destinationPortRange": "80",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "default-allow-ssh-home",
+                        "properties": {
+                            "priority": 1200,
+                            "sourceAddressPrefix": "86.152.209.202/32",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "allow-http-home",
+                        "properties": {
+                            "priority": 1300,
+                            "sourceAddressPrefix": "86.152.209.202/32",
+                            "protocol": "TCP",
+                            "destinationPortRange": "80",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "microsoft.custom-script-linux-20170818145820",
+            "apiVersion": "2015-01-01",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "https://gallery.azure.com/artifact/20161101/microsoft.custom-script-linux-arm.2.0.50/Artifacts/MainTemplate.json"
+                },
+                "parameters": {
+                    "vmName": {
+                        "value": "[variables('resources').vm_name]"
+                    },
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "fileUris": {
+                        "value": ["https://raw.githubusercontent.com/chudsonwr/linux_scripts/master/ubuntu-jenkins.sh"]
+                    },
+                    "commandToExecute": {
+                        "value": "sh ubuntu-jenkins.sh > /tmp/output.txt"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', variables('resources').vm_name)]"
+            ]
+        }
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "String",
+            "value": "[parameters('adminUsername')]"
+        }
+    }
+}
