@@ -1,0 +1,70 @@
+[
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-dev-eurw-private/sql-from-privpartner",
+    "location": "",
+    "properties": {
+      "description": "Rule to allow SQL in to private subnet from privatepartner to dev",
+      "protocol": "Tcp",
+      "sourcePortRange": "*",
+      "destinationPortRange": "1433",
+      "sourceAddressPrefix": "213.57.32.1/32",
+      "destinationAddressPrefix": "10.24.16.0/23",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-tst-eurw-private/sql-from-privpartner",
+    "location": "",
+    "properties": {
+      "description": "Rule to allow SQL in to private subnet from privatepartner to tst",
+      "protocol": "Tcp",
+      "sourcePortRange": "*",
+      "destinationPortRange": "1433",
+      "sourceAddressPrefix": "213.57.32.1/32",
+      "destinationAddressPrefix": "10.24.32.0/23",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-dev-eurw-publicclient/sql-to-pub-cli",
+    "location": "",
+    "properties": {
+      "description": "Rule to allow SQL in to public-client subnet from private to dev",
+      "protocol": "Tcp",
+      "sourcePortRange": "*",
+      "destinationPortRange": "1433",
+      "sourceAddressPrefix": "10.24.18.0/23",
+      "destinationAddressPrefix": "10.24.20.0/23",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-tst-eurw-publicclient/sql-to-pub-cli",
+    "location": "",
+    "properties": {
+      "description": "Rule to allow SQL in to public-client subnet from private to tst",
+      "protocol": "Tcp",
+      "sourcePortRange": "*",
+      "destinationPortRange": "1433",
+      "sourceAddressPrefix": "10.24.34.0/23",
+      "destinationAddressPrefix": "10.24.36.0/23",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object"
+    },
+     "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    }   
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-09-01",
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "name": "sql-to-pub-cli",
+      "location": "",
+      "properties": {
+        "description": "Rule to allow SQL in to public-client subnet from private",
+        "protocol": "Tcp",
+        "sourcePortRange": "*",
+        "destinationPortRange": "1433",
+        "sourceAddressPrefix": "privatepartner",
+        "destinationAddressPrefix": "publicclient",
+        "access": "Allow",
+        "priority": 200,
+        "direction": "Inbound"
+      }
+    }
+  ]
+}

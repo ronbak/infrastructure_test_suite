@@ -1,0 +1,36 @@
+[
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "sql-from-privpartner",
+    "location": "",
+    "properties": {
+      "description": "Rule to allow SQL in to private subnet from privatepartner",
+      "protocol": "Tcp",
+      "sourcePortRange": "*",
+      "destinationPortRange": "1433",
+      "sourceAddressPrefix": "213.57.32.1/32",
+      "destinationAddressPrefix": "private",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "sql-to-pub-cli",
+    "location": "",
+    "properties": {
+      "description": "Rule to allow SQL in to public-client subnet from private",
+      "protocol": "Tcp",
+      "sourcePortRange": "*",
+      "destinationPortRange": "1433",
+      "sourceAddressPrefix": "privatepartner",
+      "destinationAddressPrefix": "publicclient",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  }
+]

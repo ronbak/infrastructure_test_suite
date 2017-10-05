@@ -1,0 +1,40 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "tests/test_data/test.template.json"
+    },
+    "dev": {
+      "resource_group_name": "ubuntuvms-rg-dev-wr",
+      "subscription_name": "Non-Production",
+      "parameters": {
+        "vNetName":{
+            "value": "armtestvnet1"
+        },
+        "vNetResourceGroup": {
+            "value": "armtestnetwork1"
+        },
+        "subnet_name":
+        {
+            "value": "subnet-1"
+        }
+      }
+    }
+  },
+  "parameters": {
+        "location": {
+            "value": "westeurope"
+        },
+        "project_name": {
+            "value": "csreubuntu1"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_D1_v2"
+        },
+        "adminUsername": {
+            "value": "wradmin"
+        },
+        "adminPublicKey": {
+            "value": "testkey"
+        }
+    }
+}
