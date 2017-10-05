@@ -43,6 +43,9 @@ class WRAzureDeployer
     @prep_templates = prep_templates
   end
 
+  attr_reader :template
+  attr_reader :parameters
+
   # Main orchestration method
   def process_deployment()
     case @action
@@ -75,9 +78,7 @@ class WRAzureDeployer
         @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags) if  @config_manager.tags
       end
       # If separate rules templates have been specified inject them to the master template.
-      if @rules_template
-        add_rules_to_existing_template()
-      end
+      #add_rules_to_existing_template() if @rules_template
       # Builds the deployment object and passes to Azure API
       deployment_name = run_deployment(@template, @complete_deployment)
       # Checks the status of the deployment
@@ -170,7 +171,7 @@ class WRAzureDeployer
 
   # Uploads any linked templates to Azure Storage and updates master template URL and adds SAS token. 
   def prepare_linked_templates()
-    @template = WRAzureTemplateManagement.new(@template, @environment, @csrelog).process_templates()
+    @template = WRAzureTemplateManagement.new(@template, @environment, @rules_template, @parameters, @csrelog).process_templates()
   end
 
   def add_rules_to_existing_template()
