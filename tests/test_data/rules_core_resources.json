@@ -1,0 +1,70 @@
+[
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-core-eurw-private/any-from-dmz",
+    "location": "",
+    "properties": {
+      "description": " to core",
+      "protocol": "*",
+      "sourcePortRange": "*",
+      "destinationPortRange": "*",
+      "sourceAddressPrefix": "10.16.22.0/23",
+      "destinationAddressPrefix": "10.16.16.0/23",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-core-eurw-mgmt/any-from-dmz",
+    "location": "",
+    "properties": {
+      "description": " to core",
+      "protocol": "*",
+      "sourcePortRange": "*",
+      "destinationPortRange": "*",
+      "sourceAddressPrefix": "10.16.22.0/23",
+      "destinationAddressPrefix": "10.16.20.0/23",
+      "access": "Allow",
+      "priority": 200,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-core-eurw-private/any-from-mgmt",
+    "location": "",
+    "properties": {
+      "description": " to core",
+      "protocol": "*",
+      "sourcePortRange": "*",
+      "destinationPortRange": "*",
+      "sourceAddressPrefix": "10.16.20.0/23",
+      "destinationAddressPrefix": "10.16.16.0/23",
+      "access": "Allow",
+      "priority": 201,
+      "direction": "Inbound"
+    }
+  },
+  {
+    "apiVersion": "2016-09-01",
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+    "name": "nsg01-core-eurw-dmz/any-from-mgmt",
+    "location": "",
+    "properties": {
+      "description": " to core",
+      "protocol": "*",
+      "sourcePortRange": "*",
+      "destinationPortRange": "*",
+      "sourceAddressPrefix": "10.16.20.0/23",
+      "destinationAddressPrefix": "10.16.22.0/23",
+      "access": "Allow",
+      "priority": 201,
+      "direction": "Inbound"
+    }
+  }
+]

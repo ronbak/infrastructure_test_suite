@@ -5,6 +5,7 @@ require_relative 'global_methods'
 require_relative 'WRAzureCredentials'
 require_relative 'WRAzureStorageManagement'
 require_relative 'WRConfigManager'
+require_relative 'WRAzureNsgRulesMgmt'
 
 class WRAzureTemplateManagement
 

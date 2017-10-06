@@ -39,7 +39,14 @@ class WRAzureStorageManagement
   def upload_file_to_storage(data, blob_name)
     create_container unless get_container
     blob = @azure_blob_service.create_block_blob(get_container.name,
-    blob_name, data)
+      blob_name, data)
   end
-  
+
+  def delete_blob(container, blob)
+    @azure_blob_service.delete_blob(container, blob)
+  end
+
+  def delete_container(container)
+    @azure_blob_service.delete_container(container)
+  end
 end

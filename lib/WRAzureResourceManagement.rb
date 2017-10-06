@@ -44,7 +44,7 @@ class WRAzureResourceManagement
   end
 
   def get_resource_group(rg_name)
-    @rg_client.resourcegroups.get(rg_name)
+    @rg_client.resource_groups.get(rg_name)
   end
 
   def list_resources(rg_name)

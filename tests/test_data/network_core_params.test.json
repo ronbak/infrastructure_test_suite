@@ -1,0 +1,72 @@
+{
+  "vNetName": {
+    "value": "eurw-core-vnt-01"
+  },
+  "vNet": {
+    "value": {
+      "addressSpacePrefix": "10.16.0.0/16",
+      "landscapes": {
+        "gateway": {
+          "name": "GatewaySubnet",
+          "description": "Gateway environment subnet, 10.20.0.0/24",
+          "addressSpacePrefix": "10.16.0.0/20",
+          "subnets": {
+            "GatewaySubnet": "10.16.0.0/24"
+          }
+        },
+        "core": {
+          "name": "core",
+          "description": "Core network for shared services in this region, 10.16.0.0/16",
+          "virtualApplianceGateway": "10.16.0.4",
+          "addressSpacePrefix": "10.16.0.0/16",
+          "subnets": {
+            "private": "10.16.16.0/23",
+            "public": "10.16.18.0/23",
+            "mgmt": "10.16.20.0/23",
+            "dmz": "10.16.22.0/23"
+          }
+        }
+      }
+    }
+  },
+  "subnets_array": {
+    "value": [
+      {
+        "name": "private",
+        "landscape": "core",
+        "landscapeAddressPrefix": "[parameters('vNet').landscapes.core.addressSpacePrefix]",
+        "addressPrefix": "[parameters('vNet').landscapes.core.subnets.private]"
+      },
+      {
+        "name": "public",
+        "landscape": "core",
+        "landscapeAddressPrefix": "[parameters('vNet').landscapes.core.addressSpacePrefix]",
+        "addressPrefix": "[parameters('vNet').landscapes.core.subnets.public]"
+      },
+      {
+        "name": "mgmt",
+        "landscape": "core",
+        "landscapeAddressPrefix": "[parameters('vNet').landscapes.core.addressSpacePrefix]",
+        "addressPrefix": "[parameters('vNet').landscapes.core.subnets.mgmt]"
+      },
+      {
+        "name": "dmz",
+        "landscape": "core",
+        "landscapeAddressPrefix": "[parameters('vNet').landscapes.core.addressSpacePrefix]",
+        "addressPrefix": "[parameters('vNet').landscapes.core.subnets.dmz]"
+      }
+    ]
+  },
+  "location": {
+    "value": "westeurope"
+  },
+  "location_tag": {
+    "value": "eurw"
+  },
+  "create_peers": {
+    "value": true
+  },
+  "environment": {
+    "value": "core"
+  }
+}

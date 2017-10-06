@@ -1,0 +1,96 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object"
+    },
+     "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    }   
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-09-01",
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "name": "any-from-dmz",
+      "location": "",
+      "properties": {
+        "description": "",
+        "protocol": "*",
+        "sourcePortRange": "*",
+        "destinationPortRange": "*",
+        "sourceAddressPrefix": "dmz",
+        "destinationAddressPrefix": "private",
+        "access": "Allow",
+        "priority": 200,
+        "direction": "Inbound"
+      }
+    },
+    {
+      "apiVersion": "2016-09-01",
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "name": "any-from-dmz",
+      "location": "",
+      "properties": {
+        "description": "",
+        "protocol": "*",
+        "sourcePortRange": "*",
+        "destinationPortRange": "*",
+        "sourceAddressPrefix": "dmz",
+        "destinationAddressPrefix": "mgmt",
+        "access": "Allow",
+        "priority": 200,
+        "direction": "Inbound"
+      }
+    },
+    {
+      "apiVersion": "2016-09-01",
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "name": "any-from-mgmt",
+      "location": "",
+      "properties": {
+        "description": "",
+        "protocol": "*",
+        "sourcePortRange": "*",
+        "destinationPortRange": "*",
+        "sourceAddressPrefix": "mgmt",
+        "destinationAddressPrefix": "private",
+        "access": "Allow",
+        "priority": 201,
+        "direction": "Inbound"
+      }
+    },
+    {
+      "apiVersion": "2016-09-01",
+      "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "name": "any-from-mgmt",
+      "location": "",
+      "properties": {
+        "description": "",
+        "protocol": "*",
+        "sourcePortRange": "*",
+        "destinationPortRange": "*",
+        "sourceAddressPrefix": "mgmt",
+        "destinationAddressPrefix": "dmz",
+        "access": "Allow",
+        "priority": 201,
+        "direction": "Inbound"
+      }
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type":"string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object"
+    },
+    "subnets_array": {
+      "type": "array"
+    },
+    "environment": {
+      "type": "String"
+    },
+    "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    },
+    "create_peers": {
+      "type": "bool",
+      "defaultValue": false
+    }
+  },
+
+  "variables": {
+  },
+  "resources": [
+    { 
+      "apiVersion": "2017-05-10", 
+      "name": "nsgs-linked-template", 
+      "type": "Microsoft.Resources/deployments",
+      "properties": { 
+        "mode": "incremental", 
+        "templateLink": {
+          "uri": "https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/nsgs.json",
+          "contentVersion": "1.0.0.0"
+        }, 
+        "parameters": { 
+          "vNetName":{"value": "[parameters('vNetName')]"},
+          "vNet": {"value": "[parameters('vNet')]"},
+          "subnets_array": {"value": "[parameters('subnets_array')]"},
+          "environment": {"value": "[parameters('environment')]"},
+          "location": {"value": "[parameters('location')]"},
+          "location_tag": {"value": "[parameters('location_tag')]"}
+        } 
+      } 
+    }
+  ]
+}

@@ -12,7 +12,7 @@ MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
 
 #$config = WRConfigManager.new(config: 'https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/configs/networking_master.config.json').config
 $templates_array = "#{File.dirname(__FILE__)}/../test_data/rules/"
-$wrazrm = WRAzureNsgRulesMgmt.new(File.read("#{File.dirname(__FILE__)}/../test_data/network_params.test.json"), $templates_array, CSRELogger.new('INFO', 'STDOUT'))
+$wrazrulesm = WRAzureNsgRulesMgmt.new(File.read("#{File.dirname(__FILE__)}/../test_data/network_params.test.json"), $templates_array, CSRELogger.new('INFO', 'STDOUT'))
 $envs_array = ['dev', 'uat', 'tst', 'ci', 'int', 'ppd', 'nonprd', 'prd', 'core']
 
 class TestWRAzureNsgRulesMgmt <  MiniTest::Test
@@ -21,31 +21,31 @@ class TestWRAzureNsgRulesMgmt <  MiniTest::Test
   end
 
   def test_initialize
-    assert_instance_of(WRAzureNsgRulesMgmt, $wrazrm)
+    assert_instance_of(WRAzureNsgRulesMgmt, $wrazrulesm)
   end
 
   def test_process_rules
-    assert_equal(JSON.parse(File.read("#{File.dirname(__FILE__)}/../test_data/rules_resources.json")), $wrazrm.process_rules)
+    assert_equal(JSON.parse(File.read("#{File.dirname(__FILE__)}/../test_data/rules_resources.json")), $wrazrulesm.process_rules)
   end
 
   def test_retrieve_resources
-    obj_to_test = $wrazrm.retrieve_resources($templates_array)
+    obj_to_test = $wrazrulesm.retrieve_resources($templates_array)
     assert_instance_of(Array, obj_to_test)
     assert_equal(2, obj_to_test.count)
     assert_equal(JSON.parse(File.read("#{File.dirname(__FILE__)}/../test_data/rules_base-resources.json")), obj_to_test)
   end
 
   def test_list_template_files
-    assert_instance_of(Array, $wrazrm.list_template_files(['this is an array']))
-    assert_equal(['this is an array'], $wrazrm.list_template_files(['this is an array']))
-    assert_instance_of(Array, $wrazrm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules_resources.json"))
-    assert_equal(["#{File.dirname(__FILE__)}/../test_data/rules_resources.json"], $wrazrm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules_resources.json"))
-    assert_instance_of(Array, $wrazrm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules"))
-    assert_instance_of(Array, $wrazrm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules/"))
-    assert_equal(["#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_private.json", "#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_publicclient.json"], $wrazrm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules"))
-    assert_equal(["#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_private.json", "#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_publicclient.json"], $wrazrm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules/"))
-    assert_instance_of(Array, $wrazrm.list_template_files("../folder/file1.json ../folder/file2.json"))
-    assert_equal(["../folder/file1.json", "../folder/file2.json"], $wrazrm.list_template_files("../folder/file1.json ../folder/file2.json"))
+    assert_instance_of(Array, $wrazrulesm.list_template_files(['this is an array']))
+    assert_equal(['this is an array'], $wrazrulesm.list_template_files(['this is an array']))
+    assert_instance_of(Array, $wrazrulesm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules_resources.json"))
+    assert_equal(["#{File.dirname(__FILE__)}/../test_data/rules_resources.json"], $wrazrulesm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules_resources.json"))
+    assert_instance_of(Array, $wrazrulesm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules"))
+    assert_instance_of(Array, $wrazrulesm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules/"))
+    assert_equal(["#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_private.json", "#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_publicclient.json"], $wrazrulesm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules"))
+    assert_equal(["#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_private.json", "#{File.dirname(__FILE__)}/../test_data/rules/nsg_rules_publicclient.json"], $wrazrulesm.list_template_files("#{File.dirname(__FILE__)}/../test_data/rules/"))
+    assert_instance_of(Array, $wrazrulesm.list_template_files("../folder/file1.json ../folder/file2.json"))
+    assert_equal(["../folder/file1.json", "../folder/file2.json"], $wrazrulesm.list_template_files("../folder/file1.json ../folder/file2.json"))
   end
 
   def test_verify_resources_params
@@ -57,7 +57,13 @@ class TestWRAzureNsgRulesMgmt <  MiniTest::Test
       {"sourceAddressPrefix"=>"privatepartner",
         "destinationAddressPrefix"=>"publicclient",
         "direction"=>"Inbound"}}]
-    assert_equal(resources, $wrazrm.verify_resources_params(resources))
+    assert_equal(resources, $wrazrulesm.verify_resources_params(resources))
+  end
+
+  def test_core_added_subnets
+    local_templates_array = "#{File.dirname(__FILE__)}/../test_data/rules_core/"
+    core_wrazrm = WRAzureNsgRulesMgmt.new(File.read("#{File.dirname(__FILE__)}/../test_data/network_core_params.test.json"), local_templates_array, CSRELogger.new('INFO', 'STDOUT'))
+    assert_equal(JSON.parse(File.read("#{File.dirname(__FILE__)}/../test_data/rules_core_resources.json")), core_wrazrm.process_rules)
   end
     
 end
