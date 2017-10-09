@@ -174,3 +174,7 @@ def query_wr_web_servers(ip_counter, host_header)
   end
   return response
 end
+
+def write_file(file_name, data)
+  open file_name, 'w' do |io| io.write data end
+end

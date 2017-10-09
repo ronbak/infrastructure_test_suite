@@ -12,8 +12,10 @@
           "addressSpacePrefix": "10.16.0.0/16",
           "virtualApplianceGateway": "10.16.0.4",
           "subnets": {
-            "coreprivate": "10.16.0.0/20",
-            "corepublic": "10.16.16.0/20"
+            "coreprivate": "10.16.16.0/23",
+            "corepublic": "10.16.18.0/23",
+            "mgmt": "10.16.20.0/23",
+            "dmz": "10.16.22.0/23"
           }
         },
         "gateway": {

@@ -33,7 +33,7 @@ class WRAzureNsgRulesMgmt
     resources = []
     @base_resources.each do |base_rule|
       @landscapes.each do |subnet, data|
-        rule = update_rule_object(subnet, Marshal::load(Marshal.dump(base_rule)), subnet)
+        rule = update_rule_object(subnet, Marshal::load(Marshal.dump(base_rule)))
         resources << rule
       end
     end
@@ -141,38 +141,21 @@ class WRAzureNsgRulesMgmt
   end
 
   # retrieves the actual address prefix in CIDR notation for the given subnet and environment
-  def retrieve_subnet_prefix(subnet, env)
-    case subnet.downcase
-    when 'private'
-      return @priv_subnets[env]
-    when 'privatepartner'
-      return @privpart_subnets[env]
-    when 'public'
-      return @pub_subnets[env]
-    when 'publicclient'
-      return @pubcli_subnets[env]
-    when 'publicpartner'
-      return @pubpart_subnets[env]
-    when 'gatewaysubnet'
-      return @gateway_subnets['GatewaySubnet']
-    when 'coreprivate'
-      return @core_subnets['coreprivate']
-    when 'corepublic'
-      return @core_subnets['corepublic']
-    end
+  def retrieve_subnet_prefix(subnet_name, env)
+    @parameters['vNet']['value']['landscapes'][env]['subnets'][subnet_name]
   end
   
   # Updates the built rule with the correct values  
-  def update_rule_object(subnet, new_rule, env)
-    new_rule = update_rule_name(subnet, new_rule)
-    new_rule = update_rule_addr_prefixes(subnet, new_rule, env)
+  def update_rule_object(env, new_rule)
+    new_rule = update_rule_name(env, new_rule)
+    new_rule = update_rule_addr_prefixes(env, new_rule)
     return new_rule
   end
 
   # Updates the address prefix to be actual subnet in CIDR notation
-  def update_rule_addr_prefixes(subnet, new_rule, env)
+  def update_rule_addr_prefixes(env, new_rule)
     subnet_names_array = list_all_subnet_names(@parameters)
-    new_rule['properties']['description'] += " to #{subnet}"
+    new_rule['properties']['description'] += " to #{env}"
     new_rule['properties']['sourceAddressPrefix'] = retrieve_subnet_prefix(new_rule['properties']['sourceAddressPrefix'], env) if subnet_names_array.include?(new_rule['properties']['sourceAddressPrefix'])
     new_rule['properties']['destinationAddressPrefix'] = retrieve_subnet_prefix(new_rule['properties']['destinationAddressPrefix'], env) if subnet_names_array.include?(new_rule['properties']['destinationAddressPrefix'])
     return new_rule
