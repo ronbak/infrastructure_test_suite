@@ -6,6 +6,7 @@ require 'pry-byebug'
 require_relative '../lib/WRAzureCredentials'
 require_relative '../lib/WRAzureDeployer'
 require_relative '../lib/WRConfigManager'
+require_relative '../lib/WRAzurePolicyManagement'
 require_relative '../lib/CSRELogger'
 require_relative '../lib/WRResourceGroupsManagement'
 
@@ -22,7 +23,7 @@ class Provisioner
   end
 
   def self.actions
-    return ['deploy', 'delete', 'output', 'deploy_resource_groups']
+    return ['deploy', 'delete', 'output', 'deploy_resource_groups', 'deploy_policy', 'deploy_policy_set', 'assign_policy', 'delete_assignment']
   end
 
   def supported_action(action)
@@ -62,8 +63,17 @@ class Provisioner
   end
 
   def provision()
-    if @opts[:action] == 'deploy_resource_groups'
+    case @opts[:action]
+    when 'deploy_resource_groups'
       WRResourceGroupsManagement.new(config: @opts[:config], location: @opts[:location], environment: @opts[:environment]).process_groups
+    when 'deploy_policy'
+      @csrelog.info(WRAzurePolicyManagement.new(environment: @opts[:environment].to_s).create_policy(@opts[:config]))
+    when 'deploy_policy_set'
+      @csrelog.info(WRAzurePolicyManagement.new(environment: @opts[:environment].to_s).create_policy_set(@opts[:config]))
+    when 'assign_policy'
+      @csrelog.info(WRAzurePolicyManagement.new(environment: @opts[:environment].to_s).assign_policy(@opts[:config], @opts[:scope]))
+    when 'delete_assignment'
+      @csrelog.info(WRAzurePolicyManagement.new(environment: @opts[:environment].to_s).delete_policy_assignment(@opts[:config]))
     else
       @csrelog.debug(@opts[:config])
       # Create the configuration object from the supplied configuration
@@ -124,6 +134,9 @@ def parse_args(args)
     opts.on('-l', '--location PATH', 'Azure region to deploy to') do |location|
       @options.location = location
     end
+    opts.on('--scope', 'Azure scope to assign this policy against. Either a resource group ID or a Subscription. Use the full path.') do |scope|
+      @options.scope = scope
+    end
   end
 
   opt_parser.parse!(args)
@@ -145,6 +158,7 @@ if __FILE__ == $PROGRAM_NAME
   @options.skip_deploy = false
   @options.prep_templates = false
   @options.location = 'WestEurope'
+  @options.scope = nil
   parse_args(ARGV)
 
   provisioner = Provisioner.new(@options.to_h())
