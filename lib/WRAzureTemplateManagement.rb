@@ -34,6 +34,7 @@ class WRAzureTemplateManagement
         raw_template = { resource['properties']['templateLink']['uri'] => JSON.pretty_generate(WRConfigManager.new(config: template_url).config) }
         # inject the rules into the nsg template
         raw_template = inject_rules_to_template(@rules_template, raw_template) if @rules_template 
+        raw_template = inject_subnets_to_template(raw_template)
         @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
         if upload_template_to_storage(raw_template)
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
@@ -60,6 +61,16 @@ class WRAzureTemplateManagement
     return raw_template
   end
 
+  def inject_subnets_to_template(raw_template)
+    vnet_template = JSON.parse(raw_template.values[0])
+    if vnet_template.dig('variables', 'inject_subnets_here')
+      vnet_template = add_subnets_to_existing_template(vnet_template)
+      raw_template[raw_template.keys[0]] = JSON.pretty_generate(vnet_template)
+      return raw_template
+    end
+    return raw_template
+  end
+
   def add_rules_to_existing_template(rules_array, nsg_template)
     # build the rules resources
     rules_expanded_resources = build_rules_template(@parameters, rules_array)
@@ -70,6 +81,56 @@ class WRAzureTemplateManagement
     # add rules resources to nsg_template
     nsg_template['resources'] += rules_expanded_resources
     return nsg_template
+  end
+
+  def add_subnets_to_existing_template(vnet_template)
+    built_subnets_array = []
+    @parameters['vNet']['value']['landscapes'].each do |landscape_name, landscape_data|
+      landscape_data['subnets'].each do |subnet_name, subnet_addr|
+        if @environment.eql?('core')
+          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr) unless landscape_name.eql?('gateway')
+          built_subnets_array << build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr) if landscape_name.eql?('gateway')
+        else
+          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr) unless landscape_name.eql?('gateway') || landscape_name.eql?('core')
+          built_subnets_array << build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr) if landscape_name.eql?('gateway')
+        end
+      end
+    end
+    vnet_template['resources'][0]['properties']['subnets'] = built_subnets_array
+    return vnet_template
+  end
+
+  def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr)
+    return {
+      "name" => "#{landscape_name}_#{subnet_name}",
+      "properties" => {"addressPrefix" => subnet_addr,
+        "networkSecurityGroup" => {
+          "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{landscape_name}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
+        },
+        "routeTable" => {
+          "id" => "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-rot-01'))]"
+        }
+      }
+    }
+  end
+
+  def build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr)
+    if subnet_name.eql?('GatewaySubnet')
+      return {
+        "name" => subnet_name,
+        "properties" => {"addressPrefix" => subnet_addr
+        }
+      }
+    else
+      return {
+        "name" => "#{@environment}_#{subnet_name}",
+        "properties" => {"addressPrefix" => subnet_addr,
+          "networkSecurityGroup" => {
+            "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{@environment}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
+          }
+        }
+      }
+    end
   end
 
   # Cycles through any rules in and creates them for each subnet in the subnet_array parameter

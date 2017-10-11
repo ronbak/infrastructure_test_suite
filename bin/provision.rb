@@ -106,7 +106,7 @@ def parse_args(args)
   opt_parser = OptionParser.new do |opts|
     opts.banner = 'Usage: provision.rb [options]'
     opts.on('--action [TYPE]', Provisioner.actions(),
-            'Select action type (deploy, delete)') do |a|
+            "Select action type ('deploy', 'delete', 'output', 'deploy_resource_groups', 'deploy_policy', 'deploy_policy_set', 'assign_policy', 'delete_assignment')") do |a|
       @options.action = a
     end
     opts.on('-c', '--config PATH', 'Config File path argument or JSON config as String') do |cfg|
