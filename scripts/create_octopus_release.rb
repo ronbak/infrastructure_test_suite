@@ -52,7 +52,6 @@ rescue => e
   raise 'Failed to upload package'
 end
 
-
 # Getting ID's
 
 puts "[STATUS] Getting project and environment ID's..."
@@ -66,6 +65,14 @@ environment = environment.select {|key| key["Name"] == environment_name }.first
 
 puts "[OK] Project ID: #{project['Id']}"
 puts "[OK] Environment ID: #{environment['Id']}"
+
+
+
+# Get channel ID's
+
+channels_response = RestClient.get "#{octopus_url}/api/projects/#{project['Id']}/channels", api_auth
+channels = JSON.parse(channels_response.body)
+
 
 # Getting Deployment Template
 
@@ -86,7 +93,7 @@ step_names.each do |step|
 end
 
 
-release_body = JSON.generate({ :ProjectId => project['Id'], :Version => deploy_template["NextVersionIncrement"], :ChannelId => 'Channels-409',
+release_body = JSON.generate({ :ProjectId => project['Id'], :Version => deploy_template["NextVersionIncrement"], :ChannelId => channels['Items'].first['Id'],
   :SelectedPackages => selected_packages })
 
 begin
