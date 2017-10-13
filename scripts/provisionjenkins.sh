@@ -35,11 +35,15 @@ echo '    server 127.0.0.1:8080 fail_timeout=0;' >> jenkins
 echo '}' >> jenkins
 echo ' ' >> jenkins
 echo 'server {' >> jenkins
-echo '    listen 80;' >> jenkins
-echo '    listen [::]:80 default ipv6only=on;' >> jenkins
+echo '    listen 443;' >> jenkins
+echo '    ssl on;' >> jenkins
+echo '    ssl_certificate /var/lib/jenkins/.ssh/csrejenkins.pem;' >> jenkins
+echo '    ssl_certificate_key /var/lib/jenkins/.ssh/csrejenkins_private_key.pem;' >> jenkins
+echo '    listen [::]:443 default ipv6only=on;' >> jenkins
 echo '    server_name csrejenkins.worldremit.com;' >> jenkins
 echo ' ' >> jenkins
 echo '    location / {' >> jenkins
+echo '        proxy_set_header X-Forwarded-Proto https;' >> jenkins
 echo '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> jenkins
 echo '        proxy_set_header Host $http_host;' >> jenkins
 echo '        proxy_redirect off;' >> jenkins
@@ -54,3 +58,9 @@ echo '' >> jenkins
 
 ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
 service nginx restart
+
+curl -O https://download.octopusdeploy.com/octopus-tools/4.24.1/OctopusTools.4.24.1.ubuntu.16.04-x64.tar.gz
+mkdir /var/lib/octo
+tar -xvzf OctopusTools.4.24.1.ubuntu.16.04-x64.tar.gz -C /var/lib/octo/
+
+
