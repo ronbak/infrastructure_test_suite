@@ -21,7 +21,8 @@ end.parse!
 
 api_header = "X-Octopus-ApiKey"
 api_key = options[:api_key]
-octopus_url = options[:octopus_url]
+octopus_url = 'https://octopusdeploy.worldremit.com'
+octopus_url = options[:octopus_url] unless options[:octopus_url].nil?
 project_name = options[:project_name]
 environment_name = options[:environment_name]
 file_name = options[:file_name]
