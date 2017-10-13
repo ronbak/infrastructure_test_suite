@@ -6,6 +6,10 @@ node {
     checkout([$class: 'GitSCM', branches: [[name: "*/master"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'arm_templates']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:Worldremit/arm_templates.git']]])
     sh "cd infrastructure_test_suite/ && git submodule update --init --recursive"
   }
+  stage ('BuildTemplates'){
+    env.CSRE_LOG_LEVEL = "${log_level}"
+    sh "ruby bin/provision.rb --action output --output ../core_network.json --environment core --config ../arm_templates/networks/config/network_core.config.json"
+  }
 //   stage ('GetTeamConfig'){
 //     env.team_name = "${team_name}"
 //     sh "chmod +x ./fulcrum-provisioning-system/bin/checkforstacks.rb"
