@@ -28,6 +28,8 @@ environment_name = options[:environment_name]
 file_name = options[:file_name]
 step_name = options[:step_name]
 
+step_names = step_name.split(' ')
+
 package_version = file_name.gsub("#{file_name.split('.')[0]}.", "").gsub(".#{file_name.split('.')[-1]}", "")
 api_auth = { api_header => api_key }
 
@@ -78,8 +80,14 @@ puts "[OK] Deployment Template Next Version Increment: #{deploy_template['NextVe
 
 puts "[STATUS] Creating Release..."
 
+selected_packages = []
+step_names.each do |step|
+  selected_packages << { :StepName => step, :Version => package_version }
+end
+
+
 release_body = JSON.generate({ :ProjectId => project['Id'], :Version => deploy_template["NextVersionIncrement"], :ChannelId => 'Channels-409',
-  :SelectedPackages => [{:StepName => step_name, :Version => package_version}] })
+  :SelectedPackages => selected_packages })
 
 begin
   release_request = RestClient.post "#{octopus_url}/api/releases", release_body, api_auth
