@@ -1,0 +1,52 @@
+node {
+  stage ('CheckoutRequiredRepoFromGitHub'){
+    //checkout hprod-migration repo   
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
+    //chechout fps repo
+    checkout([$class: 'GitSCM', branches: [[name: "*/master"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'arm_templates']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:Worldremit/arm_templates.git']]])
+    sh "cd infrastructure_test_suite/ && git submodule update --init --recursive"
+  }
+//   stage ('GetTeamConfig'){
+//     env.team_name = "${team_name}"
+//     sh "chmod +x ./fulcrum-provisioning-system/bin/checkforstacks.rb"
+//     sh "./fulcrum-provisioning-system/bin/checkforstacks.rb ${team_name}"
+//   }
+//   stage ('UpdateTeamConfig'){
+//     //Update Teams' config with Hprod values
+//     sh "./horizontal-prod-migration/config_update/configMigrator.rb -t ${team_name} -c ${team_name}.jenkins.config"
+//   }
+//   stage ('RequestIAMroles'){
+//     echo "${team_name}"
+//     //Request IAM roles
+//      withEnv(["team_name=$team_name", "app=$app"]){
+//     sh "chmod +x ./fulcrum-provisioning-system/bin/migrate_roles.rb"     
+//     sh "./fulcrum-provisioning-system/bin/migrate_roles.rb"}
+//   }
+//   stage ('s3BackupMigrator'){
+//     sh "chmod +x ./horizontal-prod-migration/s3_migration/migrate_S3_backup.rb"  
+//     sh "./horizontal-prod-migration/s3_migration/migrate_S3_backup.rb -t ${team_name} -c ${team_name}.jenkins.config"
+//   }
+//   stage ('createNewJenkinsJob'){
+//     withCredentials([usernamePassword(credentialsId: '7881426b-dbeb-437b-9a33-cebf304a76b5', passwordVariable: 'migrate_password', usernameVariable: 'migrate_username')]) {
+//     withEnv(["JCLIUSER=${migrate_username}","JCLIPASSWORD=${migrate_password}","team_name=${team_name.toLowerCase()}","team_eid_list=${team_eid_list}"]){
+//     sh "./horizontal-prod-migration/Provision-New-Jenkins-Server.sh"}
+//   }
+// }
+//   stage ('launchNewStack'){
+//     //start new stack
+//      withCredentials([usernamePassword(credentialsId: '7881426b-dbeb-437b-9a33-cebf304a76b5', passwordVariable: 'migrate_password', usernameVariable: 'migrate_username')]) {
+//      withEnv(["JCLIUSER=${migrate_username}", "JCLIPASSWORD=${migrate_password}", "team_name=${team_name.toLowerCase()}"]){
+//      sh "./horizontal-prod-migration/start_New_Stack.sh"}}
+//   }
+//   stage ('CheckForStack'){
+//     sh "chmod +x ./fulcrum-provisioning-system/scripts/check_site.rb"  
+//     sh "./fulcrum-provisioning-system/scripts/check_site.rb --config https://github.kdc.capitalone.com/raw/DevTools/FPS-stacks/master/${team_name}/horizontalprod/jenkins/${team_name}-build-service.json --response '[Jenkins]'"
+//   }
+//   stage ('IsTeamStackUP'){
+//     input message: "Is ${team_name} new stack working as expected?" 
+//   }
+//   stage ('TearDownStackinHnonProd'){
+//     //sh "ruby bin/provision.rb --action delete --config ${team_name}.jenkins.config"
+//    }
+  
+}
