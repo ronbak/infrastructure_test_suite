@@ -145,7 +145,7 @@ class WRAzureNsgRulesMgmt
     local_addr = @parameters['vNet']['value']['landscapes'][env]['subnets'][subnet_name]
     return local_addr unless local_addr.nil?
     obj = @parameters['vNet']['value']['landscapes'].select { |landscape, landscape_data| landscape_data['subnets'].include?(subnet_name)}
-    return obj.values[0]['subnets'][subnet_name] unless obj.nil? && obj.count.eql?(1)
+    return obj.values[0]['subnets'][subnet_name] unless obj.nil? || obj.count != 1
   end
   
   # Updates the built rule with the correct values  
@@ -175,4 +175,4 @@ class WRAzureNsgRulesMgmt
     return new_rule
   end
 
-end 
+end

@@ -7,50 +7,26 @@ node {
     sh "cd infrastructure_test_suite/ && git submodule update --init --recursive"
   }
   stage ('BuildTemplates'){
-    env.CSRE_LOG_LEVEL = "${log_level}"
-    sh "ruby bin/provision.rb --action output --output ../core_network.json --environment core --config ../arm_templates/networks/config/network_core.config.json"
+    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+    string(credentialsId: 'xycsrecore01-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+      env.CSRE_LOG_LEVEL = "${log_level}"
+      sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./core_network.json --environment core --config arm_templates/networks/configs/networking_core.config.json --complete --prep_templates"      
+    }
   }
-//   stage ('GetTeamConfig'){
-//     env.team_name = "${team_name}"
-//     sh "chmod +x ./fulcrum-provisioning-system/bin/checkforstacks.rb"
-//     sh "./fulcrum-provisioning-system/bin/checkforstacks.rb ${team_name}"
-//   }
-//   stage ('UpdateTeamConfig'){
-//     //Update Teams' config with Hprod values
-//     sh "./horizontal-prod-migration/config_update/configMigrator.rb -t ${team_name} -c ${team_name}.jenkins.config"
-//   }
-//   stage ('RequestIAMroles'){
-//     echo "${team_name}"
-//     //Request IAM roles
-//      withEnv(["team_name=$team_name", "app=$app"]){
-//     sh "chmod +x ./fulcrum-provisioning-system/bin/migrate_roles.rb"     
-//     sh "./fulcrum-provisioning-system/bin/migrate_roles.rb"}
-//   }
-//   stage ('s3BackupMigrator'){
-//     sh "chmod +x ./horizontal-prod-migration/s3_migration/migrate_S3_backup.rb"  
-//     sh "./horizontal-prod-migration/s3_migration/migrate_S3_backup.rb -t ${team_name} -c ${team_name}.jenkins.config"
-//   }
-//   stage ('createNewJenkinsJob'){
-//     withCredentials([usernamePassword(credentialsId: '7881426b-dbeb-437b-9a33-cebf304a76b5', passwordVariable: 'migrate_password', usernameVariable: 'migrate_username')]) {
-//     withEnv(["JCLIUSER=${migrate_username}","JCLIPASSWORD=${migrate_password}","team_name=${team_name.toLowerCase()}","team_eid_list=${team_eid_list}"]){
-//     sh "./horizontal-prod-migration/Provision-New-Jenkins-Server.sh"}
-//   }
-// }
-//   stage ('launchNewStack'){
-//     //start new stack
-//      withCredentials([usernamePassword(credentialsId: '7881426b-dbeb-437b-9a33-cebf304a76b5', passwordVariable: 'migrate_password', usernameVariable: 'migrate_username')]) {
-//      withEnv(["JCLIUSER=${migrate_username}", "JCLIPASSWORD=${migrate_password}", "team_name=${team_name.toLowerCase()}"]){
-//      sh "./horizontal-prod-migration/start_New_Stack.sh"}}
-//   }
-//   stage ('CheckForStack'){
-//     sh "chmod +x ./fulcrum-provisioning-system/scripts/check_site.rb"  
-//     sh "./fulcrum-provisioning-system/scripts/check_site.rb --config https://github.kdc.capitalone.com/raw/DevTools/FPS-stacks/master/${team_name}/horizontalprod/jenkins/${team_name}-build-service.json --response '[Jenkins]'"
-//   }
-//   stage ('IsTeamStackUP'){
-//     input message: "Is ${team_name} new stack working as expected?" 
-//   }
-//   stage ('TearDownStackinHnonProd'){
-//     //sh "ruby bin/provision.rb --action delete --config ${team_name}.jenkins.config"
-//    }
-  
+  stage ('CreatePackage'){
+    shortCommit = sh(returnStdout: true, script: "cd arm_templates && git log -n 1 --pretty=format:'%h'").trim()
+    sh "zip core_networks.1.0.0.${BUILD_NUMBER}.zip core_network.json core_network.parameters.json"
+  }
+  stage ('PushDeployOctopus'){
+    withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
+      sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb --api_key ${octopus_api_key} -u https://octopusdeploy.worldremit.com -p deploy-core-network -e csre-core -f core_networks.1.0.0.${BUILD_NUMBER}.zip -s deploy_arm_template"
+    }
+  }
+  stage ('PushPackageToOctopus'){
+    withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
+      //sh "/var/lib/octo/Octo push --package core_networks-${shortCommit}.zip --replace-existing --server https://octopusdeploy.worldremit.com --apiKey ${octopus_api_key}"
+      //sh "curl -X POST https://octopusdeploy.worldremit.com/api/packages/raw -H 'X-Octopus-ApiKey: ${octopus_api_key}' -F 'data=@core_networks-${shortCommit}.zip'"
+    }
+  }
 }

@@ -132,6 +132,32 @@ def retrieve_from_github_api(url, access_token)
   return res.body
 end
 
+def create_repo_status(url, access_token)
+  uri = URI(url)
+  https = Net::HTTP.new(uri.host, uri.port)
+  https.use_ssl = true
+  https.open_timeout = 5
+  https.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  req = Net::HTTP::Post.new(uri.request_uri)
+  req['Authorization'] = "token #{access_token}"
+# req['Accept'] = 'application/vnd.github.v3.raw'
+  res = https.request(req)
+end
+
+  # l = URI.parse(url)
+  # File.open(file_name) do |payload|
+  #   req = Net::HTTP::Post::Multipart.new url.path,
+  #     "file" => UploadIO.new(payload, "bin/zip", file_name)
+  #   req[api_header] = api_key
+  #   https = Net::HTTP.new(url.host, url.port)
+  #   https.use_ssl = true
+  #   res = https.request(req)
+  # end
+
+
+
+
+
 def retrieve_from_gitlab_api(url, access_token)
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port)
@@ -177,4 +203,10 @@ end
 
 def write_file(file_name, data)
   open file_name, 'w' do |io| io.write data end
+end
+
+def write_hash_to_disk(hash, file_path)
+  File.open(file_path, 'w') do |file|
+    file.write JSON.pretty_generate(hash)
+  end
 end

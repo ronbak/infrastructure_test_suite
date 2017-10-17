@@ -171,7 +171,7 @@ class WRAzureDeployer
 
   # Uploads any linked templates to Azure Storage and updates master template URL and adds SAS token. 
   def prepare_linked_templates()
-    @template = WRAzureTemplateManagement.new(@template, @environment, @rules_template, @parameters, @csrelog).process_templates()
+    @template = WRAzureTemplateManagement.new(@template, @environment, @rules_template, @parameters, @output, @csrelog).process_templates()
   end
 
   def add_rules_to_existing_template()
@@ -206,30 +206,6 @@ class WRAzureDeployer
     file_path = "#{file_path}.json" unless file_path[-5..-1] == '.json'
     write_hash_to_disk(output_hash, file_path)
   end
-
-  def write_hash_to_disk(hash, file_path)
-    File.open(file_path, 'w') do |file|
-      file.write JSON.pretty_generate(hash)
-    end
-  end
-
-  # def get_params(string) 
-  #   if uri?(string)
-  #     obj = get_data_from_url(string).body
-  #   else
-  #     obj = File.read(string)
-  #   end
-  #   return JSON.parse(obj)["parameters"]
-  # end
-
-  # def get_json_object(string)
-  #   if uri?(string)
-  #     obj = get_data_from_url(string).body
-  #   else
-  #     obj = File.read(string)
-  #   end
-  #   return JSON.parse(obj)
-  # end
 
   def delete_rg()
     @csrelog.debug(@rg_name)

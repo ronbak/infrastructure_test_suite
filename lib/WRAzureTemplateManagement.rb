@@ -9,7 +9,7 @@ require_relative 'WRAzureNsgRulesMgmt'
 
 class WRAzureTemplateManagement
 
-  def initialize(master_template, environment, rules_template, parameters, logger = nil)
+  def initialize(master_template, environment, rules_template, parameters, output, logger = nil)
     @master_template = master_template #Should be in hash form
     @environment = environment
     @rules_template = rules_template
@@ -17,6 +17,7 @@ class WRAzureTemplateManagement
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
     @templates_container = 'templates' # Azure Storage container foor uploaded templates
     @csrelog = logger
+    @output = output
   end
 
   def build_templates_list(master_template)
@@ -34,7 +35,11 @@ class WRAzureTemplateManagement
         raw_template = { resource['properties']['templateLink']['uri'] => JSON.pretty_generate(WRConfigManager.new(config: template_url).config) }
         # inject the rules into the nsg template
         raw_template = inject_rules_to_template(@rules_template, raw_template) if @rules_template 
+        # Inject subnets directly in to the VNets template - to maintain subnet state during redeploys
         raw_template = inject_subnets_to_template(raw_template)
+        # write lined templates to disk for testing
+        write_hash_to_disk(JSON.parse(raw_template.values.first), @output.split('/')[-1].split('.')[0] + '.' + raw_template.keys.first.split('/')[-1]) if @output
+        # upload linked templates to Azure storage
         @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
         if upload_template_to_storage(raw_template)
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
