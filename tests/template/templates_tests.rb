@@ -39,7 +39,7 @@ elsif networks_to_deploy.uniq.include?('none')
   deploy_string = 'none'
 end
 puts 'writing file'
-write_file('networks_to_deploy.txt', networks_to_deploy)
+write_file('networks_to_deploy.txt', deploy_string)
 
 class TestWRTemplate <  MiniTest::Test
 
