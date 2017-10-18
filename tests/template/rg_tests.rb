@@ -15,12 +15,17 @@ class TestRGTemplate <  MiniTest::Test
     template = WRConfigManager.new(config: ENV['template']).config
     run_models = ['9-5', 'm-f', '247']
     locations = ['WestEurope', 'NorthEurope']
+    allowed_elements = ['name', 'access_group_id', 'tags', 'universal']
     # Verify JSON
     assert_kind_of(Hash, template)
     # Verify maximum of 4 elements in the config
-    assert_operator(4, :<=, template.keys.count)
+    assert_operator(template.keys.count, :<=, 4)
     # Verify all 5 tags are included
-    assert_operator(5, :==, template['tags'].keys.count)
+    assert_operator(template['tags'].keys.count, :==, 5)
+    # Verify no extra elements are included
+    template.keys.each do |element_name| 
+      assert_includes(allowed_elements, element_name, 'It looks like you\'ve added an element we\'re not exepcting')
+    end
     # Verify each element is included and all tags are present
     assert_equal(true, template.keys.include?('name'), 'You\'re missing the name element')
     assert_equal(true, template.keys.include?('access_group_id'), 'You\'re missing the access_group_id element')
@@ -39,7 +44,7 @@ class TestRGTemplate <  MiniTest::Test
     assert_equal([template['tags']['Team']], template['tags']['Team'].scan(/[a-zA-Z0-9\s]{2,32}/), "Team tag must contain only alpha numeric characters and white space and be no more than 32 characters")
     assert_equal([template['access_group_id']], template['access_group_id'].scan(/[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}/), "Access group must be a valid GUID reference")
     assert_equal([template['name']], template['name'].scan(/[a-zA-Z0-9\-\_]{2,64}/), "name element must contain only alphanumeric characters and '-' or '_', It can be no longer than 64 characters")
-    assert_includes([true, false, nil], template.dig('universal'))
+    assert_includes([true, false], template['universal']) if template.keys.count.equal?(4) 
   end
 
 end
