@@ -18,6 +18,8 @@ gem install minitest
 gem install minitest-reporters
 gem install simplecov
 gem install OptionParser
+gem install netaddr
+gem install git
 
 
 wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -

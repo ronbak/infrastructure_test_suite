@@ -86,7 +86,7 @@ class TestWRTemplate <  MiniTest::Test
         # validate there are no  duplicate priorities or rule numbers
         assert_empty(inbound_priority.group_by{ |e| e }.select { |k, v| v.size > 1 }.keys, 'You have a duplicate priority / rule number on your inbound rules')
         assert_empty(outbound_priority.group_by{ |e| e }.select { |k, v| v.size > 1 }.keys, 'You have a duplicate priority / rule number on your outbound rules')
-        assert_empty(rules_array.detect{ |e| rules_array.count(e) > 1 }, "You have a duplicate rule object in your template")
+        assert_nil(rules_array.detect{ |e| rules_array.count(e) > 1 }, "You have a duplicate rule object in your template")
       end
     end
     puts 'writing file'
