@@ -84,8 +84,8 @@ class TestWRTemplate <  MiniTest::Test
           outbound_priority << rule['properties']['priority']
         end
         # validate there are no  duplicate priorities or rule numbers
-        assert_empty(inbound_priority.group_by{ |e| e }.select { |k, v| v.size > 1 }.keys)
-        assert_empty(outbound_priority.group_by{ |e| e }.select { |k, v| v.size > 1 }.keys)
+        assert_empty(inbound_priority.group_by{ |e| e }.select { |k, v| v.size > 1 }.keys, 'You have a duplicate priority / rule number on your inbound rules')
+        assert_empty(outbound_priority.group_by{ |e| e }.select { |k, v| v.size > 1 }.keys, 'You have a duplicate priority / rule number on your outbound rules')
       end
     end
   end
