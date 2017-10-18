@@ -14,10 +14,12 @@ node {
           stage ('DeployPolicy'){
             sh "ruby infrastructure_test_suite/bin/provision.rb --action deploy_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
           }
+          break
         case "assign":
           stage ('AssignPolicy'){
             sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
           }
+          break
         case "deployAndAssign":
           stage ('DeployPolicy'){
             sh "ruby infrastructure_test_suite/bin/provision.rb --action deploy_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
@@ -25,6 +27,9 @@ node {
           stage ('AssignPolicy'){
             sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
           }
+          break
+        default:
+          echo 'Nothing set'
       }
     }
   }
