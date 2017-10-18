@@ -38,6 +38,8 @@ elsif networks_to_deploy.uniq.include?('core')
 elsif networks_to_deploy.uniq.include?('none')
   deploy_string = 'none'
 end
+puts 'writing file'
+write_file('networks_to_deploy.txt', networks_to_deploy)
 
 class TestWRTemplate <  MiniTest::Test
 
@@ -89,8 +91,6 @@ class TestWRTemplate <  MiniTest::Test
         assert_nil(rules_array.detect{ |e| rules_array.count(e) > 1 }, "You have a duplicate rule object in your template")
       end
     end
-    puts 'writing file'
-    write_file('networks_to_deploy.txt', networks_to_deploy)
   end
 
 end
