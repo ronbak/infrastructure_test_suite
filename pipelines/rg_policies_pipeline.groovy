@@ -10,22 +10,22 @@ node {
     withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),]) {
       switch(action) {
-      case "deploy":
-        stage ('DeployPolicy'){
-          
-          sh "ruby infrastructure_test_suite/bin/provision.rb --action deploy_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
-        }
-      case "assign":
-        stage ('AssignPolicy'){
-          sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
-        }
-      case "deployAndAssign":
-        stage ('DeployPolicy'){
-          sh "ruby infrastructure_test_suite/bin/provision.rb --action deploy_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
-        }
-        stage ('AssignPolicy'){
-          sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
-        }
+        case "deploy":
+          stage ('DeployPolicy'){
+            sh "ruby infrastructure_test_suite/bin/provision.rb --action deploy_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
+          }
+        case "assign":
+          stage ('AssignPolicy'){
+            sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
+          }
+        case "deployAndAssign":
+          stage ('DeployPolicy'){
+            sh "ruby infrastructure_test_suite/bin/provision.rb --action deploy_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
+          }
+          stage ('AssignPolicy'){
+            sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
+          }
+        default:
       }
     }
   }
