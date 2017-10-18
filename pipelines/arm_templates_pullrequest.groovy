@@ -11,6 +11,8 @@ try {
             sh "echo 'this is a test'"
             sh "ls -lah && cd arm_templates && cat test_for_merge.txt"
             sh "cd infrastructure_test_suite && ls -lah"
+            sh "printenv"
+            sh "ruby infrastructure_test_suite/tests/template/nsg_rules_tests.rb ./  ${env.GITHUB_PR_HEAD_SHA} $(git merge-base master ${env.GITHUB_PR_SOURCE_BRANCH'})"
         }
         stage ('notify git hub') {
             setGitHubPullRequestStatus context: "${env.JOB_NAME}", message: 'SUCCESS', state: 'SUCCESS'

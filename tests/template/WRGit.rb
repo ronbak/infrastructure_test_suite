@@ -10,4 +10,8 @@ class WRGit
     @git.diff(latest_commit, previous_commit).stats[:files]
   end
 
+  def branch_origin()
+    `git merge-base master #{ENV['GITHUB_PR_SOURCE_BRANCH']}`
+  end
+
 end
