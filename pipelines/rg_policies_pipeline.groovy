@@ -25,7 +25,6 @@ node {
           stage ('AssignPolicy'){
             sh "ruby infrastructure_test_suite/bin/provision.rb --action assign_policy --environment ${subscription} --config ${policy_template} --complete --prep_templates"      
           }
-        default:
       }
     }
   }
