@@ -1,0 +1,127 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type":"string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object"
+    },
+    "subnets_array": {
+      "type": "array"
+    },
+    "environment": {
+      "type": "String"
+    },
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "description": "Default tags required, passed in as a hash"
+      }
+    },
+    "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    }
+  },
+  "variables": {
+    "inject_rules_here": true
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat('nsg01-', parameters('subnets_array')[copyIndex()].landscape, '-', parameters('location_tag'), '-', parameters('subnets_array')[copyIndex()].name)]",
+      "condition": "[not(equals(parameters('subnets_array')[copyIndex()].name, parameters('vNet').landscapes.gateway.name))]",
+      "copy": {
+        "name": "nsgCopy",
+        "count": "[length(parameters('subnets_array'))]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+            "description": "Allow access to all vNets",
+            "protocol": "*",
+            "sourcePortRange": "*",
+            "destinationPortRange": "*",
+            "sourceAddressPrefix": "*",
+            "destinationAddressPrefix": "VirtualNetwork",
+            "access": "Allow",
+            "priority": 4095,
+            "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+            "description": "Allow access to internet",
+            "protocol": "*",
+            "sourcePortRange": "*",
+            "destinationPortRange": "*",
+            "sourceAddressPrefix": "*",
+            "destinationAddressPrefix": "Internet",
+            "access": "Allow",
+            "priority": 4096,
+            "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+            "description": "Allow core network in",
+            "protocol": "Tcp",
+            "sourcePortRange": "*",
+            "destinationPortRange": "*",
+            "sourceAddressPrefix": "[parameters('vNet').landscapes.core.addressSpacePrefix]",
+            "destinationAddressPrefix": "*",
+            "access": "Allow",
+            "priority": 100,
+            "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+            "description": "Allow access from gateway subnet",
+            "protocol": "*",
+            "sourcePortRange": "*",
+            "destinationPortRange": "*",
+            "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+            "destinationAddressPrefix": "*",
+            "access": "Allow",
+            "priority": 110,
+            "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+            "description": "block all traffic from other dev landscapes",
+            "protocol": "*",
+            "sourcePortRange": "*",
+            "destinationPortRange": "*",
+            "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+            "destinationAddressPrefix": "*",
+            "access": "Deny",
+            "priority": 4096,
+            "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

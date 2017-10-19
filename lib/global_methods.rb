@@ -106,9 +106,11 @@ def convert_git_raw_to_api(url)
   github_api_url = 'https://api.github.com/repos'
   github_raw_url = 'https://raw.githubusercontent.com'
   if url[0..32] == github_raw_url
-    url.sub! github_raw_url, github_api_url
-    url.sub! url.split(github_api_url)[-1].split('/')[3], 'contents'
-    return url
+    @csrelog.debug('URL is beng converted to GitHub API url')
+    git_url = url.sub github_raw_url, github_api_url
+    git_url = git_url.sub git_url.split(github_api_url)[-1].split('/')[3], 'contents'
+    @csrelog.debug(git_url)
+    return git_url
   elsif url[0..27] == github_api_url
     return url
   else

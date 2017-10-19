@@ -5,11 +5,9 @@ require 'pry-byebug'
 # Builds rules resources based on input template
 class WRAzureNsgRulesMgmt
 
-  def initialize(parameters, templates_array, nsg_template, csrelogger)
+  def initialize(parameters, templates_array, csrelogger)
     # Sanitize params input to hash
     @parameters = WRConfigManager.new(config: parameters).config
-    # Get template
-    @template = WRConfigManager.new(config: nsg_template).config
     # @template_string = template
     @csrelog = csrelogger
     # Create hash of base rule set
@@ -31,38 +29,15 @@ class WRAzureNsgRulesMgmt
 
   # Create Array of populated rules for every subnet/NSG
   def process_rules()
-    # Expand the NSG object for each landscape
-    base_nsg_object = @template['resources'].first
-    @template['resources'].delete(base_nsg_object)
-    @parameters['subnets_array']['value'].each do |subnet|
-      nsg = create_nsg_object(subnet, Marshal::load(Marshal.dump(base_nsg_object)))
-      nsg = inject_rules_into_nsg(nsg, subnet)
-      @template['resources'] << nsg
+    resources = []
+    @base_resources.each do |base_rule|
+      @landscapes.each do |subnet, data|
+        rule = update_rule_object(subnet, Marshal::load(Marshal.dump(base_rule)))
+        resources << rule
+      end
     end
-    return @template
+    return resources
   end
-
-  def create_nsg_object(subnet, base_nsg_object)
-    base_nsg_object['name'] = "nsg01-#{subnet['landscape']}-#{@parameters['location_tag']['value']}-#{subnet['name']}"
-    base_nsg_object['condition'] = base_nsg_object['condition'].gsub("parameters('subnets_array')[copyIndex()].name", "'#{subnet['name']}'")
-    base_nsg_object.delete('copy')
-    return base_nsg_object
-  end
-
-  def inject_rules_into_nsg(nsg, subnet)
-    rules_to_apply = @base_resources.select { |rule| rule['properties']['destinationAddressPrefix'] == subnet['name'] }
-    rules_to_apply.each do |base_rule|
-      rule = update_rule_object(subnet['landscape'], Marshal::load(Marshal.dump(base_rule)))
-      rule.delete('apiVersion')
-      rule.delete('location')
-      rule.delete('type')
-      rule['name'] = rule['name'].split('/')[-1]
-      nsg['properties']['securityRules'] << rule
-    end
-    return nsg
-  end
-
-
 
   # build an array of rules resources from all the base rule templates supplied. 
   def retrieve_resources(templates_array)

@@ -27,6 +27,7 @@ class WRConfigManager
       elsif config[0..44] == 'https://raw.githubusercontent.com/Worldremit/'
         @csrelog.debug('Your url is in WorldRemit Github, attempting to authenticate first')
         config = convert_git_raw_to_api(config)
+        @csrelog.debug("this is your config file: #{config}")
         # Get Git Access Token
         access_token = WRAzureCredentials.new().get_git_access_token
         raw_data = retrieve_from_github_api(config, access_token)

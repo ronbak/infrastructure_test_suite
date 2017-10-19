@@ -37,8 +37,16 @@ class WRAzureTemplateManagement
         raw_template = inject_rules_to_template(@rules_template, raw_template) if @rules_template 
         # Inject subnets directly in to the VNets template - to maintain subnet state during redeploys
         raw_template = inject_subnets_to_template(raw_template)
-        # write lined templates to disk for testing
-        write_hash_to_disk(JSON.parse(raw_template.values.first), @output.split('/')[-1].split('.')[0] + '.' + raw_template.keys.first.split('/')[-1]) if @output
+        # write linked templates to disk for testing
+        if @output 
+          output_file_name =  if @output.include?('/')
+                                folder_path = @output.gsub(@output.split('/')[-1], '')
+                                folder_path + @output.split('/')[-1].split('.')[0] + '.' + raw_template.keys.first.split('/')[-1]
+                              else
+                                @output.split('/')[-1].split('.')[0] + '.' + raw_template.keys.first.split('/')[-1]
+                              end
+          write_hash_to_disk(JSON.parse(raw_template.values.first), output_file_name)                              
+        end
         # upload linked templates to Azure storage
         @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
         if upload_template_to_storage(raw_template)
@@ -78,14 +86,14 @@ class WRAzureTemplateManagement
 
   def add_rules_to_existing_template(rules_array, nsg_template)
     # build the rules resources
-    rules_expanded_resources = build_rules_template(@parameters, rules_array)
+    return build_rules_template(@parameters, rules_array, nsg_template)
     # Set DependsOn to NSG this rule is applied to
-    rules_expanded_resources.each do |rules_resource|
-      rules_resource['dependsOn'] = ["Microsoft.Network/networkSecurityGroups/#{rules_resource['name'].split('/')[0]}"]
-    end
-    # add rules resources to nsg_template
-    nsg_template['resources'] += rules_expanded_resources
-    return nsg_template
+    # rules_expanded_resources.each do |rules_resource|
+    #   rules_resource['dependsOn'] = ["Microsoft.Network/networkSecurityGroups/#{rules_resource['name'].split('/')[0]}"]
+    # end
+    # # add rules resources to nsg_template
+    # nsg_template['resources'] += rules_expanded_resources
+    # return nsg_template
   end
 
   def add_subnets_to_existing_template(vnet_template)
@@ -139,8 +147,8 @@ class WRAzureTemplateManagement
   end
 
   # Cycles through any rules in and creates them for each subnet in the subnet_array parameter
-  def build_rules_template(parameters, base_template)
-    WRAzureNsgRulesMgmt.new(parameters, base_template, @csrelog).process_rules
+  def build_rules_template(parameters, base_template, nsg_template)
+    WRAzureNsgRulesMgmt.new(parameters, base_template, nsg_template, @csrelog).process_rules
   end
 
   def upload_template_to_storage(raw_templates = {})
