@@ -225,10 +225,12 @@
   
 ## Resource Expansion
 For both Subnets and NSG's the tool expands the resources in the templates for each landscape. For example, with NSG's we have 1 defined in the NSG template. The tool reads the lanscapes in the `vNet` parameter and determines we need 24 NSG resources. There are 6 landscapes in nonprod and each landscape consists of 4 subnets.  
-The tool creates each NSG resource, names it correctly, and injects the rules as above based on the repsence of a specific variable, `inject_rules_here`. If this value is set to `true` the tool with expand the NSG resource for each landscape and inject all the rules.  
+The tool creates each NSG resource, names it correctly, and injects the rules as above based on the presence of a specific variable, `inject_rules_here`. If this value is set to `true` the tool will expand the NSG resource for each landscape and inject all the rules.  
 The same applies for subnets in the Vnets template. The tool looks for the template variable `inject_subnets_here`. If it finds it, it creates a subnet resource (a sub-resource of a VNet resource) based on the values in the `vNet` parameter and injecs it in to the VNet resource in the template.  
+  
+
 The purpose of this process is firstly, to have an easily managed template; the NSG's template is 128 lines long, however if we were to expand all the resources of each landscape it would be 2681 lines long for the nonprd environment alone. Add prd and core and we're well over 3000 lines of template just for NSG's. 
-Secondly, if we need to make a chnage to a single resource we would have to remember to make that change for every landsacpe. Though this is possible, with a minimum of 8 landscapes, that gives us 8 opportunities to make a mistake. 
+Secondly, if we need to make a change to a single resource we would have to remember to make that change for every landsacpe. Though this is possible, with a minimum of 8 landscapes, that gives us 8 opportunities to make a mistake. 
 Finally, should we ever need to add to our network, either a landscape, a subnet or anything else, we simply add it to the `vNet` parameter and the tool builds all the resources required for it to function in the same manner as the existing resources. If we had static templates, that would be a very large and error prone task. As we expand as a company our cloud infrastrucure expands too and these processes become vital to ensure consistency and scalability without errors.
 
 
@@ -236,7 +238,7 @@ Finally, should we ever need to add to our network, either a landscape, a subnet
 The diagram below describes a typical deploymnt of the networking resources to the Non-Production subscription. It shows how all classes interact and what they do in order to create the ARM templates, link tehm correctly and deploy them to Azure. 
 ![class interaction](https://github.com/chudsowr/infrastructure_test_suite/documentation/toolSoftwareFlow.png "Class Interaction")  
   
-  
+
 ## Contribution Guide
 
 If you want to contribute code:
