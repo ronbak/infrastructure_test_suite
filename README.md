@@ -232,6 +232,11 @@ Secondly, if we need to make a chnage to a single resource we would have to reme
 Finally, should we ever need to add to our network, either a landscape, a subnet or anything else, we simply add it to the `vNet` parameter and the tool builds all the resources required for it to function in the same manner as the existing resources. If we had static templates, that would be a very large and error prone task. As we expand as a company our cloud infrastrucure expands too and these processes become vital to ensure consistency and scalability without errors.
 
 
+## Example Deployment Flow and Class Interaction
+The diagram below describes a typical deploymnt of the networking resources to the Non-Production subscription. It shows how all classes interact and what they do in order to create the ARM templates, link tehm correctly and deploy them to Azure. 
+![class interaction](https://github.com/chudsowr/infrastructure_test_suite/documentation/toolSoftwareFlow.png "Class Interaction")  
+  
+  
 ## Contribution Guide
 
 If you want to contribute code:

@@ -6,6 +6,7 @@ require_relative 'WRAzureCredentials'
 require_relative 'WRAzureStorageManagement'
 require_relative 'WRConfigManager'
 require_relative 'WRAzureNsgRulesMgmt'
+require_relative 'WRSubnetInjector'
 
 class WRAzureTemplateManagement
 
@@ -67,7 +68,8 @@ class WRAzureTemplateManagement
   def inject_rules_to_template(rules_array, raw_template)
     nsg_template = JSON.parse(raw_template.values[0])
     if nsg_template.dig('variables', 'inject_rules_here')
-      nsg_template = add_rules_to_existing_template(rules_array, nsg_template)
+      nsg_template = WRAzureNsgRulesMgmt.new(@parameters, rules_array, nsg_template, @csrelog).process_rules
+      #nsg_template = add_rules_to_existing_template(rules_array, nsg_template)
       raw_template[raw_template.keys[0]] = JSON.pretty_generate(nsg_template)
       return raw_template
     end
@@ -77,79 +79,31 @@ class WRAzureTemplateManagement
   def inject_subnets_to_template(raw_template)
     vnet_template = JSON.parse(raw_template.values[0])
     if vnet_template.dig('variables', 'inject_subnets_here')
-      vnet_template = add_subnets_to_existing_template(vnet_template)
+      vnet_template = WRSubnetInjector.new(vnet_template, @environment, @parameters).process_subnets
+      binding.pry
+      #vnet_template = add_subnets_to_existing_template(vnet_template)
       raw_template[raw_template.keys[0]] = JSON.pretty_generate(vnet_template)
       return raw_template
     end
     return raw_template
   end
 
-  def add_rules_to_existing_template(rules_array, nsg_template)
-    # build the rules resources
-    return build_rules_template(@parameters, rules_array, nsg_template)
-    # Set DependsOn to NSG this rule is applied to
-    # rules_expanded_resources.each do |rules_resource|
-    #   rules_resource['dependsOn'] = ["Microsoft.Network/networkSecurityGroups/#{rules_resource['name'].split('/')[0]}"]
-    # end
-    # # add rules resources to nsg_template
-    # nsg_template['resources'] += rules_expanded_resources
-    # return nsg_template
-  end
+  # def add_rules_to_existing_template(rules_array, nsg_template)
+  #   # build the rules resources
+  #   return build_rules_template(@parameters, rules_array, nsg_template)
+  #   # Set DependsOn to NSG this rule is applied to
+  #   # rules_expanded_resources.each do |rules_resource|
+  #   #   rules_resource['dependsOn'] = ["Microsoft.Network/networkSecurityGroups/#{rules_resource['name'].split('/')[0]}"]
+  #   # end
+  #   # # add rules resources to nsg_template
+  #   # nsg_template['resources'] += rules_expanded_resources
+  #   # return nsg_template
+  # end
 
-  def add_subnets_to_existing_template(vnet_template)
-    built_subnets_array = []
-    @parameters['vNet']['value']['landscapes'].each do |landscape_name, landscape_data|
-      landscape_data['subnets'].each do |subnet_name, subnet_addr|
-        if @environment.eql?('core')
-          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr) unless landscape_name.eql?('gateway')
-          built_subnets_array << build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr) if landscape_name.eql?('gateway')
-        else
-          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr) unless landscape_name.eql?('gateway') || landscape_name.eql?('core')
-          built_subnets_array << build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr) if landscape_name.eql?('gateway')
-        end
-      end
-    end
-    vnet_template['resources'][0]['properties']['subnets'] = built_subnets_array
-    return vnet_template
-  end
-
-  def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr)
-    return {
-      "name" => "#{landscape_name}_#{subnet_name}",
-      "properties" => {"addressPrefix" => subnet_addr,
-        "networkSecurityGroup" => {
-          "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{landscape_name}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
-        },
-        "routeTable" => {
-          "id" => "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-rot-01'))]"
-        }
-      }
-    }
-  end
-
-  def build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr)
-    if subnet_name.eql?('GatewaySubnet')
-      return {
-        "name" => subnet_name,
-        "properties" => {"addressPrefix" => subnet_addr
-        }
-      }
-    else
-      return {
-        "name" => "#{@environment}_#{subnet_name}",
-        "properties" => {"addressPrefix" => subnet_addr,
-          "networkSecurityGroup" => {
-            "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{@environment}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
-          }
-        }
-      }
-    end
-  end
-
-  # Cycles through any rules in and creates them for each subnet in the subnet_array parameter
-  def build_rules_template(parameters, base_template, nsg_template)
-    WRAzureNsgRulesMgmt.new(parameters, base_template, nsg_template, @csrelog).process_rules
-  end
+  # # Cycles through any rules in and creates them for each subnet in the subnet_array parameter
+  # def build_rules_template(parameters, base_template, nsg_template)
+  #   WRAzureNsgRulesMgmt.new(parameters, base_template, nsg_template, @csrelog).process_rules
+  # end
 
   def upload_template_to_storage(raw_templates = {})
     storer = WRAzureStorageManagement.new(environment: @environment, container: @templates_container)
