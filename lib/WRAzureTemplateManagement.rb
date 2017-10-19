@@ -69,7 +69,6 @@ class WRAzureTemplateManagement
     nsg_template = JSON.parse(raw_template.values[0])
     if nsg_template.dig('variables', 'inject_rules_here')
       nsg_template = WRAzureNsgRulesMgmt.new(@parameters, rules_array, nsg_template, @csrelog).process_rules
-      #nsg_template = add_rules_to_existing_template(rules_array, nsg_template)
       raw_template[raw_template.keys[0]] = JSON.pretty_generate(nsg_template)
       return raw_template
     end
@@ -80,30 +79,11 @@ class WRAzureTemplateManagement
     vnet_template = JSON.parse(raw_template.values[0])
     if vnet_template.dig('variables', 'inject_subnets_here')
       vnet_template = WRSubnetInjector.new(vnet_template, @environment, @parameters).process_subnets
-      binding.pry
-      #vnet_template = add_subnets_to_existing_template(vnet_template)
       raw_template[raw_template.keys[0]] = JSON.pretty_generate(vnet_template)
       return raw_template
     end
     return raw_template
   end
-
-  # def add_rules_to_existing_template(rules_array, nsg_template)
-  #   # build the rules resources
-  #   return build_rules_template(@parameters, rules_array, nsg_template)
-  #   # Set DependsOn to NSG this rule is applied to
-  #   # rules_expanded_resources.each do |rules_resource|
-  #   #   rules_resource['dependsOn'] = ["Microsoft.Network/networkSecurityGroups/#{rules_resource['name'].split('/')[0]}"]
-  #   # end
-  #   # # add rules resources to nsg_template
-  #   # nsg_template['resources'] += rules_expanded_resources
-  #   # return nsg_template
-  # end
-
-  # # Cycles through any rules in and creates them for each subnet in the subnet_array parameter
-  # def build_rules_template(parameters, base_template, nsg_template)
-  #   WRAzureNsgRulesMgmt.new(parameters, base_template, nsg_template, @csrelog).process_rules
-  # end
 
   def upload_template_to_storage(raw_templates = {})
     storer = WRAzureStorageManagement.new(environment: @environment, container: @templates_container)
