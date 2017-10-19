@@ -236,7 +236,7 @@ Finally, should we ever need to add to our network, either a landscape, a subnet
 
 ## Example Deployment Flow and Class Interaction
 The diagram below describes a typical deploymnt of the networking resources to the Non-Production subscription. It shows how all classes interact and what they do in order to create the ARM templates, link tehm correctly and deploy them to Azure. 
-![class interaction](https://github.com/chudsowr/infrastructure_test_suite/documentation/toolSoftwareFlow.png "Class Interaction")  
+![class interaction](https://github.com/chudsonwr/infrastructure_test_suite/blob/simplified_classes/documentation/toolSoftwareFlow.png "Class Interaction")  
   
 
 ## Contribution Guide
