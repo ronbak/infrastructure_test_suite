@@ -31,11 +31,15 @@ class WRAzureNsgRulesMgmt
 
   # Create Array of populated rules for every subnet/NSG
   def process_rules()
-    # Expand the NSG object for each landscape
+    # extract base NSG resource object from the template
     base_nsg_object = @template['resources'].first
+    # delete the extracted resource fro the template
     @template['resources'].delete(base_nsg_object)
+    # Loop through each subnet in the subnets_array
     @parameters['subnets_array']['value'].each do |subnet|
+      # create the NSG resource object for the subnet
       nsg = create_nsg_object(subnet, Marshal::load(Marshal.dump(base_nsg_object)))
+      # Inject all of the rules for the given subnet in to the NSG resource / object.
       nsg = inject_rules_into_nsg(nsg, subnet)
       @template['resources'] << nsg
     end
