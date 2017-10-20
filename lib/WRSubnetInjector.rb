@@ -1,4 +1,5 @@
 require 'json'
+require 'pry-byebug'
 
 class WRSubnetInjector
 
@@ -14,13 +15,15 @@ class WRSubnetInjector
 
   def add_subnets_to_existing_template(vnet_template)
     built_subnets_array = []
+    route_table = vnet_template['resources'].find { |resource| resource['type'] == 'Microsoft.Network/routeTables' }
+    route_table_name = route_table['name'].gsub('[', '').gsub(']', '')
     @parameters['vNet']['value']['landscapes'].each do |landscape_name, landscape_data|
       landscape_data['subnets'].each do |subnet_name, subnet_addr|
         if @environment.eql?('core')
-          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr) unless landscape_name.eql?('gateway')
+          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name) unless landscape_name.eql?('gateway')
           built_subnets_array << build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr) if landscape_name.eql?('gateway')
         else
-          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr) unless landscape_name.eql?('gateway') || landscape_name.eql?('core')
+          built_subnets_array << build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name) unless landscape_name.eql?('gateway') || landscape_name.eql?('core')
           built_subnets_array << build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr) if landscape_name.eql?('gateway')
         end
       end
@@ -29,7 +32,7 @@ class WRSubnetInjector
     return vnet_template
   end
 
-  def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr)
+  def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name)
     return {
       "name" => "#{landscape_name}_#{subnet_name}",
       "properties" => {"addressPrefix" => subnet_addr,
@@ -37,7 +40,7 @@ class WRSubnetInjector
           "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{landscape_name}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
         },
         "routeTable" => {
-          "id" => "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-rot-01'))]"
+          "id" => "[resourceId('Microsoft.Network/routeTables', #{route_table_name})]"
         }
       }
     }
