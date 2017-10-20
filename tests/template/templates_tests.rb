@@ -93,5 +93,14 @@ class TestWRTemplate <  MiniTest::Test
     end
   end
 
+  def test_policy_templates
+    $files.each do |template|
+      if template.first.include?('/policies/')
+        puts "Performing a policy template test set"
+        assert_equal(true, valid_json?(template))
+      end
+    end
+  end
+
 end
 
