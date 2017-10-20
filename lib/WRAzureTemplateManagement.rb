@@ -50,10 +50,11 @@ class WRAzureTemplateManagement
         end
         # upload linked templates to Azure storage
         @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
-        if upload_template_to_storage(raw_template)
+        blob_name = upload_template_to_storage(raw_template)
+        if blob_name
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
-          canonicalized_resource = "#{@templates_container}/#{resource['properties']['templateLink']['uri'].split('/')[-1]}"
-          url = create_sas_url(path: canonicalized_resource, start: (Time.now - 5*60).utc.iso8601, expiry: (Time.now + 30*60).utc.iso8601)
+          canonicalized_resource = "#{@templates_container}/#{blob_name}"
+          url = create_sas_url(path: canonicalized_resource, start: (Time.now - 5*60).utc.iso8601, expiry: (Time.now + 365*24*60*60).utc.iso8601)
           @csrelog.debug("Updating linked template uri in master template to #{url}")
           resource['properties']['templateLink']['uri'] = url
         else
@@ -89,9 +90,9 @@ class WRAzureTemplateManagement
     storer = WRAzureStorageManagement.new(environment: @environment, container: @templates_container)
     raw_templates.each do |template_name, data|
       begin
-        blob_name = template_name.split('/')[-1]
+        blob_name = template_name.split('/')[-1] + '.' + Time.now().strftime("%d%m%Y%H%M%S")
         storer.upload_file_to_storage(data, blob_name)
-        return true
+        return blob_name
       rescue => e
         @csrelog.error("the upload to Azure Storage failed for #{template_name}")
         @csrelog.debug("the failed template object name is #{template_name}
