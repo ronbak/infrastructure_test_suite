@@ -54,7 +54,7 @@ class WRAzureTemplateManagement
         if blob_name
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
           canonicalized_resource = "#{@templates_container}/#{blob_name}"
-          url = create_sas_url(path: canonicalized_resource, start: (Time.now - 5*60).utc.iso8601, expiry: (Time.now + 365*24*60*60).utc.iso8601)
+          url = create_sas_url(path: canonicalized_resource, start: (Time.now - 5*60).utc.iso8601, expiry: (Time.now + 365*24*60*60).utc.iso8601, identifier: 'saslinkedtemplates')
           @csrelog.debug("Updating linked template uri in master template to #{url}")
           resource['properties']['templateLink']['uri'] = url
         else
@@ -103,10 +103,10 @@ class WRAzureTemplateManagement
     end
   end
 
-  def create_signature(path = '/', resource = 'b', permissions = 'r', start = '', expiry = '', identifier = '')
+  def create_signature(permissions = 'r', start = '', expiry = '', path = '/', identifier = '', ip = '', protocol = '', version = '', rscc = '', rscd = '', rsce = '', rscl = '', rsct = '')
     # If resource is a container, remove the last part (which is the filename)
-    path = path.split('/').reverse.drop(1).reverse.join('/') if resource == 'c'
-    canonicalizedResource = "/#{@storage_account}/#{path}"
+    #path = path.split('/').reverse.drop(1).reverse.join('/') if resource == 'c'
+    canonicalizedResource = "/blob/#{@storage_account}/#{path}"
     wms_api_key = WRAzureCredentials.new(environment: @environment).get_storage_account_key
     stringToSign  = []
     stringToSign << permissions
@@ -114,24 +114,33 @@ class WRAzureTemplateManagement
     stringToSign << expiry
     stringToSign << canonicalizedResource
     stringToSign << identifier
+    stringToSign << ip
+    stringToSign << protocol
+    stringToSign << version
+    stringToSign << rscc
+    stringToSign << rscd
+    stringToSign << rsce
+    stringToSign << rscl
+    stringToSign << rsct
   
     stringToSign = stringToSign.join("\n")
     signature    = OpenSSL::HMAC.digest('sha256', Base64.strict_decode64(wms_api_key), stringToSign.encode(Encoding::UTF_8))
     signature    = Base64.strict_encode64(signature)
     return signature
   end
-  
+
   def create_sas_url(path: '/', query_string: nil, resource: 'b', permissions: 'r', start: '', expiry: '', identifier: '')
     base = "https://#{@storage_account}.blob.core.windows.net"
     uri  = Addressable::URI.new
       # Parts
     parts       = {}
-    parts[:st]  = URI.unescape(start) unless start == ''
-    parts[:se]  = URI.unescape(expiry)
+    parts[:sv]  = URI.unescape('2015-04-05')
+    #parts[:st]  = URI.unescape(start) unless start == ''
     parts[:sr]  = URI.unescape(resource)
-    parts[:sp]  = URI.unescape(permissions)
+    #parts[:se]  = URI.unescape(expiry)
+    #parts[:sp]  = URI.unescape(permissions)
     parts[:si]  = URI.unescape(identifier) unless identifier == ''
-    parts[:sig] = URI.unescape( create_signature(path, resource, permissions, start, expiry) )
+    parts[:sig] = URI.unescape( create_signature('', '', '', path, identifier, '', '', '2015-04-05', '', '', '', '', '') )
   
     uri.query_values = parts
     return "#{base}/#{path}?#{uri.query}"
@@ -140,6 +149,8 @@ class WRAzureTemplateManagement
 end
 
 
+
+           
 
 # url = createSignedQueryString(
 #   'templates/nsgs.json',
