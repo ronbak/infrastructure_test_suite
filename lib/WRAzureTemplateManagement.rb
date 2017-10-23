@@ -16,7 +16,7 @@ class WRAzureTemplateManagement
     @rules_template = rules_template
     @parameters = parameters
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
-    @templates_container = 'templates' # Azure Storage container foor uploaded templates
+    @templates_container = wrmetadata().dig(@environment, 'storage_account', 'templates_container') # 'templates' # Azure Storage container foor uploaded templates
     @csrelog = logger
     @output = output
     @access_policy_id = 'saslinkedtemplates'
