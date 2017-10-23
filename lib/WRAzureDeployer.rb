@@ -70,8 +70,8 @@ class WRAzureDeployer
       deployment_name = deploy()
     when 'validate'
       files = Dir['*.json']
-      templates_to_test = files.select { |file| !file.include?('.parameters.') && file.include?(@output.split('/')[-1].split('.')[0])}
-      parameters_file = files.find { |file| file.include?('.parameters.') && file.include?(@output.split('/')[-1].split('.')[0])}
+      templates_to_test = files.select { |file| !file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
+      parameters_file = files.find { |file| file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
       results = {}
       @csrelog.debug("Testing the following templates: #{templates_to_test}\nUsing the following parameters file: #{parameters_file}\n")
       templates_to_test.each do |template|

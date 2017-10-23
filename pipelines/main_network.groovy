@@ -42,11 +42,11 @@ node {
       sh "echo 'Testing Prd templates'"
       sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./prd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment prd"
     }
-    sh "ruby infrastructure_test_suite/tests/templates/network_templates_test.rb"
+    sh "ruby infrastructure_test_suite/tests/template/network_templates_test.rb"
   }
   stage ('PushDeployOctopus'){
     withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
-      sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb -a ${octopus_api_key} -p deploy-main-network -e csre-nonproduction-arm -f main_networks.1.0.0.${BUILD_NUMBER}.zip -s 'deploy-nonprd-template deploy-prd-template'"
+      //sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb -a ${octopus_api_key} -p deploy-main-network -e csre-nonproduction-arm -f main_networks.1.0.0.${BUILD_NUMBER}.zip -s 'deploy-nonprd-template deploy-prd-template'"
     }
   }
   stage ('CleanUp'){
