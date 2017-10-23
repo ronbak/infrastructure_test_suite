@@ -24,7 +24,7 @@ node {
     string(credentialsId: 'xycsrecore01-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
       echo 'Testing Core templates'
-      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment nonprd"
+      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment core"
     }
     sh "ruby infrastructure_test_suite/tests/template/network_templates_tests.rb"
   }
