@@ -17,23 +17,30 @@ class TestWRTemplate <  MiniTest::Test
   def test_nsgs
     $files.each do |template|
       if template.include?('.nsgs') && !template.include?('external')
-        puts "Performing a NSG rules template test set"
+        if template.include?('nonprd')
+          nsgs_count = 24
+          rules_count = 156
+        else
+          nsgs_count = 4
+          rules_count = 26
+        end
+        Puts "Testing NSG's and rules count for: #{template}"
         tester = WRTemplatesTester.new(template)
         subnet_info = tester.allowed_subnet_names()
         nsgs_array = tester.template['resources']
-        assert_operator(nsgs_array.count, :>=, 24)
+        assert_operator(nsgs_array.count, :>=, nsgs_count)
         count = 0
         nsgs_array.each do |nsg|
           count += nsg['properties']['securityRules'].count
         end
-        assert_operator(count, :>=, 150)
+        assert_operator(count, :>=, rules_count)
       end
     end
   end
 
   def test_valid_json
     $files.each do |template|
-      puts "Validating JSOn for template: #{template}"
+      puts "Validating JSON for template: #{template}"
       assert_equal(true, valid_json?(File.read(template)))
     end
   end
