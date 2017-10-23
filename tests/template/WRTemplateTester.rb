@@ -25,7 +25,9 @@ class WRTemplatesTester
   def allowed_subnet_names()
     subnet_names_array = []
     env_addr_prefixes = []
-    list_config_files('../arm_templates/networks/configs/*').each do |config_file|
+    files = list_config_files("#{File.dirname(__FILE__)}/../../../arm_templates/networks/configs/*")
+    #files = list_config_files('arm_templates/networks/configs/*') if files.empty?
+    files.each do |config_file|
       config_hash = JSON.parse(File.read(config_file))
       config_hash.dig('environments').each do |env|
         unless env[1].dig('parameters', 'vNet', 'value', 'addressSpacePrefix').nil?

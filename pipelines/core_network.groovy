@@ -1,7 +1,7 @@
 node {
   stage ('CheckoutRequiredRepoFromGitHub'){
     //checkout hprod-migration repo   
-    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
+    checkout([$class: 'GitSCM', branches: [[name: '*/${branch}']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
     //chechout fps repo
     checkout([$class: 'GitSCM', branches: [[name: "*/master"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'arm_templates']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:Worldremit/arm_templates.git']]])
     sh "cd infrastructure_test_suite/ && git submodule update --init --recursive"
@@ -18,15 +18,19 @@ node {
     shortCommit = sh(returnStdout: true, script: "cd arm_templates && git log -n 1 --pretty=format:'%h'").trim()
     sh "zip core_networks.1.0.0.${BUILD_NUMBER}.zip core_network.json core_network.parameters.json"
   }
+  stage ('RunSomeTestsOnTheJson') {
+    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+    string(credentialsId: 'xycsrecore01-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+      env.CSRE_LOG_LEVEL = "${log_level}"
+      echo 'Testing Core templates'
+      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment core"
+    }
+    sh "ruby infrastructure_test_suite/tests/template/network_templates_tests.rb"
+  }
   stage ('PushDeployOctopus'){
     withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
-      sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb --api_key ${octopus_api_key} -u https://octopusdeploy.worldremit.com -p deploy-core-network -e csre-core -f core_networks.1.0.0.${BUILD_NUMBER}.zip -s deploy_arm_template"
-    }
-  }
-  stage ('PushPackageToOctopus'){
-    withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
-      //sh "/var/lib/octo/Octo push --package core_networks-${shortCommit}.zip --replace-existing --server https://octopusdeploy.worldremit.com --apiKey ${octopus_api_key}"
-      //sh "curl -X POST https://octopusdeploy.worldremit.com/api/packages/raw -H 'X-Octopus-ApiKey: ${octopus_api_key}' -F 'data=@core_networks-${shortCommit}.zip'"
+      //sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb -a ${octopus_api_key} -p deploy-core-network -e csre-core -f core_networks.1.0.0.${BUILD_NUMBER}.zip -s deploy_arm_template"
     }
   }
 }
