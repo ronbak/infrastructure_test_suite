@@ -16,9 +16,11 @@ class WRAzureTemplateManagement
     @rules_template = rules_template
     @parameters = parameters
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
-    @templates_container = 'templates' # Azure Storage container foor uploaded templates
+    @templates_container = wrmetadata().dig(@environment, 'storage_account', 'templates_container') # 'templates' # Azure Storage container foor uploaded templates
+    @container_access_policy = wrmetadata().dig(@environment, 'storage_account', 'container_access_policy') 
     @csrelog = logger
     @output = output
+    @access_policy_id = 'saslinkedtemplates'
   end
 
   def build_templates_list(master_template)
@@ -50,10 +52,11 @@ class WRAzureTemplateManagement
         end
         # upload linked templates to Azure storage
         @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
-        if upload_template_to_storage(raw_template)
+        blob_name = upload_template_to_storage(raw_template)
+        if blob_name
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
-          canonicalized_resource = "#{@templates_container}/#{resource['properties']['templateLink']['uri'].split('/')[-1]}"
-          url = create_sas_url(path: canonicalized_resource, start: (Time.now - 5*60).utc.iso8601, expiry: (Time.now + 30*60).utc.iso8601)
+          canonicalized_resource = "#{@templates_container}/#{blob_name}"
+          url = create_sas_url(path: canonicalized_resource, identifier: @container_access_policy)
           @csrelog.debug("Updating linked template uri in master template to #{url}")
           resource['properties']['templateLink']['uri'] = url
         else
@@ -89,9 +92,9 @@ class WRAzureTemplateManagement
     storer = WRAzureStorageManagement.new(environment: @environment, container: @templates_container)
     raw_templates.each do |template_name, data|
       begin
-        blob_name = template_name.split('/')[-1]
+        blob_name = template_name.split('/')[-1] + '.' + Time.now().strftime("%d%m%Y%H%M%S")
         storer.upload_file_to_storage(data, blob_name)
-        return true
+        return blob_name
       rescue => e
         @csrelog.error("the upload to Azure Storage failed for #{template_name}")
         @csrelog.debug("the failed template object name is #{template_name}
@@ -102,10 +105,10 @@ class WRAzureTemplateManagement
     end
   end
 
-  def create_signature(path = '/', resource = 'b', permissions = 'r', start = '', expiry = '', identifier = '')
+  def create_signature(permissions = 'r', start = '', expiry = '', path = '/', identifier = '', ip = '', protocol = '', version = '', rscc = '', rscd = '', rsce = '', rscl = '', rsct = '')
     # If resource is a container, remove the last part (which is the filename)
-    path = path.split('/').reverse.drop(1).reverse.join('/') if resource == 'c'
-    canonicalizedResource = "/#{@storage_account}/#{path}"
+    #path = path.split('/').reverse.drop(1).reverse.join('/') if resource == 'c'
+    canonicalizedResource = "/blob/#{@storage_account}/#{path}"
     wms_api_key = WRAzureCredentials.new(environment: @environment).get_storage_account_key
     stringToSign  = []
     stringToSign << permissions
@@ -113,24 +116,33 @@ class WRAzureTemplateManagement
     stringToSign << expiry
     stringToSign << canonicalizedResource
     stringToSign << identifier
+    stringToSign << ip
+    stringToSign << protocol
+    stringToSign << version
+    stringToSign << rscc
+    stringToSign << rscd
+    stringToSign << rsce
+    stringToSign << rscl
+    stringToSign << rsct
   
     stringToSign = stringToSign.join("\n")
     signature    = OpenSSL::HMAC.digest('sha256', Base64.strict_decode64(wms_api_key), stringToSign.encode(Encoding::UTF_8))
     signature    = Base64.strict_encode64(signature)
     return signature
   end
-  
+
   def create_sas_url(path: '/', query_string: nil, resource: 'b', permissions: 'r', start: '', expiry: '', identifier: '')
     base = "https://#{@storage_account}.blob.core.windows.net"
     uri  = Addressable::URI.new
       # Parts
     parts       = {}
-    parts[:st]  = URI.unescape(start) unless start == ''
-    parts[:se]  = URI.unescape(expiry)
+    parts[:sv]  = URI.unescape('2015-04-05')
+    #parts[:st]  = URI.unescape(start) unless start == ''
     parts[:sr]  = URI.unescape(resource)
-    parts[:sp]  = URI.unescape(permissions)
+    #parts[:se]  = URI.unescape(expiry)
+    #parts[:sp]  = URI.unescape(permissions)
     parts[:si]  = URI.unescape(identifier) unless identifier == ''
-    parts[:sig] = URI.unescape( create_signature(path, resource, permissions, start, expiry) )
+    parts[:sig] = URI.unescape( create_signature('', '', '', path, identifier, '', '', '2015-04-05', '', '', '', '', '') )
   
     uri.query_values = parts
     return "#{base}/#{path}?#{uri.query}"
@@ -139,6 +151,8 @@ class WRAzureTemplateManagement
 end
 
 
+
+           
 
 # url = createSignedQueryString(
 #   'templates/nsgs.json',
