@@ -20,7 +20,7 @@ class TestWRTemplate <  MiniTest::Test
         if template.include?('nonprd')
           nsgs_count = 24
           rules_count = 156
-        elsif teamplte.include?('core')
+        elsif template.include?('core')
           nsgs_count = 100
           rules_count = 200
         else
