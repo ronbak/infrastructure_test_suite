@@ -22,7 +22,7 @@ class TestWRTemplate <  MiniTest::Test
           rules_count = 156
         elsif template.include?('core')
           nsgs_count = 4
-          rules_count = 200
+          rules_count = 26
         else
           nsgs_count = 4
           rules_count = 26
