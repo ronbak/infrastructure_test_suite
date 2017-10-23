@@ -42,7 +42,7 @@ node {
       sh "echo 'Testing Prd templates'"
       sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./prd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment prd"
     }
-    sh "ruby infrastructure_test_suite/tests/template/network_templates_test.rb"
+    sh "ruby infrastructure_test_suite/tests/template/network_templates_tests.rb"
   }
   stage ('PushDeployOctopus'){
     withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
