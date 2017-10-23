@@ -5,6 +5,7 @@ require_relative 'CSRELogger'
 require_relative 'WRAzureNsgRulesMgmt'
 require_relative 'WRAzureTemplateManagement'
 require_relative 'WRSubnetsArrayBuilder'
+require_relative 'WRAzureTemplateValidator'
 require 'pry-byebug'
 
 # Main orchestration class for building the deployment object and sending to Azure
@@ -67,6 +68,22 @@ class WRAzureDeployer
       @csrelog.info("Building deployment object and saving to #{@output}")
       prepare_linked_templates() if @prep_templates
       deployment_name = deploy()
+    when 'validate'
+      files = Dir['*.json']
+      templates_to_test = files.select { |file| !file.include?('.parameters.') && file.include?(@output.split('/')[-1].split('.')[0])}
+      parameters_file = files.find { |file| file.include?('.parameters.') && file.include?(@output.split('/')[-1].split('.')[0])}
+      results = {}
+      @csrelog.debug("Testing the following templates: #{templates_to_test}\nUsing the following parameters file: #{parameters_file}\n")
+      templates_to_test.each do |template|
+        @csrelog.debug("\nTesting template: #{template}")
+        result = WRAzureTemplateValidator.new(template: template, parameters: parameters_file, environment: @environment, rg_name: @rg_name).valid_template?
+        @csrelog.debug("Result: #{result}\n")
+        results[template] = result
+      end
+      @csrelog.fatal("One or mpore of your templates failed validation: #{results}") if results.values.include?(false)
+      exit 1 if results.values.include?(false)
+      @csrelog.debug("Your templates passed validation: #{results}")
+      return results
     end
   end
       

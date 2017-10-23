@@ -23,7 +23,7 @@ class Provisioner
   end
 
   def self.actions
-    return ['deploy', 'delete', 'output', 'deploy_resource_groups', 'deploy_policy', 'deploy_policy_set', 'assign_policy', 'delete_assignment']
+    return ['deploy', 'delete', 'output', 'validate', 'deploy_resource_groups', 'deploy_policy', 'deploy_policy_set', 'assign_policy', 'delete_assignment']
   end
 
   def supported_action(action)
