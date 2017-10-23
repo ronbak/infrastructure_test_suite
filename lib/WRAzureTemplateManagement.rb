@@ -19,6 +19,7 @@ class WRAzureTemplateManagement
     @templates_container = 'templates' # Azure Storage container foor uploaded templates
     @csrelog = logger
     @output = output
+    @access_policy_id = 'saslinkedtemplates'
   end
 
   def build_templates_list(master_template)

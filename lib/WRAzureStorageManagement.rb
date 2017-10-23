@@ -2,6 +2,8 @@ require 'azure'
 require_relative 'WRAzureCredentials'
 require_relative 'CSRELogger'
 require 'pry-byebug'
+require 'azure/service/signed_identifier'
+
 
 class WRAzureStorageManagement
 
@@ -19,6 +21,23 @@ class WRAzureStorageManagement
     @container_name = container
     @azure_blob_service = Azure::Blob::BlobService.new
   end
+
+
+  def set_access_policy_expiry(policy_id, minutes_to_add = 30)
+    # Some code here. Create blobs instance.
+    # blobs = Azure::Blob::BlobService.new
+    sas = Azure::Service::SignedIdentifier.new
+    sas.id = policy_id
+    policy = sas.access_policy
+    policy.start = (Time.now - 5 * 60).utc.iso8601
+    policy.expiry = (Time.now + minutes_to_add*60).utc.iso8601
+    policy.permission = "r"
+    identifiers = [sas]
+    options = { timeout: 60, signed_identifiers: identifiers }
+    container, signed = @azure_blob_service.set_container_acl(@container_name, "", options)
+  end
+
+
 
   def delete_old_blobs
     blobs = list_blobs()

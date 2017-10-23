@@ -17,6 +17,7 @@ class WRAzureDeployer
     # Boolean deployment mode switch
     @complete_deployment = complete_deployment
     @environment = wrenvironmentdata(environment)['name']
+    @metadata = wrmetadata()
     @landscape = environment
     # Setup credentials object
     options = {environment: @environment}
@@ -76,9 +77,13 @@ class WRAzureDeployer
       unless @action == 'output'
         @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags
         @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags) if  @config_manager.tags
+        # If there are linked templates, update the access policy to allow access for the next 30 mins.
+        if @prep_templates
+          @csrelog.debug("Setting container access policy expiry to: #{Time.now + 30*60}")
+          storer = WRAzureStorageManagement.new(environment: @environment, container: @metadata.dig(@environment, 'storage_account', 'templates_container'))
+          storer.set_access_policy_expiry(@metadata.dig(@environment, 'storage_account', 'container_access_policy'), 30)
+        end
       end
-      # If separate rules templates have been specified inject them to the master template.
-      #add_rules_to_existing_template() if @rules_template
       # Builds the deployment object and passes to Azure API
       deployment_name = run_deployment(@template, @complete_deployment)
       # Checks the status of the deployment

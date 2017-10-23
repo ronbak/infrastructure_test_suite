@@ -8,6 +8,8 @@
 		},
 		"storage_account": {
 			"name": "awcsrenonprd01",
+			"templates_container": "templates",
+			"container_access_policy": "saslinkedtemplates",
 			"resource_group": "csresa-rg-dev-wr"
 		},
     "synonyms": ["dev", "development", "nonprod", "non-prod", "tst", "uat", "ci", "int", "ppd", "nonprd"],
@@ -28,6 +30,8 @@
 		},
 		"storage_account": {
 			"name": "xycsrecore01",
+			"templates_container": "templates",
+			"container_access_policy": "saslinkedtemplates",
 			"resource_group": "csresa-rg-dev-wr"
 		},
     "synonyms": ["core", "core-infra", "coreinfrastructure", "infra", "sharedservices", "shared-services"]
@@ -41,6 +45,8 @@
 		},
 		"storage_account": {
 			"name": "ntcsreprd01",
+			"templates_container": "templates",
+			"container_access_policy": "saslinkedtemplates",
 			"resource_group": "csresa-rg-dev-wr"
 		},
 		"synonyms": ["production", "prod", "prd"],
