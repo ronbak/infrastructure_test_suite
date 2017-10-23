@@ -24,7 +24,7 @@ class TestWRTemplate <  MiniTest::Test
           nsgs_count = 4
           rules_count = 26
         end
-        Puts "Testing NSG's and rules count for: #{template}"
+        puts "Testing NSG's and rules count for: #{template}"
         tester = WRTemplatesTester.new(template)
         subnet_info = tester.allowed_subnet_names()
         nsgs_array = tester.template['resources']
