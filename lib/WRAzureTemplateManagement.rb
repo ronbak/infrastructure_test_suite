@@ -17,6 +17,7 @@ class WRAzureTemplateManagement
     @parameters = parameters
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
     @templates_container = wrmetadata().dig(@environment, 'storage_account', 'templates_container') # 'templates' # Azure Storage container foor uploaded templates
+    @container_access_policy = wrmetadata().dig(@environment, 'storage_account', 'container_access_policy') 
     @csrelog = logger
     @output = output
     @access_policy_id = 'saslinkedtemplates'
@@ -55,7 +56,7 @@ class WRAzureTemplateManagement
         if blob_name
           # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
           canonicalized_resource = "#{@templates_container}/#{blob_name}"
-          url = create_sas_url(path: canonicalized_resource, start: (Time.now - 5*60).utc.iso8601, expiry: (Time.now + 365*24*60*60).utc.iso8601, identifier: 'saslinkedtemplates')
+          url = create_sas_url(path: canonicalized_resource, identifier: @container_access_policy)
           @csrelog.debug("Updating linked template uri in master template to #{url}")
           resource['properties']['templateLink']['uri'] = url
         else
