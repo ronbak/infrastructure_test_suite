@@ -21,7 +21,7 @@ node {
   stage ('RunSomeTestsOnTheJson') {
     withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
-    string(credentialsId: 'core-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+    string(credentialsId: 'xycsrecore01-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
       echo 'Testing Core templates'
       sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment nonprd"
