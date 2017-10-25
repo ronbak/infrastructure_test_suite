@@ -43,12 +43,15 @@
 
     ruby ./bin/provision.rb --action assign_policy --environment nonprd --config ./configs/resource_groups/policies/naming_standards.json    
 
+    ruby ./bin/provision.rb --action validate --output ./nonprd_network.json --config ./configs/networking_master.config.json --environment nonprd
+
 
 ## Functionality
 
   `--action` - Required  
-  One of either `deploy`, `delete`, `output`, `deploy_resource_groups`, `deploy_policy`, `deploy_policy_set`, `assign_policy` or `delete_assignment`.  
+  One of either `deploy`, `delete`, `output`, `validate`, `deploy_resource_groups`, `deploy_policy`, `deploy_policy_set`, `assign_policy` or `delete_assignment`.  
   Deploy for deploying a stack, delete for deleting a resource group (as specified in the config file) and output for building the complete deployment object (without actually deploying it), then saving the template and parameters files in JSON, as referenced by the `--output` path to be used by another tool for deployent.  
+  `validate` runs an Azure validate deployment task against any templates in the local directory that are named according to the `--output` switch. When running valiation, supply the `--config`, `--output`, and `--environment` options.   
   `deploy_resource_groups` - Will create resource groups in all environments depending on supplied resource group configuration template.  
   `deploy_policy`, `deploy_policy_set`, `assign_policy` and `delete_assignment` - All refer to management of resource group policies.  
 
@@ -65,7 +68,7 @@
   Sets the Azure deployment mode to complete (rather than Incremental). Be careful with this setting as any resources not explicitly specified in the template being deployed will be removed from the resoure group. When deploying to prod this SHOULD be set to `--complete` as all resources should only ever be deployed via a pipeline/with a template. If you're not sure what you're doing leave this setting off.  
 
   `--prep_templates` - Optional  
-  This option will find any linked templates referenced in the master template (referenced in the config file.....stay with me) and upload them to Azure Storage Account (referenced in the [metadata file](https://source.worldremit.com/chris/infrastructure_test_suite/blob/master/metadata/metadata.json#L9-11)). It will then create a SAS token with a 30 minute window and update the linkedTemplate uri in the master template accordingly.  
+  This option will find any linked templates referenced in the master template (referenced in the config file.....stay with me) and upload them to Azure Storage Account (referenced in the [metadata file](https://source.worldremit.com/chris/infrastructure_test_suite/blob/master/metadata/metadata.json#L9-11)). See below for further information.
 
   `--output` - Optional  
   Path to save built deployment objects to. Use in conjuction with the `output` action. Can also be used with the `deploy` action to preserve the template/params used for a specific deployment.  
@@ -231,8 +234,11 @@ The same applies for subnets in the Vnets template. The tool looks for the templ
 
 The purpose of this process is firstly, to have an easily managed template; the NSG's template is 128 lines long, however if we were to expand all the resources of each landscape it would be 2681 lines long for the nonprd environment alone. Add prd and core and we're well over 3000 lines of template just for NSG's. 
 Secondly, if we need to make a change to a single resource we would have to remember to make that change for every landsacpe. Though this is possible, with a minimum of 8 landscapes, that gives us 8 opportunities to make a mistake. 
-Finally, should we ever need to add to our network, either a landscape, a subnet or anything else, we simply add it to the `vNet` parameter and the tool builds all the resources required for it to function in the same manner as the existing resources. If we had static templates, that would be a very large and error prone task. As we expand as a company our cloud infrastrucure expands too and these processes become vital to ensure consistency and scalability without errors.
-
+Finally, should we ever need to add to our network, either a landscape, a subnet or anything else, we simply add it to the `vNet` parameter and the tool builds all the resources required for it to function in the same manner as the existing resources. If we had static templates, that would be a very large and error prone task. As we expand as a company our cloud infrastrucure expands too and these processes become vital to ensure consistency and scalability without errors.  
+  
+## Linked Templates Upload
+When any linked templates are detectd and the `--prep_templates` option is set, the templates are uploaded to the storage account and container areferenced in the metadata.json file. A SAS token is then generated for each uploaded template that refers to an access policy. The access policy expiry time will already have expired therefore making any tokens stolen, no longer usable. During a deployment, the Access Policy expiry must be updated in order for Azure to be able to retrieve the templates. The prupose of this is to allow us to store multiple templates (release specific) in the container with SAS tokens that are generally invalid. When we need to deploy a rpevoius release (rollback) we can temporarily allow access to that SAS tokem via the access policy and re-deploy a previous release. This ensures security of the templates over a prolonged period of time.  
+  
 
 ## Example Deployment Flow and Class Interaction
 The diagram below describes a typical deploymnt of the networking resources to the Non-Production subscription. It shows how all classes interact and what they do in order to create the ARM templates, link them correctly and deploy them to Azure. 
