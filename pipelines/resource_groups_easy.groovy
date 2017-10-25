@@ -6,6 +6,11 @@ node {
     sh "ruby infrastructure_test_suite/scripts/create_resource_group_template.rb"      
     
   }
+  stage ('Test RG Template'){
+    withEnv(["template=${name}.json"]){
+      sh "ruby infrastructure_test_suite/tests/template/rg_tests.rb"
+    }
+  }
   stage ('Deploy Resource Groups NonPrd'){
     withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
@@ -13,7 +18,6 @@ node {
       env.CSRE_LOG_LEVEL = "${log_level}"
       env.name = "${name}"
       env.group_name = "${group_name}"
-      env.Team = "${Team}"
       env.OwnerContact = "${OwnerContact}"
       env.Project = "${Project}"
       env.RunModel = "${RunModel}"
