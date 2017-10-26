@@ -6,7 +6,7 @@ task :build_nonprd do
   puts ENV['AZURE_STORAGE_ACCOUNT_KEY']
   @options = OpenStruct.new
   @options.action = 'output'
-  @options.output = './nonprd_networks.json'
+  @options.output = './nonprd_network.json'
   @options.config = ENV['config_path']
   @options.verbose = false
   @options.environment = 'nonprd'
@@ -25,7 +25,7 @@ task :build_prd do
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_PRD']
   @options = OpenStruct.new
   @options.action = 'output'
-  @options.output = './prd_networks.json'
+  @options.output = './prd_network.json'
   @options.config = ENV['config_path']
   @options.verbose = false
   @options.environment = 'prd'
