@@ -3,6 +3,7 @@ require 'rake/testtask'
 
 task :build_nonprd do
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_NONPRD']
+  puts ENV['AZURE_STORAGE_ACCOUNT_KEY']
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './nonprd_networks.json'
