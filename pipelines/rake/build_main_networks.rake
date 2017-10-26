@@ -1,4 +1,5 @@
 require_relative '../../bin/provision.rb'
+require 'rake/testtask'
 
 task :build_nonprd do
   @options = OpenStruct.new
