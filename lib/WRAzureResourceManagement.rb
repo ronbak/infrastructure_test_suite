@@ -1,6 +1,7 @@
 require_relative 'global_methods'
 require_relative 'CSRELogger'
 require_relative 'WRAzureCredentials'
+require 'azure_mgmt_resources'
 require 'pry-byebug'
 
 class WRAzureResourceManagement
