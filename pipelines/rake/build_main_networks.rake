@@ -2,6 +2,7 @@ require_relative '../../bin/provision.rb'
 require 'rake/testtask'
 
 task :build_nonprd do
+  ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_NONPRD']
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './nonprd_networks.json'
@@ -20,6 +21,7 @@ task :build_nonprd do
 end
 
 task :build_prd do
+  ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_PRD']
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './prd_networks.json'
