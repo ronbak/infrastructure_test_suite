@@ -36,7 +36,7 @@ class WRAzureStorageManagement
 
   def delete_old_blobs
     blobs = list_blobs()
-    while blobs.count >= 61
+    while blobs.count >= 121
       blobs = sort_by_datetime(blobs)
       last_blobs = []
       last_blobs += blobs[0..5]

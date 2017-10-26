@@ -8,14 +8,23 @@ MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
                           MiniTest::Reporters::JUnitReporter.new]
 
 
-$path = ARGV[0]
-$commit = ARGV[1]
-$previous_commit = ARGV[2]
-$files = WRGit.new($path).diff_files($commit, $previous_commit)
-puts $path
-puts $previous_commit
-puts $commit
+if ENV['changed_files']
+  $files = {}
+  files = File.read(ENV['changed_files'])
+  files.split(' ').each do |file_string|
+    $files[file_string.split(':CHANGED:')[0]] = file_string.split(':CHANGED:')[-1]
+  end
+else
+  $path = ARGV[0]
+  $commit = ARGV[1]
+  $previous_commit = ARGV[2]
+  $files = WRGit.new($path).diff_files($commit, $previous_commit)
+  puts $path
+  puts $previous_commit
+  puts $commit
+end
 puts "these are your files: #{$files}"
+
 
 networks_to_deploy = []
 $files.keys.each do |file_path|
