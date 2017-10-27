@@ -22,10 +22,11 @@ class WRTemplatesTester
     config_files = Dir[path]
   end
 
-  def allowed_subnet_names()
+  def allowed_subnet_names(configs_path)
     subnet_names_array = []
     env_addr_prefixes = []
-    files = list_config_files("#{File.dirname(__FILE__)}/../../../arm_templates/networks/configs/*")
+    configs_path += '/' unless configs_path[-1].eql?('/')
+    files = list_config_files("#{configs_path}*")
     #files = list_config_files('arm_templates/networks/configs/*') if files.empty?
     files.each do |config_file|
       config_hash = JSON.parse(File.read(config_file))
