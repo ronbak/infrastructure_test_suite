@@ -61,6 +61,7 @@ class TestWRTemplate <  MiniTest::Test
         puts "Performing a NSG rules template test set"
         tester = WRTemplatesTester.new(template.first)
         subnet_info = tester.allowed_subnet_names()
+        puts "These are your allowed subnet names: #{subnet_info}"
         rules_array = tester.template['resources']
         rules_array.each do |rule_object|
           puts "We are now testing rule: #{rule_object['name']}\nWith DestinationAddressprefix of: #{rule_object['properties']['destinationAddressPrefix']}"
@@ -76,7 +77,7 @@ class TestWRTemplate <  MiniTest::Test
           # Ensure source address is either a subnet from the vNet
           if subnet_info[0].include?(rule_object['properties']['sourceAddressPrefix'])
             assert_includes(subnet_info[0], rule_object['properties']['sourceAddressPrefix'])
-          # if it's a vsalid CIDSR that it's not in the local vnet (prd and nonprd, NOT core) 
+          # if it's a valid CIDR that it's not in the local vnet (prd and nonprd, NOT core) 
           elsif tester.valid_cidr?(rule_object['properties']['sourceAddressPrefix'])
             assert_equal(false, tester.disallowed_subnet_cidr?(rule_object['properties']['sourceAddressPrefix'], subnet_info[1]))
           else
