@@ -113,8 +113,10 @@ class TestWRTemplate <  MiniTest::Test
 
   def test_valid_json
     $files.each do |template|
-      puts "Validating JSOn for template: #{template.first}"
-      assert_equal(true, valid_json?(File.read(template.first)))
+      if template[-5..-1].eql?('.json')
+        puts "Validating JSON for template: #{template.first}"
+        assert_equal(true, valid_json?(File.read(template.first)))
+      end
     end
   end
 

@@ -73,6 +73,3 @@ end
 task :build_main_networks => [:build_nonprd, :build_prd, :validate_templates, :unit_tests] do
   puts "Building templates and testing them"
 end
-
-
-
