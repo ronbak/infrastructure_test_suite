@@ -94,6 +94,9 @@ chmod +x /etc/init.d/teamcity
 update-rc.d teamcity defaults
 
 
+# AT THIS POINT YOU SHOULD CHECK FOR BAKUP AND RETRIEVE>>>>>PERHAPS CHEFZERO WOULD BE BEST FOR THIS? :)
+
+
 apt-get -y install nginx
 
 cd /etc/nginx/sites-available
