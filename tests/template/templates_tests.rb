@@ -61,8 +61,8 @@ class TestWRTemplate <  MiniTest::Test
         puts "Performing a NSG rules template test set"
         tester = WRTemplatesTester.new(template.first)
         puts template.first
-        puts "#{File.dirname(template.first)}/../configs/*"
-        subnet_info = tester.allowed_subnet_names("#{File.dirname(template.first)}/../configs/*")
+        puts "#{File.dirname(template.first)}/../configs/"
+        subnet_info = tester.allowed_subnet_names("#{File.dirname(template.first)}/../configs/")
         puts "These are your allowed subnet names: #{subnet_info}"
         rules_array = tester.template['resources']
         rules_array.each do |rule_object|
