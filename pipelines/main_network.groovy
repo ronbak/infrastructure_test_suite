@@ -4,10 +4,9 @@ node {
     checkout([$class: 'GitSCM', branches: [[name: "*/${branch}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
     //chechout fps repo
     checkout([$class: 'GitSCM', branches: [[name: "*/master"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'arm_templates']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:Worldremit/arm_templates.git']]])
-    sh "cd infrastructure_test_suite/ && git submodule update --init --recursive"
   }
   stage ('BuildNonPrdTemplates'){
-    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
     string(credentialsId: 'nonprd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
@@ -15,7 +14,7 @@ node {
     }
   }
   stage ('BuildPrdTemplates'){
-    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
     string(credentialsId: 'prd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
@@ -28,14 +27,14 @@ node {
     sh "zip main_networks.1.0.0.${BUILD_NUMBER}.zip nonprd_network.json nonprd_network.parameters.json prd_network.json prd_network.parameters.json gitinfo.txt"
   }
   stage ('RunSomeTestsOnTheJson') {
-    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
     string(credentialsId: 'nonprd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
       echo 'Testing NonPrd templates'
       sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./nonprd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment nonprd"
     }
-    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
     string(credentialsId: 'prd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
