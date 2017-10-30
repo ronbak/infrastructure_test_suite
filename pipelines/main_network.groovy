@@ -24,7 +24,7 @@ node {
   stage ('CreatePackage'){
     shortCommit = sh(returnStdout: true, script: "cd arm_templates && git log -n 1 --pretty=format:'%h'").trim()
     sh "cd arm_templates && git log -n 1 > gitinfo.txt"
-    sh "zip main_networks.1.0.0.${BUILD_NUMBER}.zip nonprd_network.json nonprd_network.parameters.json prd_network.json prd_network.parameters.json gitinfo.txt"
+    sh "zip main_networks.1.0.1.${BUILD_NUMBER}.zip nonprd_network.json nonprd_network.parameters.json prd_network.json prd_network.parameters.json gitinfo.txt"
   }
   stage ('RunSomeTestsOnTheJson') {
     withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
@@ -45,7 +45,7 @@ node {
   }
   stage ('PushDeployOctopus'){
     withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
-      sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb -a ${octopus_api_key} -p deploy-main-network -e csre-nonproduction-arm -f main_networks.1.0.0.${BUILD_NUMBER}.zip -s 'deploy-nonprd-template deploy-prd-template'"
+      sh "ruby infrastructure_test_suite/scripts/create_octopus_release.rb -a ${octopus_api_key} -p deploy-main-network -e csre-nonproduction-arm -f main_networks.1.0.1.${BUILD_NUMBER}.zip -s 'deploy-nonprd-template deploy-prd-template'"
     }
   }
   stage ('CleanUp'){
