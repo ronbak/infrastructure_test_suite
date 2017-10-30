@@ -22,7 +22,7 @@ class WRTemplatesTester
     config_files = Dir[path]
   end
 
-  def allowed_subnet_names(configs_path)
+  def allowed_subnet_names(configs_path = 'arm_templates/networks/configs')
     subnet_names_array = []
     env_addr_prefixes = []
     configs_path += '/' unless configs_path[-1].eql?('/')
