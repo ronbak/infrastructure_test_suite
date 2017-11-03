@@ -18,11 +18,11 @@ try {
             sh "cd arm_templates && ruby ../infrastructure_test_suite/tests/template/templates_tests.rb ./  ${masterCommit} ${branchCommit}"
             
             filesChanged = sh(returnStdout: true, script: "cd arm_templates && git diff --name-only ${masterCommit} ${branchCommit}").trim()
-            if (filesChanged.contains('/policies/')) {
+            if (filesChanged.contains('policies/')) {
                 echo 'testing policies'
                 //sh "cd arm_templates && ruby ../infrastructure_test_suite/tests/template/policies_test.rb"
             }
-            if (filesChanged.contains('/networks/')) {
+            if (filesChanged.contains('networks/')) {
                 echo 'building networks templates and validating'
                 if (filesChanged.contains('_core')) {
                     withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
