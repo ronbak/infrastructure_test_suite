@@ -20,7 +20,7 @@ class WRAzureTemplateManagement
     @container_access_policy = wrmetadata().dig(@environment, 'storage_account', 'container_access_policy') 
     @csrelog = logger
     @output = output
-    @upload = upload
+    @no_upload = no_upload
     @access_policy_id = 'saslinkedtemplates'
   end
 
