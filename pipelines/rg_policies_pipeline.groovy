@@ -7,7 +7,7 @@ node {
     sh "cd infrastructure_test_suite/ && git submodule update --init --recursive"
   }
   withEnv(["CSRE_LOG_LEVEL=${log_level}"]) {
-    withCredentials([string(credentialsId: 'github_PAC_chudson', variable: 'GIT_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),]) {
       switch(action) {
         case "deploy":

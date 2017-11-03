@@ -11,7 +11,7 @@ require 'pry-byebug'
 # Main orchestration class for building the deployment object and sending to Azure
 class WRAzureDeployer
 
-  def initialize(action: nil, config_manager: nil, environment: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil, prep_templates: false)
+  def initialize(action: nil, config_manager: nil, environment: nil, complete_deployment: false, rules_template: nil, skip_deploy: false, output: nil, prep_templates: false, no_upload: true)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
@@ -41,6 +41,7 @@ class WRAzureDeployer
     # bool
     @skip_deploy = skip_deploy
     @output = output
+    @no_upload = no_upload
     # bool
     @prep_templates = prep_templates
   end
@@ -69,7 +70,8 @@ class WRAzureDeployer
       prepare_linked_templates() if @prep_templates
       deployment_name = deploy()
     when 'validate'
-      files = Dir['*.json']
+      files_path = File.dirname(@output)
+      files = Dir["#{files_path}/*.json"]
       templates_to_test = files.select { |file| !file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
       parameters_file = files.find { |file| file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
       results = {}
@@ -193,7 +195,7 @@ class WRAzureDeployer
 
   # Uploads any linked templates to Azure Storage and updates master template URL and adds SAS token. 
   def prepare_linked_templates()
-    @template = WRAzureTemplateManagement.new(@template, @environment, @rules_template, @parameters, @output, @csrelog).process_templates()
+    @template = WRAzureTemplateManagement.new(@template, @environment, @rules_template, @parameters, @output, @no_upload, @csrelog).process_templates()
   end
 
   def add_rules_to_existing_template()

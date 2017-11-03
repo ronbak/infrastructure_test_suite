@@ -22,6 +22,45 @@ try {
                 echo 'testing policies'
                 //sh "cd arm_templates && ruby ../infrastructure_test_suite/tests/template/policies_test.rb"
             }
+            if (filesChanged.contains('/networks/')) {
+                echo 'building networks templates and validating'
+                if (filesChanged.contains('_core')) {
+                    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+                    string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+                    string(credentialsId: 'core-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+                        env.CSRE_LOG_LEVEL = "${log_level}"
+                        sh "mkdir core_test_files"
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./core_test_files/core_network.json --environment core --config arm_templates/networks/configs/networking_core.config.json --complete --prep_templates --no_upload"      
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_test_files/core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment core"
+                    }
+                }
+                else {
+                    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+                    string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+                    string(credentialsId: 'prd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+                        env.CSRE_LOG_LEVEL = "${log_level}"
+                        sh "mkdir prd_test_files"
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./prd_test_files/prd_network.json --environment prd --config arm_templates/networks/configs/networking_master.config.json --complete --prep_templates --no_upload"      
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./prd_test_files/prd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment prd"
+                    }
+                    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+                    string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+                    string(credentialsId: 'nonprd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+                        env.CSRE_LOG_LEVEL = "${log_level}"
+                        sh "mkdir nonprd_test_files"
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./nonprd_test_files/nonprd_network.json --environment nonprd --config arm_templates/networks/configs/networking_master.config.json --complete --prep_templates --no_upload"      
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./nonprd_test_files/nonprd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment nonprd"
+                    }
+                    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+                    string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+                    string(credentialsId: 'core-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+                        env.CSRE_LOG_LEVEL = "${log_level}"
+                        sh "mkdir core_test_files"
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./core_test_files/core_network.json --environment core --config arm_templates/networks/configs/networking_core.config.json --complete --prep_templates --no_upload"      
+                        sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_test_files/core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment core"
+                    }
+                }
+            }
         }
         stage ('set network update') {
             fullPath =  sh(returnStdout: true, script: "pwd").trim()
