@@ -8,7 +8,7 @@ try {
             checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'arm_templates-master']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '2c74e2d9-4e99-4f84-86fc-affb2559331f', url: 'git@github.com:Worldremit/arm_templates.git']]])
         }
         stage ('checkout test tools') {
-            checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '2c74e2d9-4e99-4f84-86fc-affb2559331f', url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
+            checkout([$class: 'GitSCM', branches: [[name: '*/${tools_branch}']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '2c74e2d9-4e99-4f84-86fc-affb2559331f', url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
         }
         stage ('run some tests'){
             masterCommit = sh(returnStdout: true, script: "cd arm_templates-master && git log -n 1 --pretty=format:'%H'").trim()
@@ -33,8 +33,7 @@ try {
                         sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./core_test_files/core_network.json --environment core --config arm_templates/networks/configs/networking_core.config.json --complete --prep_templates --no_upload"      
                         sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_test_files/core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment core"
                     }
-                }
-                else {
+                } else {
                     withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
                     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
                     string(credentialsId: 'prd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
