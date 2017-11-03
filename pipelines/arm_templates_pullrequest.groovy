@@ -18,6 +18,8 @@ try {
             sh "cd arm_templates && ruby ../infrastructure_test_suite/tests/template/templates_tests.rb ./  ${masterCommit} ${branchCommit}"
             
             filesChanged = sh(returnStdout: true, script: "cd arm_templates && git diff --name-only ${masterCommit} ${branchCommit}").trim()
+            echo 'these are what the groovy code thinks has changed'
+            println filesChanged
             if (filesChanged.contains('policies/')) {
                 echo 'testing policies'
                 //sh "cd arm_templates && ruby ../infrastructure_test_suite/tests/template/policies_test.rb"
