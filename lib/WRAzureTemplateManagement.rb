@@ -10,7 +10,7 @@ require_relative 'WRSubnetInjector'
 
 class WRAzureTemplateManagement
 
-  def initialize(master_template, environment, rules_template, parameters, output, logger = nil)
+  def initialize(master_template, environment, rules_template, parameters, output, no_upload = false, logger = nil)
     @master_template = master_template #Should be in hash form
     @environment = environment
     @rules_template = rules_template
@@ -20,6 +20,7 @@ class WRAzureTemplateManagement
     @container_access_policy = wrmetadata().dig(@environment, 'storage_account', 'container_access_policy') 
     @csrelog = logger
     @output = output
+    @no_upload = no_upload
     @access_policy_id = 'saslinkedtemplates'
   end
 
@@ -50,18 +51,20 @@ class WRAzureTemplateManagement
                               end
           write_hash_to_disk(JSON.parse(raw_template.values.first), output_file_name)                              
         end
-        # upload linked templates to Azure storage
-        @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
-        blob_name = upload_template_to_storage(raw_template)
-        if blob_name
-          # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
-          canonicalized_resource = "#{@templates_container}/#{blob_name}"
-          url = create_sas_url(path: canonicalized_resource, identifier: @container_access_policy)
-          @csrelog.debug("Updating linked template uri in master template to #{url}")
-          resource['properties']['templateLink']['uri'] = url
-        else
-          @csrelog.fatal('We could not upload templates to storage, exiting')
-          exit 1
+        unless @no_upload
+          # upload linked templates to Azure storage
+          @csrelog.debug("uploading template to Azure Storage in #{@storage_account}/#{@templates_container}")
+          blob_name = upload_template_to_storage(raw_template)
+          if blob_name
+            # Generate SAS token for retrieving linked templates with an expiry of 30 minutes
+            canonicalized_resource = "#{@templates_container}/#{blob_name}"
+            url = create_sas_url(path: canonicalized_resource, identifier: @container_access_policy)
+            @csrelog.debug("Updating linked template uri in master template to #{url}")
+            resource['properties']['templateLink']['uri'] = url
+          else
+            @csrelog.fatal('We could not upload templates to storage, exiting')
+            exit 1
+          end
         end
       end
     end
