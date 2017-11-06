@@ -157,7 +157,17 @@ end
   # end
 
 
-
+def upload_package_to_octopus(octopus_url, file_name, api_key)
+  url = URI.parse("#{octopus_url}/api/packages/raw")
+  File.open(file_name) do |payload|
+    req = Net::HTTP::Post::Multipart.new url.path,
+      "file" => UploadIO.new(payload, "bin/zip", file_name)
+    req[api_header] = api_key
+    https = Net::HTTP.new(url.host, url.port)
+    https.use_ssl = true
+    res = https.request(req)
+  end
+end
 
 
 def retrieve_from_gitlab_api(url, access_token)

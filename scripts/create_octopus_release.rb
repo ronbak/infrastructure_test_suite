@@ -4,6 +4,7 @@ require 'rest-client'
 require 'json'
 require 'optparse'
 require 'net/http/post/multipart'
+require_relative '../lib/global_methods'
 
 # Setting up arguments
 
@@ -37,16 +38,8 @@ api_auth = { api_header => api_key }
 
 puts "[STATUS] Uploading package #{file_name}..."
 
-begin 
-  url = URI.parse("#{octopus_url}/api/packages/raw")
-  File.open(file_name) do |payload|
-    req = Net::HTTP::Post::Multipart.new url.path,
-      "file" => UploadIO.new(payload, "bin/zip", file_name)
-    req[api_header] = api_key
-    https = Net::HTTP.new(url.host, url.port)
-    https.use_ssl = true
-    res = https.request(req)
-  end
+begin
+  upload_package_to_octopus(octopus_url, file_name, api_key)
 rescue => e
   puts e
   raise 'Failed to upload package'
