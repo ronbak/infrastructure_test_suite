@@ -39,7 +39,7 @@ api_auth = { api_header => api_key }
 puts "[STATUS] Uploading package #{file_name}..."
 
 begin
-  upload_package_to_octopus(octopus_url, file_name, api_key)
+  upload_package_to_octopus(octopus_url, file_name, api_key, api_header)
 rescue => e
   puts e
   raise 'Failed to upload package'

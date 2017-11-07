@@ -157,7 +157,7 @@ end
   # end
 
 
-def upload_package_to_octopus(octopus_url, file_name, api_key)
+def upload_package_to_octopus(octopus_url, file_name, api_key, api_header)
   url = URI.parse("#{octopus_url}/api/packages/raw")
   File.open(file_name) do |payload|
     req = Net::HTTP::Post::Multipart.new url.path,
