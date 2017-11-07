@@ -74,7 +74,7 @@ class WRAzureDeployer
       files = Dir["#{files_path}/*.json"]
       templates_to_test = files.select { |file| !file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
       parameters_file = files.select { |file| file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
-      parameters_file = parameters_file[0] if parameters_file.count.eql(1)
+      parameters_file = parameters_file[0] if parameters_file.count.eql?(1)
       parameters_file = parameters_file.find { |file| file.include?(@landscape) } if parameters_file.count >= 2
       results = {}
       @csrelog.debug("Testing the following templates: #{templates_to_test}\nUsing the following parameters file: #{parameters_file}\n")
