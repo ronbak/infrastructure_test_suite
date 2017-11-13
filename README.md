@@ -76,6 +76,8 @@
   `--rules` - Optional  
   You can specify a rules template or a local directory to pull in rules from. This setting will be overridden if rules templates are referenced in the config file, like [here](https://source.worldremit.com/chris/infrastructure_test_suite/blob/master/configs/networking_master.config.json#L5-8). Rules templates should be generic, see below for more details.  
   
+  `--resource-group` - Optional  
+  Can be used in conjunction with the `--action validate` instead of using the `--config` option. If you are using a standard Azure ARM template and associated parameters file, but you don't have a config file from which to retrieve the resource group name to deploy to, you can specify the resource group name using this switch.
 
 ## ConfigFile
 
