@@ -4,7 +4,7 @@ require 'rake/testtask'
 task :validate do
   @options = OpenStruct.new
   @options.action = 'validate'
-  @options.output = './arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json'
+  @options.output = '.arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json'
   @options.config = nil
   @options.verbose = false
   @options.environment = 'core'
