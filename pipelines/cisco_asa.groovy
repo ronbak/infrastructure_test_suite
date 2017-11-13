@@ -8,11 +8,11 @@ node {
   stage ('ValidateTemplate'){
     withCredentials([string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
-      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json --environment core --resource-group cisco-asav-ha-rg-core-wr"      
+      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./arm_templates/csre/networkdevices/ciscoasav/${template_version}/asav-ha-template.json --environment core --resource-group cisco-asav-ha-rg-core-wr"      
     }
   }
   stage ('CreatePackage'){
-    sh "cd arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/ && zip asav-core.1.0.0.${BUILD_NUMBER}.zip asav-ha-template.json asav-ha-param.json && mv asav-core.1.0.0.${BUILD_NUMBER}.zip ../../../../../asav-core.1.0.0.${BUILD_NUMBER}.zip"
+    sh "cd arm_templates/csre/networkdevices/ciscoasav/${template_version}/ && zip asav-core.1.0.0.${BUILD_NUMBER}.zip asav-ha-template.json asav-ha-param.json && mv asav-core.1.0.0.${BUILD_NUMBER}.zip ../../../../../asav-core.1.0.0.${BUILD_NUMBER}.zip"
   }
   stage ('PushDeployOctopus'){
     withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
