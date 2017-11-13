@@ -12,7 +12,7 @@ node {
     }
   }
   stage ('CreatePackage'){
-    sh "zip asav-core.1.0.0.${BUILD_NUMBER}.zip arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono/asav-ha-template.json arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono/asav-ha-param.json"
+    sh "cd arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono/ && zip asav-core.1.0.0.${BUILD_NUMBER}.zip asav-ha-template.json asav-ha-param.json && mv asav-core.1.0.0.${BUILD_NUMBER}.zip ../../../../../asav-core.1.0.0.${BUILD_NUMBER}.zip"
   }
   stage ('PushDeployOctopus'){
     withCredentials([string(credentialsId: 'octopus_api_key', variable: 'octopus_api_key')]){
