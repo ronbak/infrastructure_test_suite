@@ -3,7 +3,7 @@ node {
     checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'infrastructure_test_suite']], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:chudsonwr/infrastructure_test_suite.git']]])
   }
   withEnv(["CSRE_LOG_LEVEL=DEBUG"]) {
-    withCredentials([string(credentialsId: 'github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
     string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),]) {
         stage ('test supplied template'){
             withEnv(["template=${template}"]){
