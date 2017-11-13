@@ -9,6 +9,7 @@ require_relative '../lib/WRConfigManager'
 require_relative '../lib/WRAzurePolicyManagement'
 require_relative '../lib/CSRELogger'
 require_relative '../lib/WRResourceGroupsManagement'
+require_relative '../lib/WRAzureValidator'
 
 
 # Shim for launching the WRAzureDeployer class from the command line
@@ -74,6 +75,13 @@ class Provisioner
       @csrelog.info(WRAzurePolicyManagement.new(environment: @opts[:environment].to_s).assign_policy(@opts[:config], @opts[:scope]))
     when 'delete_assignment'
       @csrelog.info(WRAzurePolicyManagement.new(environment: @opts[:environment].to_s).delete_policy_assignment(@opts[:config]))
+    when 'validate'
+      rg_name = @opts[:rg_name]
+      if @opts[:config]
+        config_manager = WRConfigManager.new(config: @opts[:config])
+        rg_name = config_manager.rg_name(@opts[:environment].to_s)
+      end
+      WRAzureValidator.new(environment: @opts[:environment].to_s, output: @opts[:output], rg_name: rg_name).validate
     else
       @csrelog.debug(@opts[:config])
       # Create the configuration object from the supplied configuration
@@ -100,7 +108,7 @@ class Provisioner
 end
 
 def missing_args()
-  raise OptionParser::MissingArgument, "You're missing the --config ConfigFile option" if @options.config.nil?
+  raise OptionParser::MissingArgument, "You're missing the --config ConfigFile or --resource-group ResourceGroup Name option" if @options.config.nil? && @options.rg_name.nil?
 end
 
 def parse_args(args)
@@ -113,6 +121,9 @@ def parse_args(args)
     opts.on('-c', '--config PATH', 'Config File path argument or JSON config as String') do |cfg|
       @options.config = cfg
     end
+    opts.on('-g', '--resource-group PATH', 'Name of the Resource Group to deploy to') do |rg_name|
+      @options.rg_name = rg_name
+    end
     opts.on('-r', '--rules PATH', 'NSG Rules template file path argument or JSON String') do |rules|
       @options.rules = rules
     end
@@ -120,7 +131,7 @@ def parse_args(args)
             "Environment to deploy your template in to") do |environment|
       @options.environment = environment
     end
-    opts.on("--complete", "runs an Azure ARm Complete deployment, use wisely", "true or false.") do |complete_deployment|
+    opts.on("--complete", "runs an Azure ARM Complete deployment, use wisely", "true or false.") do |complete_deployment|
       @options.complete_deployment = complete_deployment
     end
     opts.on("--skip_deploy", "Skips the main deployment step, useful for testing or validating configs", "true or false.") do |skip_deploy|
@@ -144,7 +155,7 @@ def parse_args(args)
   end
 
   opt_parser.parse!(args)
-  missing_args()
+  #missing_args()
 end
 
 #--------------------------------------------
