@@ -8,7 +8,7 @@ node {
   stage ('ValidateTemplate'){
     withCredentials([string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),]) {
       env.CSRE_LOG_LEVEL = "${log_level}"
-      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono/asav-ha-template.json --environment core --resource-group asavha-rg-core-wr"      
+      sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono/asav-ha-template.json --environment core --resource-group cisco-asav-ha-rg-core-wr"      
     }
   }
   stage ('CreatePackage'){
