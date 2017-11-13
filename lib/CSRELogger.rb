@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'logger'
+require_relative 'global_methods'
 
 class CSRELogger
   
