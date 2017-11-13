@@ -15,7 +15,7 @@ task :validate do
   @options.location = 'WestEurope'
   @options.scope = nil
   @options.resource_group = 'cisco-asav-ha-rg-core-wr'
-
+  ENV['CSRE_LOG_LEVEL'] = 'DEBUG'
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 end
