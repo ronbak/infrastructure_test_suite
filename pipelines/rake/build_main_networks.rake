@@ -2,11 +2,12 @@ require_relative '../../bin/provision.rb'
 require 'rake/testtask'
 
 task :build_nonprd do
+  ENV['CSRE_LOG_LEVEL'] = 'INFO'
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_NONPRD']
   puts ENV['AZURE_STORAGE_ACCOUNT_KEY']
   @options = OpenStruct.new
   @options.action = 'output'
-  @options.output = './nonprd_network.json'
+  @options.output = './nonprd_networks.json'
   @options.config = 'arm_templates/networks/configs/networking_master.config.json'
   @options.verbose = false
   @options.environment = 'nonprd'
@@ -22,10 +23,11 @@ task :build_nonprd do
 end
 
 task :build_prd do
+  ENV['CSRE_LOG_LEVEL'] = 'INFO'
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_PRD']
   @options = OpenStruct.new
   @options.action = 'output'
-  @options.output = './prd_network.json'
+  @options.output = './prd_networks.json'
   @options.config = 'arm_templates/networks/configs/networking_master.config.json'
   @options.verbose = false
   @options.environment = 'prd'
@@ -41,6 +43,9 @@ task :build_prd do
 end
 
 task :validate_templates do
+  ENV['CSRE_LOG_LEVEL'] = 'DEBUG'
+  puts `pwd`
+  puts `ls -lah`.split("\n")
   @options = OpenStruct.new
   @options.action = 'validate'
   @options.output = './nonprd_networks.json'
