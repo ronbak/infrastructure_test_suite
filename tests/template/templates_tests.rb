@@ -34,6 +34,7 @@ else
   puts $commit
 end
 puts "these are your files: #{$files}"
+puts "This is the contents of the chnaged files file: #{File.read(ENV['changed_files'])}"
 
 
 networks_to_deploy = []
