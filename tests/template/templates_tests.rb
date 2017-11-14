@@ -9,13 +9,21 @@ MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
 
 
 if ENV['changed_files']
+  puts "Running the changed files file in TC #{ENV['changed_files']}"
   puts ENV['changed_files']
   $files = {}
   files = File.read(ENV['changed_files'])
   files.split(' ').each do |file_string|
-    $files[file_string.split(':CHANGED:')[0]] = file_string.split(':CHANGED:')[-1]
+    if file_string.include?(':ADDED:')
+      $files[file_string.split(':ADDED:')[0]] = file_string.split(':ADDED:')[-1]
+    elsif file_string.include?(':CHANGED:')
+      $files[file_string.split(':CHANGED:')[0]] = file_string.split(':CHANGED:')[-1]
+    else
+      $files[file_string.split(':')[0]] = file_string.split(':')[-1]
+    end
   end
 else
+  puts "Running the changes direct from a git repo diff command"
   $path = ARGV[0]
   $commit = ARGV[1]
   $previous_commit = ARGV[2]
