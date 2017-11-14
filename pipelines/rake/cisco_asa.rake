@@ -3,7 +3,7 @@ require 'rake/testtask'
 
 task :validate do
   puts "this is your current path: #{`pwd`}"
-  puts `ls -lah ./arm_templates/csre/networkdevices/ciscoasav/`.split("\n")
+  puts `ls -lah ./arm_templates/csre/`.split("\n")
   @options = OpenStruct.new
   @options.action = 'validate'
   @options.output = './arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json'
