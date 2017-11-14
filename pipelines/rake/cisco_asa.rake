@@ -4,7 +4,7 @@ require 'rake/testtask'
 task :validate do
   @options = OpenStruct.new
   @options.action = 'validate'
-  @options.output = '.arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json'
+  @options.output = './arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json'
   @options.config = nil
   @options.verbose = false
   @options.environment = 'core'
@@ -14,13 +14,14 @@ task :validate do
   @options.prep_templates = false
   @options.location = 'WestEurope'
   @options.scope = nil
-  @options.resource_group = 'cisco-asav-ha-rg-core-wr'
+  @options.rg_name = 'cisco-asav-ha-rg-core-wr'
   ENV['CSRE_LOG_LEVEL'] = 'DEBUG'
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 end
 
 
-task :deploy_cisco_asav => [:validate,] do
+task :default => [:validate,] do
   puts "Building templates and testing them"
 end
+
