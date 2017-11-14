@@ -9,6 +9,7 @@ MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
 
 
 if ENV['changed_files']
+  puts ENV['changed_files']
   $files = {}
   files = File.read(ENV['changed_files'])
   files.split(' ').each do |file_string|
