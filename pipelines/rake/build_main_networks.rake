@@ -26,7 +26,7 @@ task :build_prd do
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './prd_network.json'
-  @options.config = 'arm_templates/networks/configs/networking_master.config'
+  @options.config = 'arm_templates/networks/configs/networking_master.config.json'
   @options.verbose = false
   @options.environment = 'prd'
   @options.complete_deployment = true
@@ -44,7 +44,7 @@ task :validate_templates do
   @options = OpenStruct.new
   @options.action = 'validate'
   @options.output = './nonprd_networks.json'
-  @options.config = 'arm_templates/networks/configs/networking_master.config'
+  @options.config = 'arm_templates/networks/configs/networking_master.config.json'
   @options.verbose = false
   @options.environment = 'nonprd'
   @options.complete_deployment = true
