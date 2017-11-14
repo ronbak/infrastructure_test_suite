@@ -7,7 +7,7 @@ task :build_nonprd do
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './nonprd_network.json'
-  @options.config = 'arm_templates/networks/configs/networking_master.config'
+  @options.config = 'arm_templates/networks/configs/networking_master.config.json'
   @options.verbose = false
   @options.environment = 'nonprd'
   @options.complete_deployment = true
