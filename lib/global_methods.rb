@@ -125,7 +125,7 @@ def retrieve_from_github_api(url, access_token)
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port)
   https.use_ssl = true
-  https.open_timeout = 5
+  https.open_timeout = 20
   https.verify_mode = OpenSSL::SSL::VERIFY_PEER
   req = Net::HTTP::Get.new(uri.request_uri)
   req['Authorization'] = "token #{access_token}"
@@ -138,7 +138,7 @@ def create_repo_status(url, access_token)
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port)
   https.use_ssl = true
-  https.open_timeout = 5
+  https.open_timeout = 20
   https.verify_mode = OpenSSL::SSL::VERIFY_PEER
   req = Net::HTTP::Post.new(uri.request_uri)
   req['Authorization'] = "token #{access_token}"
@@ -174,7 +174,7 @@ def retrieve_from_gitlab_api(url, access_token)
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port)
   https.use_ssl = true
-  https.open_timeout = 5
+  https.open_timeout = 20
   https.verify_mode = OpenSSL::SSL::VERIFY_NONE
   req = Net::HTTP::Get.new(uri.request_uri)
   req['PRIVATE-TOKEN'] = "#{access_token}"
