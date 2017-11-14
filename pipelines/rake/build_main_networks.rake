@@ -7,7 +7,7 @@ task :build_nonprd do
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './nonprd_network.json'
-  @options.config = ENV['config_path']
+  @options.config = 'arm_templates/networks/configs/networking_master.config'
   @options.verbose = false
   @options.environment = 'nonprd'
   @options.complete_deployment = true
@@ -26,7 +26,7 @@ task :build_prd do
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './prd_network.json'
-  @options.config = ENV['config_path']
+  @options.config = 'arm_templates/networks/configs/networking_master.config'
   @options.verbose = false
   @options.environment = 'prd'
   @options.complete_deployment = true
@@ -44,7 +44,7 @@ task :validate_templates do
   @options = OpenStruct.new
   @options.action = 'validate'
   @options.output = './nonprd_networks.json'
-  @options.config = ENV['config_path']
+  @options.config = 'arm_templates/networks/configs/networking_master.config'
   @options.verbose = false
   @options.environment = 'nonprd'
   @options.complete_deployment = true
@@ -57,8 +57,8 @@ task :validate_templates do
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 
-  @options.output = './nonprd_networks.json'
-  @options.environment = 'nonprd'
+  @options.output = './prd_networks.json'
+  @options.environment = 'prd'
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 end
