@@ -13,7 +13,7 @@ if ENV['changed_files']
   puts ENV['changed_files']
   $files = {}
   files = File.read(ENV['changed_files'])
-  print files
+  puts files
   files.split(' ').each do |file_string|
     if file_string.include?(':ADDED:')
       $files[file_string.split(':ADDED:')[0]] = file_string.split(':ADDED:')[-1]
