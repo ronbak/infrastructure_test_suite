@@ -4,9 +4,10 @@ require 'rake/testtask'
 task :validate do
   puts "this is your current path: #{`pwd`}"
   puts `ls -lah ./arm_templates/csre/networkdevices`.split("\n")
+  puts ENV['version_to_deploy']
   @options = OpenStruct.new
   @options.action = 'validate'
-  @options.output = './arm_templates/csre/networkdevices/ciscoasav/cisco-asav-ha-mono-fast/asav-ha-template.json'
+  @options.output = "./arm_templates/csre/networkdevices/ciscoasav/#{ENV['version_to_deploy']}/asav-ha-template.json"
   @options.config = nil
   @options.verbose = false
   @options.environment = 'core'
@@ -21,6 +22,8 @@ task :validate do
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 end
+
+
 
 
 task :default => [:validate,] do
