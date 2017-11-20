@@ -37,7 +37,7 @@ class TestRGTemplate <  MiniTest::Test
     assert_equal(true, template['tags'].keys.include?('Project'), 'You\'re missing the Project tag')
     assert_equal(true, template['tags'].keys.include?('RunModel'), 'You\'re missing the RunModel tag')
     # Verify values for each key
-    assert_equal([template['tags']['OwnerContact']], template['tags']['OwnerContact'].scan(/[a-zA-Z0-9]*@worldremit.com/), "You have not supplied a worldremit email address in the OwnerContact tag")
+    assert_equal([template['tags']['OwnerContact']], template['tags']['OwnerContact'].scan(/[a-zA-Z0-9-_]*@worldremit.com/), "You have not supplied a worldremit email address in the OwnerContact tag")
     assert_includes(run_models, template['tags']['RunModel'], "You must supply one of: #{run_models} in the RunModel tag")
     assert_equal([template['tags']['Project']], template['tags']['Project'].scan(/[a-zA-Z]{3,6}-[0-9]{3,5} - [a-zA-Z0-9\s]*/), "Project tag must star with a Jira ticket followed by, ' - ' and a description")    
     assert_includes(locations, template['tags']['Location'], "Location tag must be one of #{locations}")
