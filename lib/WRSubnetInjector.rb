@@ -34,7 +34,7 @@ class WRSubnetInjector
 
   def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name)
     return {
-      "name" => "#{landscape_name}_#{subnet_name}",
+      "name" => "#{landscape_name}-#{subnet_name}",
       "properties" => {"addressPrefix" => subnet_addr,
         "networkSecurityGroup" => {
           "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{landscape_name}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
@@ -55,7 +55,7 @@ class WRSubnetInjector
       }
     else
       return {
-        "name" => "#{@environment}_#{subnet_name}",
+        "name" => "#{@environment}-#{subnet_name}",
         "properties" => {"addressPrefix" => subnet_addr,
           "networkSecurityGroup" => {
             "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{@environment}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
