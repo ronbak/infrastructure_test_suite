@@ -18,14 +18,14 @@ class TestWRTemplate <  MiniTest::Test
     $files.each do |template|
       if template.include?('.nsgs') && !template.include?('external')
         if template.include?('nonprd')
-          nsgs_count = 24
-          rules_count = 156
+          nsgs_count = 23
+          rules_count = 154
         elsif template.include?('core')
-          nsgs_count = 4
-          rules_count = 26
+          nsgs_count = 3
+          rules_count = 24
         else
-          nsgs_count = 4
-          rules_count = 26
+          nsgs_count = 3
+          rules_count = 24
         end
         puts "Testing NSG's and rules count for: #{template}"
         tester = WRTemplatesTester.new(template)
