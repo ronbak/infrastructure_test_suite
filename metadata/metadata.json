@@ -93,6 +93,10 @@
 			  "core"
 			]
 		},
+		"subnets": {
+			"no_routetable": ["GatewaySubnet"],
+			"no_nsg": ["GatewaySubnet", "aadds"]
+		},
 		"naming_standards":{
 			"regexes": [
 				{

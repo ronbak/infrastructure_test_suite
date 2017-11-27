@@ -61,12 +61,49 @@ class WRAzureNsgRulesMgmt
       rule.delete('location')
       rule.delete('type')
       rule['name'] = rule['name'].split('/')[-1]
-      nsg['properties']['securityRules'] << rule
+      if condition_met?(nsg, rule)
+        rule.delete('condition')
+        nsg['properties']['securityRules'] << rule
+      end
     end
     return nsg
   end
 
+  def condition_met?(nsg, rule)
+    condition = rule.dig('condition')
+    if condition
+      comparison, container, element = clean_condition(condition)
+      container = resolve_comparison_container(nsg, rule, container)
+      case comparison
+      when 'equal'
+        return container.eql?(element)
+      when 'not_equal'
+        return !container.eql?(element)
+      when 'contains'
+        return container.include?(element)
+      end
+      return false
+    end
+    return true
+  end
 
+  def clean_condition(condition)
+    container = condition.match(/\((.*?)\)/)[1].split(', ')[0]
+    element = condition.match(/\((.*?)\)/)[1].split(', ')[-1]
+    element = element[1..-2] if element.match(/'(.*)'/)
+    return [condition.split('(')[0].split('[')[-1], container, element]
+  end
+
+  def resolve_comparison_container(nsg, rule, container)
+    resource_string = container.split('/')[0]
+    resource_element = container.split('/')[1]
+    case resource_string
+    when 'parent_resource'
+      resource = nsg
+    end
+    return resource[resource_element] if resource_element
+    return resource
+  end
 
   # build an array of rules resources from all the base rule templates supplied. 
   def retrieve_resources(templates_array)
