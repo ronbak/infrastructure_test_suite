@@ -36,9 +36,6 @@ class TestWRConfigManagement <  MiniTest::Test
 
   def test_accessors
     obj = WRConfigManager.new(config: 'https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/configs/networking_master.config.json')
-    if obj.environments.nil?
-      binding.pry
-    end
     assert_instance_of(Hash, obj.environments)
     assert_instance_of(Hash, obj.template)
     assert_instance_of(Array, obj.rules)
