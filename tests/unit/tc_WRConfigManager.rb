@@ -14,6 +14,7 @@ MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
 class TestWRConfigManagement <  MiniTest::Test
 
   def setup()
+
   end
 
   def test_initialize
@@ -35,7 +36,7 @@ class TestWRConfigManagement <  MiniTest::Test
   end
 
   def test_accessors
-    obj = WRConfigManager.new(config: 'https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/configs/networking_master.config.json')
+    obj = WRConfigManager.new(config: JSON.parse(File.read("#{File.dirname(__FILE__)}/../test_data/networking_master.config.json")))
     assert_instance_of(Hash, obj.environments)
     assert_instance_of(Hash, obj.template)
     assert_instance_of(Array, obj.rules)

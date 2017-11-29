@@ -1,0 +1,194 @@
+{
+  "environments": {
+    "global": {
+      "arm_template": "https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/networking_master.json",
+      "arm_template_rules": [
+        "https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/nsg_rules/nsg_rules_private.json",
+        "https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/nsg_rules/nsg_rules_publicclient.json"
+        ]
+    },
+    "nonprd": {
+      "resource_group_name": "networking-rg-nonprd-wr",
+      "subscription_name": "Non-production",
+      "parameters": {
+        "vNetName": {
+          "value": "eurw-nonprd-vnt-01"
+        },
+        "vNet": {
+          "value": {
+            "addressSpacePrefix": "10.24.0.0/16",
+            "vNetName": "[parameters('vNetName')]",
+            "landscapes": {
+              "gateway": {
+                "name" : "GatewaySubnet",
+                "description": "Gateway environment subnet, 10.24.0.0/20",
+                "addressSpacePrefix": "10.24.0.0/20",
+                "subnets": {
+                  "GatewaySubnet": "10.24.0.0/27",
+                  "external": "10.24.2.0/23"
+                }
+              },
+              "dev": {
+                "name" : "dev",
+                "description": "Development environment subnet, 10.24.16.0/20",
+                "addressSpacePrefix": "10.24.16.0/20",
+                "subnets": {
+                  "private": "10.24.16.0/23",
+                  "privatepartner": "10.24.18.0/23",
+                  "publicclient": "10.24.20.0/23",
+                  "publicpartner": "10.24.22.0/23"
+                }
+              },
+              "tst": {
+                "name" : "tst",
+                "description": "test environment subnet, 10.24.32.0/20",
+                "addressSpacePrefix": "10.24.32.0/20",
+                "subnets": {
+                  "private": "10.24.32.0/23",
+                  "privatepartner": "10.24.34.0/23",
+                  "publicclient": "10.24.36.0/23",
+                  "publicpartner": "10.24.38.0/23"
+                }
+              },
+              "uat": {
+                "name" : "uat",
+                "description": "UAT environment subnet, 10.24.48.0/20",
+                "addressSpacePrefix": "10.24.48.0/20",
+                "subnets": {
+                  "private": "10.24.48.0/23",
+                  "privatepartner": "10.24.50.0/23",
+                  "publicclient": "10.24.52.0/23",
+                  "publicpartner": "10.24.54.0/23"
+                }
+              },
+              "int": {
+                "name" : "int",
+                "description": "Integrations environment subnet, 10.24.64.0/20",
+                "addressSpacePrefix": "10.24.64.0/20",
+                "subnets": {
+                  "private": "10.24.64.0/23",
+                  "privatepartner": "10.24.66.0/23",
+                  "publicclient": "10.24.68.0/23",
+                  "publicpartner": "10.24.70.0/23"
+                }
+              },
+              "ci": {
+                "name" : "ci",
+                "description": "Continous Integration environment subnet, 10.24.80.0/20",
+                "addressSpacePrefix": "10.24.80.0/20",
+                "subnets": {
+                  "private": "10.24.80.0/23",
+                  "privatepartner": "10.24.82.0/23",
+                  "publicclient": "10.24.84.0/23",
+                  "publicpartner": "10.24.86.0/23"
+                }
+              },
+              "ppd": {
+                "name" : "ppd",
+                "description": "Pre-Prod environment subnet, 10.24.96.0/20",
+                "addressSpacePrefix": "10.24.96.0/20",
+                "subnets": {
+                  "private": "10.24.96.0/23",
+                  "privatepartner": "10.24.98.0/23",
+                  "publicclient": "10.24.100.0/23",
+                  "publicpartner": "10.24.102.0/23"
+                }
+              }
+            }
+          }
+        },
+        "subnets_array": {
+          "value": "build_from_vNet"
+        }
+      }
+    },
+    "prd": {
+      "resource_group_name": "networking-rg-prd-wr",
+      "subscription_name": "Production-ARM",
+      "parameters": {
+        "vNetName": {
+          "value": "eurw-prd-vnt-01"
+        },
+        "vNet": {
+          "value": {
+            "addressSpacePrefix": "10.20.0.0/16",
+            "landscapes": {
+              "gateway": {
+                "name" : "GatewaySubnet",
+                "description": "Gateway environment subnet, 10.20.0.0/24",
+                "addressSpacePrefix": "10.20.0.0/20",
+                "subnets": {
+                  "GatewaySubnet": "10.20.0.0/27",
+                  "external": "10.20.2.0/23"
+                }
+              },
+              "prd": {
+                "name" : "prd",
+                "description": "Prod environment subnet, 10.20.16.0/20",
+                "addressSpacePrefix": "10.20.16.0/20",
+                "subnets": {
+                  "private": "10.20.16.0/23",
+                  "privatepartner": "10.20.18.0/23",
+                  "publicclient": "10.20.20.0/23",
+                  "publicpartner": "10.20.22.0/23"
+                }
+              }
+            }
+          }
+        },
+        "subnets_array": {
+          "value": "build_from_vNet"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "vNetName": {
+    },
+    "vNet": {
+      "value": {
+        "landscapes": {
+          "core": {
+            "name" : "core",
+            "vNetName": "eurw-core-vnt-01",
+            "description": "Core network for shared services in this region, 10.16.0.0/16",
+            "addressSpacePrefix": "10.16.0.0/16",
+            "virtualApplianceGateway": "10.16.16.4",
+            "subnets": {
+              "private": "10.16.16.0/23",
+              "public": "10.16.18.0/23"
+            }
+          }
+        }
+      }
+    },
+    "subnets_array": {
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "location_tag": {
+      "value": "eurw"
+    },
+    "gatewayPublicIpAddressName": {
+      "value": "vpngateway-pip-core-wr"
+    },
+    "gatewayName": {
+      "value": "csregateway-vpng-core-wr"
+    },
+    "create_peers": {
+      "value": true
+    },
+    "sharedKey": {
+      "value": "notarealkey"
+    },
+    "tags": {
+      "value": {
+        "OwnerContact": "csre-team@worldremit.com",
+        "Team": "CSRE",
+        "Project": "CSRE-1223 - ARM Environments",
+        "RunModel": "247"
+      }
+    }
+  }
+}
