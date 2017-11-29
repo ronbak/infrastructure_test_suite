@@ -73,7 +73,7 @@ class WRAzureNsgRulesMgmt
     condition = rule.dig('condition')
     if condition
       comparison, container, element = clean_condition(condition)
-      container = resolve_comparison_container(nsg, rule, container)
+      container = resolve_comparison_container(nsg, container)
       case comparison
       when 'equal'
         return container.eql?(element)
@@ -94,7 +94,7 @@ class WRAzureNsgRulesMgmt
     return [condition.split('(')[0].split('[')[-1], container, element]
   end
 
-  def resolve_comparison_container(nsg, rule, container)
+  def resolve_comparison_container(nsg, container)
     resource_string = container.split('/')[0]
     resource_element = container.split('/')[1]
     case resource_string

@@ -4,13 +4,14 @@ SimpleCov.start
 
 require 'minitest/reporters'
 require 'minitest/autorun'
+require 'pry-byebug'
 require_relative '../../lib/WRConfigManager'
 require_relative '../../lib/WRAzureCredentials'
 require_relative '../../lib/CSRELogger'
 MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
                           MiniTest::Reporters::JUnitReporter.new]
 
-class TestWRAzureTemplateManagement <  MiniTest::Test
+class TestWRConfigManagement <  MiniTest::Test
 
   def setup()
   end
@@ -35,7 +36,9 @@ class TestWRAzureTemplateManagement <  MiniTest::Test
 
   def test_accessors
     obj = WRConfigManager.new(config: 'https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/configs/networking_master.config.json')
-    assert_instance_of(Hash, obj.parameters)
+    if obj.environments.nil?
+      binding.pry
+    end
     assert_instance_of(Hash, obj.environments)
     assert_instance_of(Hash, obj.template)
     assert_instance_of(Array, obj.rules)
@@ -43,6 +46,7 @@ class TestWRAzureTemplateManagement <  MiniTest::Test
     assert_nil(obj.tags)
     assert_nil(obj.client_name)
     assert_instance_of(String, obj.rg_name('nonprd'))
+    assert_instance_of(Hash, obj.parameters)
   end
 end
 

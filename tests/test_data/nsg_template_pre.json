@@ -1,0 +1,96 @@
+{
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-dev-eurw-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    }

@@ -38,7 +38,9 @@ class TestWRAzureTemplateManagement <  MiniTest::Test
   end
 
   def test_create_sas_url
-    assert_equal("https://awcsrenonprd01.blob.core.windows.net/templates/file1.txt?se=2099-01-01T00%3A00%3A00Z&sig=OwzBMDA2HTv53dNu6Am9QP0VgdSXgNzo330MoSFwANM%3D&sp=r&sr=b&st=2017-01-01T00%3A00%3A00Z", $wraztm.create_sas_url(path: 'templates/file1.txt', start: Date.parse("2017-01-01").to_datetime.to_time.utc.iso8601, expiry: Date.parse("2099-01-01").to_datetime.to_time.utc.iso8601))
+    access_policy = wrmetadata().dig('nonprd', 'storage_account', 'container_access_policy')
+    assert_equal("https://awcsrenonprd01.blob.core.windows.net/templates/file1.txt?si=saslinkedtemplates&sig=F61pscKd4P7CK0eDxXESNBhRBRM%2FSajQOkt5o%2F5ggAs%3D&sr=b&sv=2015-04-05", 
+      $wraztm.create_sas_url(path: 'templates/file1.txt', identifier: access_policy))
   end
 end
 

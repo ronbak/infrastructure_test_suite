@@ -41,4 +41,10 @@ class TestWRAzureStorageManagement <  MiniTest::Test
     # delete container
     assert_nil($wrazsm.delete_container('testcontainerignore'))
   end
+
+  def teardown()
+    # $wrazsm.delete_blob('testcontainerignore', 'test_file')
+    # $wrazsm.delete_container('testcontainerignore')
+  end
+  
 end

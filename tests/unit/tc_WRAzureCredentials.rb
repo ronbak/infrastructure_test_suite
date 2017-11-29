@@ -60,4 +60,11 @@ class TestWRAzureCredentials <  MiniTest::Test
     assert_instance_of(MsRest::TokenCredentials, $wrazcreds.authenticate)
     File.delete('temp_key_file')
   end
+
+  def teardown()
+    ENV['AZURE_CLIENT_SECRET'] = nil
+    ENV['GIT_ACCESS_TOKEN'] = nil
+    ENV['GITLAB_ACCESS_TOKEN'] = nil
+    ENV['AZURE_STORAGE_ACCOUNT_KEY'] = nil
+  end
 end
