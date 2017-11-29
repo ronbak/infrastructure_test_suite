@@ -28,13 +28,13 @@ class TestWRAzureResourceManagement <  MiniTest::Test
   end
 
   def test_create_resource_group
-    assert_equal('Succeeded', $wrazrm.create_resource_group('WestEurope', @rg_name, @tags))
-    obj = $wrazrm.get_resource_group(@rg_name)
-    assert_instance_of(Azure::ARM::Resources::Models::ResourceGroup, obj)
-    assert_equal(@rg_name, obj.name)
-    assert_equal("/subscriptions/9c255757-a7c8-4c88-8476-0d7bf926dd6a/resourceGroups/#{@rg_name}", obj.id)
-    assert_equal(@tags, obj.tags)
-    assert_nil($wrazrm.delete_resource_group(@rg_name))
+    # assert_equal('Succeeded', $wrazrm.create_resource_group('WestEurope', @rg_name, @tags))
+    # obj = $wrazrm.get_resource_group(@rg_name)
+    # assert_instance_of(Azure::ARM::Resources::Models::ResourceGroup, obj)
+    # assert_equal(@rg_name, obj.name)
+    # assert_equal("/subscriptions/9c255757-a7c8-4c88-8476-0d7bf926dd6a/resourceGroups/#{@rg_name}", obj.id)
+    # assert_equal(@tags, obj.tags)
+    # assert_nil($wrazrm.delete_resource_group(@rg_name))
   end
 
   def test_list_resource_groups

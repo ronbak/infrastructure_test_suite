@@ -62,9 +62,9 @@ class TestWRAzureCredentials <  MiniTest::Test
   end
 
   def teardown()
-    ENV['AZURE_CLIENT_SECRET'] = nil
-    ENV['GIT_ACCESS_TOKEN'] = nil
-    ENV['GITLAB_ACCESS_TOKEN'] = nil
-    ENV['AZURE_STORAGE_ACCOUNT_KEY'] = nil
+    # ENV['AZURE_CLIENT_SECRET'] = nil
+    # ENV['GIT_ACCESS_TOKEN'] = nil
+    # ENV['GITLAB_ACCESS_TOKEN'] = nil
+    # ENV['AZURE_STORAGE_ACCOUNT_KEY'] = nil
   end
 end
