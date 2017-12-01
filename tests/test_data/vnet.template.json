@@ -1,0 +1,106 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type":"string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object"
+    },
+    "subnets_array": {
+      "type": "array"
+    },
+     "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "description": "Default tags required, passed in as a hash"
+      }
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    },
+    "environment": {
+      "type": "String"
+    },
+    "routeTableName": {
+      "type": "String",
+      "defaultValue": "custom_udr_1"
+    },
+    "create_peers": {
+      "type": "bool",
+      "defaultValue": false
+    }
+  },
+  "variables": {
+    "inject_subnets_here": true,
+    "vNetToCorevNetPeeringName": "[concat(parameters('vNetName'), '-CoreServicesVNet')]",
+    "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+    "gatewaySubnetId": "[concat(resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('vNetName')), '/subnets/GatewaySubnet')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('vNetName')]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/routeTables/', parameters('location_tag'), '-', parameters('environment'), '-routetable-01')]"
+      ],
+      "comments": "VNet for WR [parameters('environment') Subscription in [resourceGroup().location].",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vNet').addressSpacePrefix]"
+          ]
+        },
+        "subnets": "build_from_vNet"
+      },
+      "resources": [
+      ]
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Name": "[concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01')]",
+        "Team": "CSRE",
+        "OwnerContact": "csre@worldremit.com",
+        "RunModel": "247",
+        "Location": "[resourceGroup().location]",
+        "Environment": "[parameters('environment')]",
+        "Project": "CSRE-1223 - ARM Environments"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "RouteToInternet",
+            "properties": {
+              "addressPrefix": "0.0.0.0/0",
+              "nextHopType": "Internet"
+            }
+          },
+          {
+            "name": "RouteToLocalVnet",
+            "properties": {
+              "addressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "nextHopType": "VnetLocal"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

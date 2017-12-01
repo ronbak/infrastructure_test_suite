@@ -13,6 +13,7 @@ MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
 #$config = WRConfigManager.new(config: 'https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/configs/networking_master.config.json').config
 $templates_array = "#{File.dirname(__FILE__)}/../test_data/rules/"
 $template = "#{File.dirname(__FILE__)}/../test_data/nsg_template.json"
+$pre_processed_template = "#{File.dirname(__FILE__)}/../test_data/nsg_template_pre.json"
 $wrazrulesm = WRAzureNsgRulesMgmt.new(File.read("#{File.dirname(__FILE__)}/../test_data/network_params.test.json"), $templates_array, $template, CSRELogger.new('INFO', 'STDOUT'))
 $envs_array = ['dev', 'uat', 'tst', 'ci', 'int', 'ppd', 'nonprd', 'prd', 'core']
 
@@ -65,6 +66,33 @@ class TestWRAzureNsgRulesMgmt <  MiniTest::Test
     local_templates_array = "#{File.dirname(__FILE__)}/../test_data/rules_core/"
     core_wrazrm = WRAzureNsgRulesMgmt.new(File.read("#{File.dirname(__FILE__)}/../test_data/network_core_params.test.json"), local_templates_array, $template, CSRELogger.new('INFO', 'STDOUT'))
     #assert_equal(JSON.parse(File.read("#{File.dirname(__FILE__)}/../test_data/rules_core_resources.json")), core_wrazrm.process_rules)
+  end
+
+  def test_clean_condition
+    comparison, container, element = $wrazrulesm.clean_condition("[contains(parent_resource/name, '-int-')]")
+    assert_instance_of(Array, $wrazrulesm.clean_condition("[contains(parent_resource/name, '-int-')]"))
+    assert_equal("contains", comparison)
+    assert_equal("parent_resource/name", container)
+    assert_equal("-int-", element)
+    comparison, container, element = $wrazrulesm.clean_condition("[equal(parent_resource/name, '-int-')]")
+    assert_equal("equal", comparison)
+    comparison, container, element = $wrazrulesm.clean_condition("[not_equal(parent_resource/name, '-int-')]")
+    assert_equal("not_equal", comparison)
+  end
+
+  def test_resolve_comparison_container
+    assert_equal("nsg01-dev-eurw-privatepartner", $wrazrulesm.resolve_comparison_container(JSON.parse(File.read($pre_processed_template)), 'parent_resource/name'))
+    assert_equal("Microsoft.Network/networkSecurityGroups", $wrazrulesm.resolve_comparison_container(JSON.parse(File.read($pre_processed_template)), 'parent_resource/type'))
+  end
+
+  def test_condition_met?
+    nsg = JSON.parse(File.read($pre_processed_template))
+    assert_equal(false, $wrazrulesm.condition_met?(nsg, { "condition" => "[contains(parent_resource/name, '-int-')]" }))
+    assert_equal(true, $wrazrulesm.condition_met?(nsg, { "condition" => "[contains(parent_resource/name, '-dev-')]" }))
+    assert_equal(false, $wrazrulesm.condition_met?(nsg, { "condition" => "[equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner1')]" }))
+    assert_equal(true, $wrazrulesm.condition_met?(nsg, { "condition" => "[equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner')]" }))
+    assert_equal(false, $wrazrulesm.condition_met?(nsg, { "condition" => "[not_equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner')]" }))
+    assert_equal(true, $wrazrulesm.condition_met?(nsg, { "condition" => "[not_equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner1')]" }))
   end
     
 end

@@ -37,38 +37,38 @@ class WRSubnetInjector
     return vnet_template
   end
 
-  def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name)
-    return {
-      "name" => "#{landscape_name}-#{subnet_name}",
-      "properties" => {"addressPrefix" => subnet_addr,
-        "networkSecurityGroup" => {
-          "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{landscape_name}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
-        },
-        "routeTable" => {
-          "id" => "[resourceId('Microsoft.Network/routeTables', #{route_table_name})]"
-        }
-      }
-    }
-  end
+  # def build_standard_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name)
+  #   return {
+  #     "name" => "#{landscape_name}-#{subnet_name}",
+  #     "properties" => {"addressPrefix" => subnet_addr,
+  #       "networkSecurityGroup" => {
+  #         "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{landscape_name}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
+  #       },
+  #       "routeTable" => {
+  #         "id" => "[resourceId('Microsoft.Network/routeTables', #{route_table_name})]"
+  #       }
+  #     }
+  #   }
+  # end
 
-  def build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr)
-    if subnet_name.eql?('GatewaySubnet')
-      return {
-        "name" => subnet_name,
-        "properties" => {"addressPrefix" => subnet_addr
-        }
-      }
-    else
-      return {
-        "name" => "#{@environment}-#{subnet_name}",
-        "properties" => {"addressPrefix" => subnet_addr,
-          "networkSecurityGroup" => {
-            "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{@environment}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
-          }
-        }
-      }
-    end
-  end
+  # def build_gateway_subnet_hash(landscape_name, subnet_name, subnet_addr)
+  #   if subnet_name.eql?('GatewaySubnet')
+  #     return {
+  #       "name" => subnet_name,
+  #       "properties" => {"addressPrefix" => subnet_addr
+  #       }
+  #     }
+  #   else
+  #     return {
+  #       "name" => "#{@environment}-#{subnet_name}",
+  #       "properties" => {"addressPrefix" => subnet_addr,
+  #         "networkSecurityGroup" => {
+  #           "id" => "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-#{@environment}-#{@parameters['location_tag']['value']}-#{subnet_name}')]"
+  #         }
+  #       }
+  #     }
+  #   end
+  # end
 
   def build_subnet_hash(landscape_name, subnet_name, subnet_addr, route_table_name)
     #binding.pry

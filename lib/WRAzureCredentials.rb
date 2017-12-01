@@ -45,23 +45,23 @@ class WRAzureCredentials
 	end
 
 	# Retrieves secret for Azure
-	def get_client_secret()
-		return retrieve_secret('AZURE_CLIENT_SECRET', "#{ENV['HOME']}/.ssh/azure_ruby_key", @azure_creds_file)
+	def get_client_secret(env_var_secret = 'AZURE_CLIENT_SECRET')
+		return retrieve_secret(env_var_secret, "#{ENV['HOME']}/.ssh/azure_ruby_key", @azure_creds_file)
 	end
 
   # Retrieves secret for Git Access token (PAC)
-  def get_git_access_token()
-  	retrieve_secret('GIT_ACCESS_TOKEN', "#{ENV['HOME']}/.ssh/azure_ruby_key", @github_pac_file)
+  def get_git_access_token(env_var_secret = 'GIT_ACCESS_TOKEN')
+  	retrieve_secret(env_var_secret, "#{ENV['HOME']}/.ssh/azure_ruby_key", @github_pac_file)
   end
   
   # Retrieves secret for GitLab access token
-  def get_gitlab_access_token()
-  	retrieve_secret('GITLAB_ACCESS_TOKEN', "#{ENV['HOME']}/.ssh/azure_ruby_key", @gitlab_token_file)
+  def get_gitlab_access_token(env_var_secret = 'GITLAB_ACCESS_TOKEN')
+  	retrieve_secret(env_var_secret, "#{ENV['HOME']}/.ssh/azure_ruby_key", @gitlab_token_file)
   end
 
   # Retrieves storage account key
-  def get_storage_account_key()
-  	retrieve_secret('AZURE_STORAGE_ACCOUNT_KEY', "#{ENV['HOME']}/.ssh/azure_ruby_key", @storage_account_key)
+  def get_storage_account_key(env_var_secret = 'AZURE_STORAGE_ACCOUNT_KEY')
+  	retrieve_secret(env_var_secret, "#{ENV['HOME']}/.ssh/azure_ruby_key", @storage_account_key)
   end
 
   # Writes secret to an encrypted file

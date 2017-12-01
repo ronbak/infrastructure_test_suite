@@ -129,7 +129,8 @@ class WRAzureTemplateManagement
     stringToSign << rsct
   
     stringToSign = stringToSign.join("\n")
-    signature    = OpenSSL::HMAC.digest('sha256', Base64.strict_decode64(wms_api_key), stringToSign.encode(Encoding::UTF_8))
+    puts wms_api_key
+    signature = OpenSSL::HMAC.digest('sha256', Base64.strict_decode64(wms_api_key), stringToSign.encode(Encoding::UTF_8))
     signature    = Base64.strict_encode64(signature)
     return signature
   end

@@ -24,23 +24,23 @@ class TestWRAzureCredentials <  MiniTest::Test
   end
 
   def test_get_client_secret
-    ENV['AZURE_CLIENT_SECRET'] = 'somedodgyclientsecret'
-    assert_equal('somedodgyclientsecret', $wrazcreds.get_client_secret)
+    ENV['TST_AZURE_CLIENT_SECRET'] = 'somedodgyclientsecret'
+    assert_equal('somedodgyclientsecret', $wrazcreds.get_client_secret('TST_AZURE_CLIENT_SECRET'))
   end
 
   def test_get_git_access_token
-    ENV['GIT_ACCESS_TOKEN'] = 'somedodgyclientsecret'
-    assert_equal('somedodgyclientsecret', $wrazcreds.get_git_access_token)
+    ENV['TST_GIT_ACCESS_TOKEN'] = 'somedodgyclientsecret'
+    assert_equal('somedodgyclientsecret', $wrazcreds.get_git_access_token('TST_GIT_ACCESS_TOKEN'))
   end
 
   def test_get_gitlab_access_token
-    ENV['GITLAB_ACCESS_TOKEN'] = 'somedodgyclientsecret'
-    assert_equal('somedodgyclientsecret', $wrazcreds.get_gitlab_access_token)
+    ENV['TST_GITLAB_ACCESS_TOKEN'] = 'somedodgyclientsecret'
+    assert_equal('somedodgyclientsecret', $wrazcreds.get_gitlab_access_token('TST_GITLAB_ACCESS_TOKEN'))
   end
 
   def test_get_storage_account_key
-    ENV['AZURE_STORAGE_ACCOUNT_KEY'] = 'somedodgyclientsecret'
-    assert_equal('somedodgyclientsecret', $wrazcreds.get_storage_account_key)
+    ENV['TST_AZURE_STORAGE_ACCOUNT_KEY'] = 'somedodgyclientsecret'
+    assert_equal('somedodgyclientsecret', $wrazcreds.get_storage_account_key('TST_AZURE_STORAGE_ACCOUNT_KEY'))
   end
   
   def test_retrieve_secret()
@@ -59,5 +59,12 @@ class TestWRAzureCredentials <  MiniTest::Test
     $wrazcreds.write_creds_file('mydodgypassword', 'temp_key_file')
     assert_instance_of(MsRest::TokenCredentials, $wrazcreds.authenticate)
     File.delete('temp_key_file')
+  end
+
+  def teardown()
+    # ENV['AZURE_CLIENT_SECRET'] = nil
+    # ENV['GIT_ACCESS_TOKEN'] = nil
+    # ENV['GITLAB_ACCESS_TOKEN'] = nil
+    # ENV['AZURE_STORAGE_ACCOUNT_KEY'] = nil
   end
 end

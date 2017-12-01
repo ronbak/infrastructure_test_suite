@@ -89,6 +89,7 @@ class WRAzureStorageManagement
     blob = @azure_blob_service.create_block_blob(get_container.name,
       blob_name, data)
     delete_old_blobs()
+    return blob
   end
 
   def delete_blob(container, blob)
