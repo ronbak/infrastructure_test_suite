@@ -78,7 +78,7 @@ class TestWRTemplate <  MiniTest::Test
           puts "We are now testing rule: #{rule_object['name']}\nWith DestinationAddressprefix of: #{rule_object['properties']['destinationAddressPrefix']}"
           puts "From file: #{template.first}\n\n\n"
           # Test for no 'Any' rule in destination port unless it's coming from the local vNet
-          refute_equal('*', rule_object['properties']['destinationPortRange']) unless rule_object['properties']['sourceAddressPrefix'] == 'VirtualNetwork'
+          refute_equal('*', rule_object['properties']['destinationPortRange']) if rule_object['properties']['sourceAddressPrefix'] == '*'
           # test that destination address is not a valid CIDR (it should be a generic subnet name, i.e private, public, etc etc)
           assert_equal(false, tester.valid_cidr?(rule_object['properties']['destinationAddressPrefix']))
           # ensure sourec port is set to 'Any'
