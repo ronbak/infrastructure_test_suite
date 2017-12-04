@@ -39,7 +39,7 @@ api_auth = { api_header => api_key }
 puts "[STATUS] Uploading package #{file_name}..."
 
 begin
-  upload_package_to_octopus(octopus_url, file_name, api_key, api_header)
+  upload_package_to_octopus(octopus_url, file_name, api_key, api_header) if file_name
 rescue => e
   puts e
   raise 'Failed to upload package'
@@ -77,38 +77,47 @@ deploy_template = JSON.parse(deploy_template_response.body)
 puts "[OK] Deployment Template Next Version Increment: #{deploy_template['NextVersionIncrement']}"
 
 # Creating Release
-
-puts "[STATUS] Creating Release..."
-
-selected_packages = []
-step_names.each do |step|
-  selected_packages << { :StepName => step, :Version => package_version }
-end
-
-
-release_body = JSON.generate({ :ProjectId => project['Id'], :Version => deploy_template["NextVersionIncrement"], :ChannelId => channels['Items'].first['Id'],
-  :SelectedPackages => selected_packages })
-
-begin
-  release_request = RestClient.post "#{octopus_url}/api/releases", release_body, api_auth
-rescue RestClient::ExceptionWithResponse => release_error
-  errors = JSON.parse(release_error.response.body)
-  puts "\n[ERROR] ERROR while trying to create release!"
-  puts "[ERROR] Error Message: #{errors['ErrorMessage']}"
-  errors["Errors"].each do |err|
-    puts "--------------------------------"
-    puts "#{err}"
-    puts "--------------------------------"
+if file_name
+  puts "[STATUS] Creating Release..."
+  
+  selected_packages = []
+  step_names.each do |step|
+    selected_packages << { :StepName => step, :Version => package_version }
   end
-  raise "Failed to create Release!"
+  
+  
+  release_body = JSON.generate({ :ProjectId => project['Id'], :Version => deploy_template["NextVersionIncrement"], :ChannelId => channels['Items'].first['Id'],
+    :SelectedPackages => selected_packages })
+  
+  begin
+    release_request = RestClient.post "#{octopus_url}/api/releases", release_body, api_auth
+  rescue RestClient::ExceptionWithResponse => release_error
+    errors = JSON.parse(release_error.response.body)
+    puts "\n[ERROR] ERROR while trying to create release!"
+    puts "[ERROR] Error Message: #{errors['ErrorMessage']}"
+    errors["Errors"].each do |err|
+      puts "--------------------------------"
+      puts "#{err}"
+      puts "--------------------------------"
+    end
+    raise "Failed to create Release!"
+  end
+  
+  
+  release = JSON.parse(release_request.body)
+  
+  puts "[OK] Release ID: #{release['Id']}"
+  
+  puts "[OK] Release created on URL: #{octopus_url}/app\#/projects/#{project_name}/releases/#{deploy_template['NextVersionIncrement']}"
+else
+  releases = JSON.parse(RestClient.get("#{octopus_url}#{project['Links']['Releases'].split('{')[0]}", api_auth).body)
+  release = releases['Items'].max_by do |element|
+    element['Version'].to_i
+  end
+  puts "[OK] Release ID: #{release['Id']}"
+  puts "[OK] Release Version: #{release['Version']}"
+  puts "[OK] Promoting to #{environment['Name']}"
 end
-
-
-release = JSON.parse(release_request.body)
-
-puts "[OK] Release ID: #{release['Id']}"
-
-puts "[OK] Release created on URL: #{octopus_url}/app\#/projects/#{project_name}/releases/#{deploy_template['NextVersionIncrement']}"
 
 # Creating Deployment
 
