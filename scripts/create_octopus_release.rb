@@ -21,7 +21,7 @@ end.parse!
 # Setting up parameters
 
 api_header = "X-Octopus-ApiKey"
-api_key = options[:api_key]
+api_key = options[:api_key] #API-CHONT1G1ZJFSF9OPHGN9PIDJDEA
 octopus_url = 'https://octopusdeploy.worldremit.com'
 octopus_url = options[:octopus_url] unless options[:octopus_url].nil?
 project_name = options[:project_name]
@@ -133,4 +133,30 @@ end
 deployment_response = JSON.parse(deployment_request.body)
 
 puts "[OK] Deployment created on URL: #{octopus_url}#{deployment_response['Links']['Web']}"
-exit
+
+
+status = JSON.parse(RestClient.get("#{octopus_url}#{deployment_response['Links']['Task']}", api_auth).body)
+displayed_logs = []
+while status['IsCompleted'].eql?(false)
+  sleep 5
+  details = JSON.parse(RestClient.get("#{octopus_url}#{status['Links']['Details'].split('{')[0]}", api_auth).body)
+  details['ActivityLogs'].first['Children'].each do |step|
+    # puts step['Name'] unless displayed_logs.include?(step)
+    # displayed_logs << step
+    step['Children'].each do |child_step|
+      child_step['LogElements'].each do |log_element|
+        puts "#{step['Name']} - #{child_step['Name']} - Message: #{log_element['MessageText']}" unless displayed_logs.include?(log_element)
+        displayed_logs << log_element
+      end
+    end
+  end
+  status = JSON.parse(RestClient.get("#{octopus_url}#{deployment_response['Links']['Task']}", api_auth).body)
+end
+
+if status['FinishedSuccessfully']
+  puts "[OK] Deployment completed successfully"
+  exit
+else
+  puts "The deployment status is: #{JSON.pretty_generate(JSON.parse(RestClient.get(octopus_url + status['Links']['Details'], api_auth).body))}"
+  exit 1
+end
