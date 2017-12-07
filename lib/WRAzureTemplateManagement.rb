@@ -31,6 +31,7 @@ class WRAzureTemplateManagement
   end
 
   def process_templates()
+    @master_template = sanitize_template_params(@master_template)
     @master_template['resources'].each do |resource|
       template_url = resource['properties'].dig('templateLink', 'uri')
       if template_url
@@ -41,6 +42,8 @@ class WRAzureTemplateManagement
         raw_template = inject_rules_to_template(@rules_template, raw_template) if @rules_template 
         # Inject subnets directly in to the VNets template - to maintain subnet state during redeploys
         raw_template = inject_subnets_to_template(raw_template)
+        # Inject parameters in to linked template to ensure it matches the master template
+        raw_template = inject_parameters_to_template(raw_template, @master_template['parameters'])
         # write linked templates to disk for testing
         if @output 
           output_file_name =  if @output.include?('/')
@@ -71,6 +74,35 @@ class WRAzureTemplateManagement
     @master_template
   end
 
+  def sanitize_template_params(template)
+    linked_template_params_hash = {}
+    params = template.dig('parameters')
+    params = params.each do |param_name, value|
+      unless value.dig('defaultValue')
+        case value['type'].downcase
+        when 'string'
+          value['defaultValue'] = ""
+        when 'array'
+          value['defaultValue'] = []
+        when 'object'
+          value['defaultValue'] = {}
+        when 'securestring'
+          value['defaultValue'] = ""
+        when 'bool'
+          value['defaultValue'] = false
+        end
+      end
+      linked_template_params_hash[param_name] = {"value" => "[parameters('#{param_name}')]"}
+    end
+    
+    template['resources'].each do |resource|
+      if resource.dig('properties', 'parameters')
+        resource['properties']['parameters'] = linked_template_params_hash
+      end
+    end
+    return template
+  end
+
   def inject_rules_to_template(rules_array, raw_template)
     nsg_template = JSON.parse(raw_template.values[0])
     if nsg_template.dig('variables', 'inject_rules_here')
@@ -88,6 +120,13 @@ class WRAzureTemplateManagement
       raw_template[raw_template.keys[0]] = JSON.pretty_generate(vnet_template)
       return raw_template
     end
+    return raw_template
+  end
+
+  def inject_parameters_to_template(raw_template, params_hash)
+    template = JSON.parse(raw_template.values[0])
+    template['parameters'] = params_hash
+    raw_template[raw_template.keys[0]] = JSON.pretty_generate(template)
     return raw_template
   end
 
