@@ -125,7 +125,7 @@ class WRAzureTemplateManagement
 
   def inject_parameters_to_template(raw_template, params_hash)
     template = JSON.parse(raw_template.values[0])
-    template['parameters'] = params_hash
+    template['parameters'] = template['parameters'].deep_merge(params_hash)
     raw_template[raw_template.keys[0]] = JSON.pretty_generate(template)
     return raw_template
   end
