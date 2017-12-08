@@ -45,18 +45,16 @@ class TestWRAzureTemplateManagement <  MiniTest::Test
 
   def test_sanitize_template_params()    
     template = {"parameters"=>
-      {"vNetName"=>{"type"=>"string"},
-      "vNet"=>{"type"=>"object"},
-      "subnets_array"=>{"type"=>"array"},
-      "sharedKey"=>{"type"=>"securestring"},
-      "create_peers"=>{"type"=>"bool"}},
-      "resources"=>
-        [{"properties"=>
-        {"parameters"=>{}}}]}
+        {"vNetName"=>{"type"=>"string"},
+        "vNet"=>{"type"=>"object"},
+        "subnets_array"=>{"type"=>"array"},
+        "sharedKey"=>{"type"=>"securestring"},
+        "create_peers"=>{"type"=>"bool"}},
+      "resources"=>[{"properties"=>{"parameters"=>{}, "templateLink"=>{"uri"=>"./arm_templates/networks/nsgs.json"}}}]}
 
     result = {"parameters"=>
       {"vNetName"=>{"type"=>"string", "defaultValue"=>""},
-      "vNet"=>{"type"=>"object", "defaultValue"=>{}},
+       "vNet"=>{"type"=>"object", "defaultValue"=>{}},
       "subnets_array"=>{"type"=>"array", "defaultValue"=>[]},
       "sharedKey"=>{"type"=>"securestring", "defaultValue"=>""},
       "create_peers"=>{"type"=>"bool", "defaultValue"=>false}},
@@ -64,10 +62,11 @@ class TestWRAzureTemplateManagement <  MiniTest::Test
       [{"properties"=>
         {"parameters"=>
           {"vNetName"=>{"value"=>"[parameters('vNetName')]"},
-          "vNet"=>{"value"=>"[parameters('vNet')]"},
-          "subnets_array"=>{"value"=>"[parameters('subnets_array')]"},
-          "sharedKey"=>{"value"=>"[parameters('sharedKey')]"},
-          "create_peers"=>{"value"=>"[parameters('create_peers')]"}}}}]}
+            "vNet"=>{"value"=>"[parameters('vNet')]"},
+            "subnets_array"=>{"value"=>"[parameters('subnets_array')]"},
+            "sharedKey"=>{"value"=>"[parameters('sharedKey')]"},
+            "create_peers"=>{"value"=>"[parameters('create_peers')]"}},
+          "templateLink"=>{"uri"=>"./arm_templates/networks/nsgs.json"}}}]}
     assert_equal(result, $wraztm.sanitize_template_params(template))
   end
 

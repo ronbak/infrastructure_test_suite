@@ -96,7 +96,7 @@ class WRAzureTemplateManagement
     end
     
     template['resources'].each do |resource|
-      if resource.dig('properties', 'parameters')
+      if resource.dig('properties', 'parameters') && resource.dig('properties', 'templateLink')
         resource['properties']['parameters'] = linked_template_params_hash
       end
     end
