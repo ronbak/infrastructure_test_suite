@@ -69,6 +69,50 @@
 			}
 		}
 	},
+	"asm-staging": {
+		"name": "asm-staging",
+		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
+    "subscription_id": "d8a25530-d81a-44fd-9db9-5acf4150e7e2",
+    "service_principal": {
+			"octopus-csre-app-wr": "41c29dbb-eaf3-4b0b-9069-24bfb00af65f"
+		},
+		"storage_account": {
+			"name": "",
+			"templates_container": "templates",
+			"container_access_policy": "saslinkedtemplates",
+			"resource_group": ""
+		},
+    "synonyms": ["asm-staging", "staging"],
+    "web_clusters": {
+			"classic": {
+				"blue": {
+					"cloud_service": ""
+				}
+			}
+		}
+	},
+	"asm-prd": {
+		"name": "asm-prd",
+		"tenant_id": "dfa9e765-3904-44f4-9511-e6b031bc3894",
+    "subscription_id": "76d26251-cc91-46f7-9459-4bc76ea9a2ae",
+    "service_principal": {
+			"wr-prd-app-csre-provision": "f0c36d5f-7782-40ae-8390-faa2910b3fdb"
+		},
+		"storage_account": {
+			"name": "",
+			"templates_container": "templates",
+			"container_access_policy": "saslinkedtemplates",
+			"resource_group": ""
+		},
+    "synonyms": ["asm-prd", "asm-prod", "classic-prod", "classic-prd", "classic-production"],
+    "web_clusters": {
+			"classic": {
+				"blue": {
+					"cloud_service": ""
+				}
+			}
+		}
+	},
 	"global": {
 		"keyVault": "wr-kv-dev-svfab",
 		"tenant_id": "9c59c4ec-cac8-41e7-ba78-3baa0be25172",
@@ -91,6 +135,9 @@
 			],
 			"core": [
 			  "core"
+			],
+			"asm-staging": [
+			  "asm-staging"
 			]
 		},
 		"subnets": {

@@ -56,6 +56,12 @@ class WRAzureResourceManagement
     @rg_client.resources.get_by_id(id, api_version)
   end
 
+  def get_resources_by_type(type)
+    all_resources = list_all_resources()
+    all_resources.select { |resource| resource.type.include?(type) }
+  end
+
+
 	def list_resource_groups()
 		response = @rg_client.resource_groups.list
 		resources_array = []
