@@ -42,5 +42,43 @@ class TestWRAzureTemplateManagement <  MiniTest::Test
     assert_equal("https://awcsrenonprd01.blob.core.windows.net/templates/file1.txt?si=saslinkedtemplates&sig=F61pscKd4P7CK0eDxXESNBhRBRM%2FSajQOkt5o%2F5ggAs%3D&sr=b&sv=2015-04-05", 
       $wraztm.create_sas_url(path: 'templates/file1.txt', identifier: access_policy))
   end
-end
 
+  def test_sanitize_template_params()    
+    template = {"parameters"=>
+        {"vNetName"=>{"type"=>"string"},
+        "vNet"=>{"type"=>"object"},
+        "subnets_array"=>{"type"=>"array"},
+        "sharedKey"=>{"type"=>"securestring"},
+        "create_peers"=>{"type"=>"bool"}},
+      "resources"=>[{"properties"=>{"parameters"=>{}, "templateLink"=>{"uri"=>"./arm_templates/networks/nsgs.json"}}}]}
+
+    result = {"parameters"=>
+      {"vNetName"=>{"type"=>"string", "defaultValue"=>""},
+       "vNet"=>{"type"=>"object", "defaultValue"=>{}},
+      "subnets_array"=>{"type"=>"array", "defaultValue"=>[]},
+      "sharedKey"=>{"type"=>"securestring", "defaultValue"=>""},
+      "create_peers"=>{"type"=>"bool", "defaultValue"=>false}},
+    "resources"=>
+      [{"properties"=>
+        {"parameters"=>
+          {"vNetName"=>{"value"=>"[parameters('vNetName')]"},
+            "vNet"=>{"value"=>"[parameters('vNet')]"},
+            "subnets_array"=>{"value"=>"[parameters('subnets_array')]"},
+            "sharedKey"=>{"value"=>"[parameters('sharedKey')]"},
+            "create_peers"=>{"value"=>"[parameters('create_peers')]"}},
+          "templateLink"=>{"uri"=>"./arm_templates/networks/nsgs.json"}}}]}
+    assert_equal(result, $wraztm.sanitize_template_params(template))
+  end
+
+  def test_inject_parameters_to_template()
+    raw_template = {"./arm_templates/networks/nsgs.json"=>"{\"parameters\":{},\"resources\":[{\"properties\":{\"parameters\":{}}}]}"}
+    params_hash = {"vNetName"=>{"type"=>"string"},
+      "vNet"=>{"type"=>"object"},
+       "subnets_array"=>{"type"=>"array"},
+      "sharedKey"=>{"type"=>"securestring"},
+      "create_peers"=>{"type"=>"bool"}}
+    result = {"./arm_templates/networks/nsgs.json"=>
+      "{\n  \"parameters\": {\n    \"vNetName\": {\n      \"type\": \"string\"\n    },\n    \"vNet\": {\n      \"type\": \"object\"\n    },\n    \"subnets_array\": {\n      \"type\": \"array\"\n    },\n    \"sharedKey\": {\n      \"type\": \"securestring\"\n    },\n    \"create_peers\": {\n      \"type\": \"bool\"\n    }\n  },\n  \"resources\": [\n    {\n      \"properties\": {\n        \"parameters\": {\n        }\n      }\n    }\n  ]\n}"}
+    assert_equal(result, $wraztm.inject_parameters_to_template(raw_template, params_hash))
+  end
+end
