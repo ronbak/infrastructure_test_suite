@@ -78,6 +78,34 @@ class TestWRAzureWebManagement <  MiniTest::Test
     assert_instance_of(WRAzureWebManagement, @wrazwm)
   end
 
+  def test_list_websites()
+    result = [AppObject.new]
+    @wrazwm.stub :list_websites, [AppObject.new] do
+      assert_instance_of(Array, @wrazwm.list_websites())
+      assert_equal(result.first.name, @wrazwm.list_websites().first.name)
+      assert_equal(result.first.container_size, @wrazwm.list_websites().first.container_size)
+      assert_equal(result.first.server_farm_id, @wrazwm.list_websites().first.server_farm_id)
+      assert_equal(result.first.resource_group, @wrazwm.list_websites().first.resource_group)
+      assert_equal(result.first.kind, @wrazwm.list_websites().first.kind)
+      assert_equal(result.first.id, @wrazwm.list_websites().first.id)
+    end
+  end
+
+  def test_list_app_service_plans()
+    result = [AspObject.new]
+    @wrazwm.stub :list_app_service_plans, [AspObject.new] do
+      assert_instance_of(Array, @wrazwm.list_app_service_plans())
+      assert_equal(result.first.app_service_plan_name, @wrazwm.list_app_service_plans().first.app_service_plan_name)
+      assert_equal(result.first.maximum_number_of_workers, @wrazwm.list_app_service_plans().first.maximum_number_of_workers)
+      assert_equal(result.first.resource_group, @wrazwm.list_app_service_plans().first.resource_group)
+      assert_equal(result.first.kind, @wrazwm.list_app_service_plans().first.kind)
+      assert_equal(result.first.id, @wrazwm.list_app_service_plans().first.id)
+      assert_equal(result.first.sku.capacity, @wrazwm.list_app_service_plans().first.sku.capacity)
+      assert_equal(result.first.sku.size, @wrazwm.list_app_service_plans().first.sku.size)
+      assert_equal(result.first.sku.tier, @wrazwm.list_app_service_plans().first.sku.tier)
+    end
+  end
+
   def test_create_webapp_list()
     result = [{"name"=>"appserviecplan1",
       "capacity"=>1,
