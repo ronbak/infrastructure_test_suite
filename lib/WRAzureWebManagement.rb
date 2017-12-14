@@ -1,6 +1,6 @@
-require_relative 'global_methods'
 require_relative 'CSRELogger'
 require_relative 'WRAzureCredentials'
+require_relative 'global_methods'
 require 'azure_mgmt_web'
 require 'csv'
 require 'pry-byebug'
@@ -11,6 +11,7 @@ class WRAzureWebManagement
 		log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 		@csrelog = CSRELogger.new(log_level, 'STDOUT')
+    #environment = 'dev' if environment.nil?
     @environment = wrenvironmentdata(environment)['name']
     @landscape = landscape
 		options = {environment: @environment}
@@ -44,7 +45,6 @@ class WRAzureWebManagement
     all_apps.each do |webapp|
       list << create_webapps_csv_object(webapp, all_plans)
     end
-
     column_names = list.first.keys
     s = CSV.generate do |csv|
       csv << column_names
@@ -97,4 +97,4 @@ class WRAzureWebManagement
   end
 end
 
-WRAzureWebManagement.new(environment: ARGV[0]).create_webapps_csv(ARGV[1])
+#WRAzureWebManagement.new(environment: ARGV[0]).create_webapps_csv(ARGV[1])
