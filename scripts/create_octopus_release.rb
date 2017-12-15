@@ -5,6 +5,7 @@ require 'json'
 require 'optparse'
 require 'net/http/post/multipart'
 require_relative '../lib/global_methods'
+require_relative '../lib/CSRELogger'
 
 # Setting up arguments
 
@@ -34,20 +35,24 @@ step_names = step_name.split(' ')
 package_version = file_name.gsub("#{file_name.split('.')[0]}.", "").gsub(".#{file_name.split('.')[-1]}", "")
 api_auth = { api_header => api_key }
 
+# Setup logger
+log_level = 'INFO'
+log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
+csrelog = CSRELogger.new(log_level, 'STDOUT')
 
 
-puts "[STATUS] Uploading package #{file_name}..."
+csrelog.info("[STATUS] Uploading package #{file_name}...")
 
 begin
   upload_package_to_octopus(octopus_url, file_name, api_key, api_header) if file_name
 rescue => e
-  puts e
+  csrelog.error(e)
   raise 'Failed to upload package'
 end
 
 # Getting ID's
 
-puts "[STATUS] Getting project and environment ID's..."
+csrelog.info("[STATUS] Getting project and environment ID's...")
 
 project_response = RestClient.get "#{octopus_url}/api/projects/#{project_name}", api_auth
 project = JSON.parse(project_response.body)
@@ -56,8 +61,8 @@ environment_response = RestClient.get "#{octopus_url}/api/Environments/all", api
 environment = JSON.parse(environment_response.body)
 environment = environment.select {|key| key["Name"] == environment_name }.first
 
-puts "[OK] Project ID: #{project['Id']}"
-puts "[OK] Environment ID: #{environment['Id']}"
+csrelog.info("[OK] Project ID: #{project['Id']}")
+csrelog.info("[OK] Environment ID: #{environment['Id']}")
 
 
 
@@ -69,16 +74,16 @@ channels = JSON.parse(channels_response.body)
 
 # Getting Deployment Template
 
-puts "[STATUS] Getting Deployment Template..."
+csrelog.info("[STATUS] Getting Deployment Template...")
 
 deploy_template_response = RestClient.get "#{octopus_url}/api/deploymentprocesses/deploymentprocess-#{project['Id']}/template", api_auth
 deploy_template = JSON.parse(deploy_template_response.body)
 
-puts "[OK] Deployment Template Next Version Increment: #{deploy_template['NextVersionIncrement']}"
+csrelog.info("[OK] Deployment Template Next Version Increment: #{deploy_template['NextVersionIncrement']}")
 
 # Creating Release
 if file_name
-  puts "[STATUS] Creating Release..."
+  csrelog.info("[STATUS] Creating Release...")
   
   selected_packages = []
   step_names.each do |step|
@@ -93,12 +98,12 @@ if file_name
     release_request = RestClient.post "#{octopus_url}/api/releases", release_body, api_auth
   rescue RestClient::ExceptionWithResponse => release_error
     errors = JSON.parse(release_error.response.body)
-    puts "\n[ERROR] ERROR while trying to create release!"
-    puts "[ERROR] Error Message: #{errors['ErrorMessage']}"
+    csrelog.error("\n[ERROR] ERROR while trying to create release!")
+    csrelog.error("[ERROR] Error Message: #{errors['ErrorMessage']}")
     errors["Errors"].each do |err|
-      puts "--------------------------------"
-      puts "#{err}"
-      puts "--------------------------------"
+      csrelog.error("--------------------------------")
+      csrelog.error("#{err}")
+      csrelog.error("--------------------------------")
     end
     raise "Failed to create Release!"
   end
@@ -106,22 +111,21 @@ if file_name
   
   release = JSON.parse(release_request.body)
   
-  puts "[OK] Release ID: #{release['Id']}"
-  
-  puts "[OK] Release created on URL: #{octopus_url}/app\#/projects/#{project_name}/releases/#{deploy_template['NextVersionIncrement']}"
+  csrelog.info("[OK] Release ID: #{release['Id']}")
+  csrelog.info("[OK] Release created on URL: #{octopus_url}/app\#/projects/#{project_name}/releases/#{deploy_template['NextVersionIncrement']}")
 else
   releases = JSON.parse(RestClient.get("#{octopus_url}#{project['Links']['Releases'].split('{')[0]}", api_auth).body)
   release = releases['Items'].max_by do |element|
     element['Version'].to_i
   end
-  puts "[OK] Release ID: #{release['Id']}"
-  puts "[OK] Release Version: #{release['Version']}"
-  puts "[OK] Promoting to #{environment['Name']}"
+  csrelog.info("[OK] Release ID: #{release['Id']}")
+  csrelog.info("[OK] Release Version: #{release['Version']}")
+  csrelog.info("[OK] Promoting to #{environment['Name']}")
 end
 
 # Creating Deployment
 
-puts "[STATUS] Creating Deployment..."
+csrelog.info("[STATUS] Creating Deployment...")
 
 deployment_body = JSON.generate({ :ReleaseId => release["Id"], :EnvironmentId => environment["Id"]})
 
@@ -129,19 +133,19 @@ begin
   deployment_request = RestClient.post "#{octopus_url}/api/deployments", deployment_body, api_auth
 rescue RestClient::ExceptionWithResponse => deploy_error
   errors = JSON.parse(deploy_error.response.body)
-  puts "\n[ERROR] ERROR while trying to create deployment!"
-  puts "[ERROR] Error Message: #{errors['ErrorMessage']}"
+  csrelog.error("\n[ERROR] ERROR while trying to create deployment!")
+  csrelog.error("[ERROR] Error Message: #{errors['ErrorMessage']}")
   errors["Errors"].each do |err|
-    puts "--------------------------------"
-    puts "#{err}"
-    puts "--------------------------------"
+    csrelog.error("--------------------------------")
+    csrelog.error("#{err}")
+    csrelog.error("--------------------------------")
   end
   raise "Failed to create Deployment!"
 end
 
 deployment_response = JSON.parse(deployment_request.body)
 
-puts "[OK] Deployment created on URL: #{octopus_url}#{deployment_response['Links']['Web']}"
+csrelog.info("[OK] Deployment created on URL: #{octopus_url}#{deployment_response['Links']['Web']}")
 
 
 status = JSON.parse(RestClient.get("#{octopus_url}#{deployment_response['Links']['Task']}", api_auth).body)
@@ -150,11 +154,9 @@ while status['IsCompleted'].eql?(false)
   sleep 5
   details = JSON.parse(RestClient.get("#{octopus_url}#{status['Links']['Details'].split('{')[0]}", api_auth).body)
   details['ActivityLogs'].first['Children'].each do |step|
-    # puts step['Name'] unless displayed_logs.include?(step)
-    # displayed_logs << step
     step['Children'].each do |child_step|
       child_step['LogElements'].each do |log_element|
-        puts "#{step['Name']} - #{child_step['Name']} - Message: #{log_element['MessageText']}" unless displayed_logs.include?(log_element)
+        csrelog.info("#{step['Name']} - #{child_step['Name']} - Message: #{log_element['MessageText']}") unless displayed_logs.include?(log_element)
         displayed_logs << log_element
       end
     end
@@ -163,9 +165,9 @@ while status['IsCompleted'].eql?(false)
 end
 
 if status['FinishedSuccessfully']
-  puts "[OK] Deployment completed successfully"
+  csrelog.info("[OK] Deployment completed successfully")
   exit
 else
-  puts "The deployment status is: #{JSON.pretty_generate(JSON.parse(RestClient.get(octopus_url + status['Links']['Details'], api_auth).body))}"
+  csrelog.error("The deployment status is: #{JSON.pretty_generate(JSON.parse(RestClient.get(octopus_url + status['Links']['Details'], api_auth).body))}")
   exit 1
 end
