@@ -26,7 +26,7 @@ base_names.each do |base_name|
       text = File.read(file)
       if text.include?(base_name)
         new_contents = text.gsub(base_name, projectName)
-        File.open(file_name, "w") {|file| file.write new_contents }
+        File.open(file, "w") {|f| f.write new_contents }
       end
     end
   end
