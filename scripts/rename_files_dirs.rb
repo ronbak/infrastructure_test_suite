@@ -6,7 +6,7 @@ base_names = ['baseProject', 'BaseProject']
 # For each name
 base_names.each do |base_name|
   # Rename any directories 
-  Dir.glob("#{directory}/**/*").reverse.each do |path|
+  Dir.glob("#{directory}/**/*").each do |path|
     if File.directory?(path)
       File.rename(path, path.gsub(base_name, projectName)) #or upcase if you want to convert to uppercase
     end
