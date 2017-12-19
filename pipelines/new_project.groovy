@@ -21,9 +21,20 @@ node{
       def obj = parsed.find{
         it.Name == env.projectGroup
       }
+
+      // get cloning project id
+      def getProjs = new URL("https://octopusdeploy.worldremit.com/api/projects/all").openConnection();
+      getProjs.setRequestProperty("X-Octopus-ApiKey", "$env.OCTOPUS_API_KEY")
+      response = getProjs.getInputStream().getText();
+      
+      // get project selected by user
+      def parsedProjs = new JsonSlurper().parseText(response)
+      def cloneProj = parsedProjs.find{
+        it.Name == env.templateToClone
+      }
   
       // create new octopus job with name under selected projectgroup 
-      def post = new URL("https://octopusdeploy.worldremit.com/api/projects").openConnection();
+      def post = new URL("https://octopusdeploy.worldremit.com/api/projects?clone=$cloneProj.Id").openConnection();
       message_map = [:]
       message_map.Name = name
       message_map.ProjectGroupId = obj.Id 
