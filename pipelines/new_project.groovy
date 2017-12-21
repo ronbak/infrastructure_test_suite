@@ -46,11 +46,17 @@ node{
 
     //   }
     // )
-    sh(resturnStdout: true, script: "ruby infrastructure_test_suite/scripts/rename_files_dirs.rb $projectName target_repo/.teamcity")
+    sh(returnStdout: true, script: "ruby infrastructure_test_suite/scripts/rename_files_dirs.rb $projectName target_repo/.teamcity")
   }
   stage('commit_to_git'){
     withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GITHUB_ACCESS_TOKEN'),]){
-      sh(resturnStdout: true, script: "curl -v -i -H 'Authorization: token ${env.GITHUB_ACCESS_TOKEN} -d '{\"name\":\"${projectName}\"' https://api.github.com/user/repos")
+
+      setupssh = 'eval "$(ssh-agent -s)" && ssh-add /var/lib/jenkins/.ssh/id_rsa_csre && cd target_repo'
+      cleanssh = ' ssh-agent -k'
+      command = "git init && git add -A && git config --global user.email ${contactEmail} && git config --global user.name JenkinsCSRE && git commit -m \"CSRE automation initial commit\""
+      command2 = "git remote add origin git@github.com:Worldremit/${projectName}.git && git push origin master"
+      sh(returnStdout: true, script: "curl -v -i -H 'Authorization: token ${env.GITHUB_ACCESS_TOKEN}' -d '{\"name\":\"${projectName}\"' https://api.github.com/orgs/Worldremit/repos")      
+      sh(returnStdout: true, script: "${setupssh} && ${command} && ${command2} && ${cleanssh}")
     }
   }
   stage('create_octopus_project'){
