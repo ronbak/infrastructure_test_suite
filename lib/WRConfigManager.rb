@@ -36,8 +36,11 @@ class WRConfigManager
       else
         @csrelog.debug("Attempting to download anonymously")
         raw_data = retrieve_from_internet_anonymous(config)  
-      end      
-      config_hash = JSON.parse(raw_data) if raw_data
+      end
+      config_hash = JSON.parse(raw_data) if valid_json?(raw_data)
+      @csrelog.fatal("We encountered a problem poarsing your config, check it's valid json?
+        #{config}")
+      exit 1
     elsif config.class == Hash
       # already parsed config, send back as is
       @csrelog.debug("object is a hash: #{config}")
