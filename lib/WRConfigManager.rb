@@ -38,7 +38,7 @@ class WRConfigManager
         raw_data = retrieve_from_internet_anonymous(config)  
       end
       config_hash = JSON.parse(raw_data) if valid_json?(raw_data)
-      @csrelog.fatal("We encountered a problem parsing your config, check it's valid json?
+      @csrelog.fatal("We encountered a problem parsing your file, check it's valid json?
         #{config}")
       exit 1
     elsif config.class == Hash
@@ -54,7 +54,7 @@ class WRConfigManager
       @csrelog.debug("object is a valid json string, parsing now")
       config_hash = JSON.parse(config)
     else
-      @csrelog.fatal("We couldn't determine what your config file is, please verify the path / string
+      @csrelog.fatal("We couldn't determine what your file is, please verify the path / string
         #{config}")
       exit 1
     end
