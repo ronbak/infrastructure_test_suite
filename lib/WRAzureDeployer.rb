@@ -96,8 +96,8 @@ class WRAzureDeployer
     unless @skip_deploy
       # ensure the resource group is created
       unless @action == 'output'
-        @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags
-        @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags) if  @config_manager.tags
+        @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags(@landscape)
+        @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags(@landscape)) if @config_manager.tags(@landscape)
         # If there are linked templates, update the access policy to allow access for the next 30 mins.
         if @prep_templates
           @csrelog.debug("Setting container access policy expiry to: #{Time.now + 30*60}")

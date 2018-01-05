@@ -50,6 +50,14 @@ class WRAzureNsgRulesMgmt
     base_nsg_object['name'] = "nsg01-#{subnet['landscape']}-#{@parameters['location_tag']['value']}-#{subnet['name']}"
     base_nsg_object['condition'] = base_nsg_object['condition'].gsub("parameters('subnets_array')[copyIndex()].name", "'#{subnet['name']}'")
     base_nsg_object.delete('copy')
+    base_nsg_object.dig('properties', 'securityRules').each do |rule|
+      rule.dig('properties').each do |property|
+        if property[1].kind_of?(String) && property[1].include?('[copyIndex()]')
+          value_to_lookup = property[1].split('[copyIndex()].')[-1].gsub(']', '')
+          rule['properties'][property[0]] = subnet[value_to_lookup]
+        end
+      end
+    end
     return base_nsg_object
   end
 
