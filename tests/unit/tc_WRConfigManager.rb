@@ -41,7 +41,7 @@ class TestWRConfigManagement <  MiniTest::Test
     assert_instance_of(Hash, obj.template)
     assert_instance_of(Array, obj.rules)
     assert_instance_of(Hash, obj.config)
-    assert_nil(obj.tags)
+    assert_nil(obj.tags('env'))
     assert_nil(obj.client_name)
     assert_instance_of(String, obj.rg_name('nonprd'))
     assert_instance_of(Hash, obj.parameters)
