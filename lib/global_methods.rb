@@ -123,14 +123,6 @@ def convert_git_raw_to_api(url)
   end
 end
 
-url = 'https://github.com/Worldremit/arm_templates/blob/master/csre/servicefabric/basicInternalCluster.config.json'
-
-raw_url = 'https://raw.githubusercontent.com/Worldremit/arm_templates/master/csre/servicefabric/basicInternalCluster.config.json'
-
-api_url = convert_git_raw_to_api(raw_url)
-
-api_url = 'https://api.github.com/repos/Worldremit/arm_templates/contents/csre/servicefabric/basicInternalCluster.config.json?ref=master'
-
 def convert_git_to_api(url)
   github_api_url = 'https://api.github.com/repos'
   github_url = 'https://github.com'
