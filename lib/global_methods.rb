@@ -123,6 +123,28 @@ def convert_git_raw_to_api(url)
   end
 end
 
+def convert_git_to_api(url)
+  github_api_url = 'https://api.github.com/repos'
+  github_url = 'https://github.com'
+  if url[0..17] == github_url
+    @csrelog.debug('URL is being converted to GitHub API url')
+    git_url = url.sub github_url, github_api_url
+    branch = git_url.split(github_api_url)[-1].split('/')[4]
+    git_url = git_url.sub branch, 'contents'
+    git_url = git_url.sub '/blob', ''
+    git_url += "?ref=#{branch}"
+    @csrelog.debug(git_url)
+    return git_url
+  elsif url[0..27] == github_api_url
+    return url
+  else
+    @csrelog.error("We couldn't convert the url supplied to use GitHub api. 
+      #{url}
+      Please use either a github api url or a github raw.usercontent url")
+    #exit 1
+  end
+end
+
 def retrieve_from_github_api(url, access_token)
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port)

@@ -88,6 +88,11 @@ class Testglobal_methods <  MiniTest::Test
     assert_equal('https://api.github.com/repos/Worldremit/csre_documentation/contents/file_path.txt?ref=branch1', convert_git_raw_to_api('https://raw.githubusercontent.com/Worldremit/csre_documentation/branch1/file_path.txt'))
   end
 
+  def test_convert_git_to_api
+    assert_equal('https://api.github.com/repos/Worldremit/csre_documentation/contents/file_path.txt?ref=master', convert_git_to_api('https://github.com/Worldremit/csre_documentation/blob/master/file_path.txt'))
+    assert_equal('https://api.github.com/repos/Worldremit/csre_documentation/contents/file_path.txt?ref=branch1', convert_git_to_api('https://github.com/Worldremit/csre_documentation/blob/branch1/file_path.txt'))
+  end
+
   def test_write_file
     write_file('test_file.txt', 'sometext')
     assert_equal('sometext', File.read('test_file.txt'))

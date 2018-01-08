@@ -33,6 +33,13 @@ class WRConfigManager
         access_token = WRAzureCredentials.new().get_git_access_token
         raw_data = retrieve_from_github_api(config, access_token)
         @csrelog.debug("this is your retrieved file: #{raw_data}")
+      elsif config[0..18] == 'https://github.com/'
+        @csrelog.debug('Your url is in GitHub, attempting to convert to API url and authenticate')
+        config = convert_git_to_api(config)
+        # Get Git Access Token
+        access_token = WRAzureCredentials.new().get_git_access_token
+        raw_data = retrieve_from_github_api(config, access_token)
+        @csrelog.debug("this is your retrieved file: #{raw_data}")
       else
         @csrelog.debug("Attempting to download anonymously")
         raw_data = retrieve_from_internet_anonymous(config)  
