@@ -24,6 +24,7 @@ class TestWRConfigManagement <  MiniTest::Test
   def test_configs
     configs_array = [
       'https://raw.githubusercontent.com/Worldremit/arm_templates/master/networks/configs/networking_master.config.json',
+      'https://github.com/Worldremit/arm_templates/blob/master/networks/configs/networking_master.config.json',
       {},
       "#{File.dirname(__FILE__)}/../test_data/inject_rules_template.json",
       File.read("#{File.dirname(__FILE__)}/../test_data/inject_rules_template.json")
