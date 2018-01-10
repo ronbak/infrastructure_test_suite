@@ -50,12 +50,12 @@ node {
         parsedConfig.parameters.name.value = clusterName
       }
       if(clusterApplication){
-        parsedConfig.environments."${environment}".parameters.clusterApplication = clusterApplication
+        parsedConfig.environments."${environment}".parameters.clusterApplication.value = clusterApplication
       }
       if(clientApplication){
-        parsedConfig.environments."${environment}".parameters.clientApplication = clientApplication
+        parsedConfig.environments."${environment}".parameters.clientApplication.value = clientApplication
       }
-      
+
       parsedConfig.environments."${environment}".resource_group_name = "${clusterName}-rg-${environment}-wr"
 
       def json = JsonOutput.toJson(parsedConfig)
