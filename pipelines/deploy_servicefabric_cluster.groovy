@@ -34,6 +34,9 @@ node {
         case "internalMidCluster":
           config_path = "arm_templates/csre/servicefabric/internalMidCluster.config.json"
           break
+        case "publicMidCluster":
+          config_path = "arm_templates/csre/servicefabric/publicMidCluster.config.json"
+          break
         default:
           config_path = "not_a_file"
           break
