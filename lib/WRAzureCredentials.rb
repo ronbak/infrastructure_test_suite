@@ -28,6 +28,7 @@ class WRAzureCredentials
 	def retrieve_secret(env_var, encryption_key, encrypted_file)
   	# Use ENV Var if it exists
 		if ENV[env_var]
+      @csrelog.debug("Found secret as an environment variable: #{env_var}")
 			return ENV[env_var]
 		# Use encrypted creds file 
 		elsif File.exist?(encryption_key) && File.exist?(encrypted_file)
