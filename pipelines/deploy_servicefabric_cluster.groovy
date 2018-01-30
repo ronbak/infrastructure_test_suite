@@ -51,6 +51,7 @@ node {
       def parsedConfig = new JsonSlurperClassic().parseText(fileContents)
       if(clusterName){
         parsedConfig.parameters.name.value = clusterName
+        parsedConfig.environments."${environment}".resource_group_name = "${clusterName}-rg-${environment}-wr"
       }
       if(clusterApplication){
         parsedConfig.environments."${environment}".parameters.clusterApplication.value = clusterApplication
@@ -58,8 +59,6 @@ node {
       if(clientApplication){
         parsedConfig.environments."${environment}".parameters.clientApplication.value = clientApplication
       }
-
-      parsedConfig.environments."${environment}".resource_group_name = "${clusterName}-rg-${environment}-wr"
 
       def json = JsonOutput.toJson(parsedConfig)
       println json

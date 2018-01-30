@@ -14,7 +14,6 @@ class WRAzureStorageManagement
     @environment = wrenvironmentdata(environment)['name']
     @storage_account = wrmetadata()[@environment]['storage_account']['name']
     @storage_access_key = WRAzureCredentials.new(environment: environment).get_storage_account_key
-    @csrelog.debug("Found a storage access key: #{@storage_access_key}")
     Azure.config.storage_account_name = wrmetadata()[@environment]['storage_account']['name']
     Azure.config.storage_access_key = @storage_access_key
     #@storage_rg = wrmetadata()[@environment]['storage_account']['resource_group']
