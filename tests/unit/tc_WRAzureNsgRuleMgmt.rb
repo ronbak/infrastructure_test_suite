@@ -74,6 +74,10 @@ class TestWRAzureNsgRulesMgmt <  MiniTest::Test
     assert_equal("contains", comparison)
     assert_equal("parent_resource/name", container)
     assert_equal("-int-", element)
+    comparison, container, element = $wrazrulesm.clean_condition("[not_contains(parent_resource/name, '-int-')]")
+    assert_equal("not_contains", comparison)
+    assert_equal("parent_resource/name", container)
+    assert_equal("-int-", element)
     comparison, container, element = $wrazrulesm.clean_condition("[equal(parent_resource/name, '-int-')]")
     assert_equal("equal", comparison)
     comparison, container, element = $wrazrulesm.clean_condition("[not_equal(parent_resource/name, '-int-')]")
@@ -93,6 +97,8 @@ class TestWRAzureNsgRulesMgmt <  MiniTest::Test
     assert_equal(true, $wrazrulesm.condition_met?(nsg, { "condition" => "[equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner')]" }))
     assert_equal(false, $wrazrulesm.condition_met?(nsg, { "condition" => "[not_equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner')]" }))
     assert_equal(true, $wrazrulesm.condition_met?(nsg, { "condition" => "[not_equal(parent_resource/name, 'nsg01-dev-eurw-privatepartner1')]" }))
+    assert_equal(false, $wrazrulesm.condition_met?(nsg, { "condition" => "[not_contains(parent_resource/name, '-dev-')]" }))
+    assert_equal(true, $wrazrulesm.condition_met?(nsg, { "condition" => "[not_contains(parent_resource/name, '-int-')]" }))
   end
     
 end
