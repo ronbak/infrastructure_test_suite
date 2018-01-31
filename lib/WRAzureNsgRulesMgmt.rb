@@ -89,6 +89,8 @@ class WRAzureNsgRulesMgmt
         return !container.eql?(element)
       when 'contains'
         return container.include?(element)
+      when 'not_contains'
+        return !container.include?(element)
       end
       return false
     end
