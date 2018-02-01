@@ -98,10 +98,18 @@ class WRAzureNsgRulesMgmt
   end
 
   def clean_condition(condition)
-    container = condition.match(/\((.*?)\)/)[1].split(', ')[0]
+    functions = ['not', 'and']
+    comparison = condition.split('(')[0].split('[')[-1]
+    if functions.include?(comparison)
+      function = condition.split('(')[0].split('[')[-1]
+      comparison = function + '_' + condition.split(function)[1].split('(')[1]
+      container = condition.split("#{function}(")[1].match(/\((.*?)\)/)[1].split(', ')[0]
+    else
+      container = condition.match(/\((.*?)\)/)[1].split(', ')[0]
+    end
     element = condition.match(/\((.*?)\)/)[1].split(', ')[-1]
     element = element[1..-2] if element.match(/'(.*)'/)
-    return [condition.split('(')[0].split('[')[-1], container, element]
+    return [comparison, container, element]
   end
 
   def resolve_comparison_container(nsg, container)
