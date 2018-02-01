@@ -17,11 +17,14 @@ node {
       env.CSRE_LOG_LEVEL = "${log_level}"
       switch(environment) {
         case "prd":
-        env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_P
+          env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_P
+          break
         case "core":
-        env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_C
+          env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_C
+          break
         default:
-        env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_NP
+          env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_NP
+          break
       }
       println template
       switch(template) {
@@ -74,11 +77,14 @@ node {
       env.CSRE_LOG_LEVEL = "${log_level}"
       switch(environment) {
         case "prd":
-        env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_P
+          env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_P
+          break
         case "core":
-        env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_C
+          env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_C
+          break
         default:
-        env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_NP
+          env.AZURE_STORAGE_ACCOUNT_KEY = env.AZURE_STORAGE_ACCOUNT_KEY_NP
+          break
       }
       sh "ruby infrastructure_test_suite/bin/provision.rb --action ${action} --environment ${environment} --config '${env.JSON_CONFIG}' --complete --prep_templates"
     }      
