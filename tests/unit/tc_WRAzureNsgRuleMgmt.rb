@@ -78,10 +78,18 @@ class TestWRAzureNsgRulesMgmt <  MiniTest::Test
     assert_equal("not_contains", comparison)
     assert_equal("parent_resource/name", container)
     assert_equal("-int-", element)
+    comparison, container, element = $wrazrulesm.clean_condition("[not(contains(parent_resource/name, '-int-'))]")
+    assert_equal("not_contains", comparison)
+    assert_equal("parent_resource/name", container)
+    assert_equal("-int-", element)
     comparison, container, element = $wrazrulesm.clean_condition("[equal(parent_resource/name, '-int-')]")
     assert_equal("equal", comparison)
     comparison, container, element = $wrazrulesm.clean_condition("[not_equal(parent_resource/name, '-int-')]")
     assert_equal("not_equal", comparison)
+    comparison, container, element = $wrazrulesm.clean_condition("[not(equal(parent_resource/name, '-int-'))]")
+    assert_equal("not_equal", comparison)
+    assert_equal("parent_resource/name", container)
+    assert_equal("-int-", element)
   end
 
   def test_resolve_comparison_container
