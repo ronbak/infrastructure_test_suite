@@ -4,6 +4,7 @@ require_relative 'WRTemplateTester'
 require_relative '../../lib/global_methods'
 require 'minitest/reporters'
 require 'minitest/autorun'
+require 'pry-byebug'
 MiniTest::Reporters.use! [MiniTest::Reporters::DefaultReporter.new,
                           MiniTest::Reporters::JUnitReporter.new]
 
@@ -83,18 +84,24 @@ class TestWRTemplate <  MiniTest::Test
           refute_equal('*', rule_object['properties']['sourceAddressPrefix']) if rule_object['properties']['destinationPortRange'] == '*'
           # test that destination address is not a valid CIDR (it should be a generic subnet name, i.e private, public, etc etc)
           assert_equal(false, tester.valid_cidr?(rule_object['properties']['destinationAddressPrefix']))
-          # ensure sourec port is set to 'Any'
+          # ensure source port is set to 'Any'
           assert_equal('*', rule_object['properties']['sourcePortRange'])
           # Ensure protocol is either tcp udp or any
-          assert_includes(['Tcp', 'Udp', '*'], rule_object['properties']['protocol'])
+          assert_includes(['tcp', 'udp', '*'], rule_object['properties']['protocol'].downcase)
           # Ensure source address is either a subnet from the vNet
           if subnet_info[0].include?(rule_object['properties']['sourceAddressPrefix'])
             assert_includes(subnet_info[0], rule_object['properties']['sourceAddressPrefix'])
           # if it's a valid CIDR that it's not in the local vnet (prd and nonprd, NOT core) 
           elsif tester.valid_cidr?(rule_object['properties']['sourceAddressPrefix'])
             assert_equal(false, tester.disallowed_subnet_cidr?(rule_object['properties']['sourceAddressPrefix'], subnet_info[1]))
+          # if it's an any rule inbound for the subnet
+          elsif rule_object['properties']['sourceAddressPrefix'].eql?('*')
+            # assert the destination is in the subnets list
+            assert_equal(true, subnet_info[0].include?(rule_object['properties']['destinationAddressPrefix']))
+            # that the action is deny - inbound rules from 'any' source should only be allowed in the external subnet as that is the only internet facing subnet. 
+            assert_equal('deny', rule_object['properties']['access'].downcase)
           else
-          # default fail, the previous 2 options should catch all rules, if not there is an error and should fail.
+          # default fail, the previous 3 options should catch all rules, if not there is an error and should fail.
             assert_equal(false, rule_object['properties']['sourceAddressPrefix'])
           end
         end
