@@ -13,7 +13,11 @@ class WRResourceGroupsManagement
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
     @config = WRConfigManager.new(config: config).config
-    @location = location
+    @location = if @config['location']
+                  @config['location']
+                else
+                  location
+                end
     @name = @config['name']
     @environment = wrenvironmentdata(environment.to_s)['name']
     @landscape = environment.to_s
