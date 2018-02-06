@@ -108,7 +108,13 @@ class WRResourceGroupsManagement
   end
 
   def create_tags_hash(tags, environment)
-    tags['name'] = "#{@name}-rg-#{environment}-wr"
+    case @location.downcase
+    when 'northeurope'
+      location_tag = 'eurn'
+    else
+      location_tag = 'eurw'
+    end
+    tags['name'] = "#{@name}-rg-#{location_tag}-#{environment}-wr"
     tags['environment'] = environment
     tags['location'] = @location
     tags['RunModel'] = 'm-f' if environment == 'dev'
