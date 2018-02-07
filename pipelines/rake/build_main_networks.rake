@@ -3,7 +3,7 @@ require 'rake/testtask'
 
 task :build_nonprd do
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_NONPRD']
-  puts ENV['AZURE_STORAGE_ACCOUNT_KEY']
+  # Build eurw
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './nonprd_network.json'
@@ -19,10 +19,20 @@ task :build_nonprd do
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
+
+  # build eurn
+  @options.output = './nonprd_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_master.config.json'
+  @options.location = 'NorthEurope'
+  @options.scope = nil
+
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
 end
 
 task :build_prd do
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_PRD']
+  # build eurw
   @options = OpenStruct.new
   @options.action = 'output'
   @options.output = './prd_network.json'
@@ -35,6 +45,14 @@ task :build_prd do
   @options.prep_templates = true
   @options.location = 'WestEurope'
   @options.scope = nil
+
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
+  # Build eurn
+  @options.output = './prd_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_master.config.json'
+  @options.location = 'NorthEurope'
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
@@ -62,6 +80,19 @@ task :validate_templates do
 
   @options.output = './prd_network.json'
   @options.environment = 'prd'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
+  # eurn validation
+  @options.output = './prd_eurn_network.json'
+  @options.location = 'NorthEurope'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_master.config.json'
+  @options.environment = 'prd'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
+  @options.output = './nonprd_eurn_network.json'
+  @options.environment = 'nonprd'
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 end

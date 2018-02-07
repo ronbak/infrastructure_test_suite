@@ -37,6 +37,8 @@ try {
                     }
                     sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./prd_test_files/prd_network.json --environment prd --config arm_templates/networks/configs/networking_master.config.json --complete --prep_templates --no_upload"      
                     sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./prd_test_files/prd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment prd"
+                    // sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./prd_test_files/prd_eurn_network.json --environment prd --config arm_templates/networks/configs/networking_eurn_master.config.json --complete --prep_templates --no_upload"      
+                    // sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./prd_test_files/prd_eurn_network.json --config arm_templates/networks/configs/networking_eurn_master.config.json --environment prd"
                 }
                 withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
                 string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
@@ -48,6 +50,8 @@ try {
                     sh "ls -lah"
                     sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./nonprd_test_files/nonprd_network.json --environment nonprd --config arm_templates/networks/configs/networking_master.config.json --complete --prep_templates --no_upload"      
                     sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./nonprd_test_files/nonprd_network.json --config arm_templates/networks/configs/networking_master.config.json --environment nonprd"
+                    // sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./nonprd_test_files/nonprd_eurn_network.json --environment nonprd --config arm_templates/networks/configs/networking_eurn_master.config.json --complete --prep_templates --no_upload"      
+                    // sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./nonprd_test_files/nonprd_eurn_network.json --config arm_templates/networks/configs/networking_eurn_master.config.json --environment nonprd"
                 }
                 withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
                 string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
@@ -58,6 +62,8 @@ try {
                     }
                     sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./core_test_files/core_network.json --environment core --config arm_templates/networks/configs/networking_core.config.json --complete --prep_templates --no_upload"      
                     sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_test_files/core_network.json --config arm_templates/networks/configs/networking_core.config.json --environment core"
+                    sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./core_test_files/core_eurn_network.json --environment core --config arm_templates/networks/configs/networking_eurn_core.config.json --complete --prep_templates --no_upload"      
+                    sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./core_test_files/core_eurn_network.json --config arm_templates/networks/configs/networking_eurn_core.config.json --environment core"
                 } 
             }
         }

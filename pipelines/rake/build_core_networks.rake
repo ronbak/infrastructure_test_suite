@@ -2,6 +2,7 @@ require_relative '../../bin/provision.rb'
 require 'rake/testtask'
 
 task :build_core do
+  # Build eurw network
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_CORE']
   @options = OpenStruct.new
   @options.action = 'output'
@@ -18,6 +19,14 @@ task :build_core do
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
+  
+  # Build eurn network
+  @options.output = './core_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_core.config.json'
+  @options.location = 'NorthEurope'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
 end
 
 task :validate_templates do
@@ -36,6 +45,13 @@ task :validate_templates do
   @options.prep_templates = true
   @options.location = 'WestEurope'
   @options.scope = nil
+
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
+  @options.output = './core_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_core.config.json'
+  @options.location = 'NorthEurope'
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
