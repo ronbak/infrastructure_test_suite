@@ -44,6 +44,14 @@ task :build_nonprd do
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
+
+  # Build NorthEurope
+  @options.output = './nonprd_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_master.config.json'
+  @options.location = 'NorthEurope'
+
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
 end
 
 task :build_prd do
@@ -60,6 +68,14 @@ task :build_prd do
   @options.location = 'WestEurope'
   @options.scope = nil
   @options.no_upload = true
+
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
+    # Build NorthEurope
+  @options.output = './prd_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_master.config.json'
+  @options.location = 'NorthEurope'
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
@@ -82,6 +98,13 @@ task :build_core do
 
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
+
+  # Build EurN
+  @options.output = './core_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_core.config.json'
+  @options.location = 'NorthEurope'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()  
 end
 
 task :validate_templates do
@@ -104,10 +127,36 @@ task :validate_templates do
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
 
-  @options.output = './prd_network.json'
-  @options.environment = 'prd'
+  @options.output = './nonprd_eurn_network.json'
+  @options.config = 'arm_templates/networks/configs/networking_eurn_master.config.json'
+  @options.location = 'NorthEurope'
   provisioner = Provisioner.new(@options.to_h())
   provisioner.provision()
+
+  @options.output = './prd_network.json'
+  @options.environment = 'prd'
+  @options.location = 'WestEurope'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+  
+  @options.output = './prd_eurn_network.json'
+  @options.location = 'NorthEurope'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+ 
+  @options.config = 'arm_templates/networks/configs/networking_core.config.json'
+  @options.output = './core_network.json'
+  @options.environment = 'core'
+  @options.location = 'WestEurope'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()
+
+  @options.config = 'arm_templates/networks/configs/networking_eurn_core.config.json'
+  @options.output = './core_eurn_network.json'
+  @options.environment = 'core'
+  @options.location = 'NorthEurope'
+  provisioner = Provisioner.new(@options.to_h())
+  provisioner.provision()  
 end
 
 if changed_files.keys.find { |file, commit| file.include?('/networks/') }
