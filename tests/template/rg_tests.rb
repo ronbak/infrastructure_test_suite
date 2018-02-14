@@ -42,7 +42,12 @@ class TestRGTemplate <  MiniTest::Test
     assert_equal([template['tags']['Project']], template['tags']['Project'].scan(/[a-zA-Z]{3,6}-[0-9]{3,5} - [a-zA-Z0-9\s]*/), "Project tag must star with a Jira ticket followed by, ' - ' and a description")    
     assert_includes(locations, template['tags']['Location'], "Location tag must be one of #{locations}")
     assert_equal([template['tags']['Team']], template['tags']['Team'].scan(/[a-zA-Z0-9\s]{2,32}/), "Team tag must contain only alpha numeric characters and white space and be no more than 32 characters")
-    assert_equal([template['access_group_id']], template['access_group_id'].scan(/[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}/), "Access group must be a valid GUID reference")
+    assert_equal([template['access_group_id']], template['access_group_id'].scan(/[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}/), "Access group must be a valid GUID reference") unless template['access_group_id'].class.eql?(Array)
+    if template['access_group_id'].class.eql?(Array)
+        template['access_group_id'].each do |access_group_id|
+            assert_equal([access_group_id], access_group_id.scan(/[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}/), "Access group must be a valid GUID reference")
+        end
+    end
     assert_equal([template['name']], template['name'].scan(/[a-zA-Z0-9\-\_]{2,64}/), "name element must contain only alphanumeric characters and '-' or '_', It can be no longer than 64 characters")
     assert_includes([true, false], template['universal']) if template.keys.count.equal?(4) 
   end

@@ -6,6 +6,7 @@ require 'optparse'
 require 'net/http/post/multipart'
 require_relative '../lib/global_methods'
 require_relative '../lib/CSRELogger'
+require 'pry-byebug'
 
 # Setting up arguments
 
@@ -94,7 +95,6 @@ if file_name
   
   release_body = JSON.generate({ :ProjectId => project['Id'], :Version => deploy_template["NextVersionIncrement"], :ChannelId => channels['Items'].first['Id'],
     :SelectedPackages => selected_packages })
-  
   begin
     release_request = RestClient.post "#{octopus_url}/api/releases", release_body, api_auth
   rescue RestClient::ExceptionWithResponse => release_error

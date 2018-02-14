@@ -33,7 +33,14 @@ class WRResourceGroupsManagement
       au_client = create_azure_au_client(@environment) if au_client.nil?
       au_client = create_azure_au_client(@environment) unless au_client.subscription_id == wrenvironmentdata(@environment)['subscription_id']
       begin
-        assign_usergroup_rg(au_client, @config['access_group_id'], "#{@name}-rg-dev-wr", 'cust-Contributor-no-pip-sa-rg')
+        unless @config['access_group_id'].class.eql?(Array)
+          groups_to_add = [@config['access_group_id']]
+        else
+          groups_to_add = @config['access_group_id']
+        end
+        gropus_to_add.each do |group_id|
+          assign_usergroup_rg(au_client, group_id, "#{@name}-rg-dev-wr", 'cust-Contributor-no-pip-sa-rg')
+        end
       rescue => e
         @csrelog.error(e)
       end
