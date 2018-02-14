@@ -33,6 +33,7 @@ step_name = options[:step_name]
 step_names = step_name.split(' ')
 
 package_version = file_name.gsub("#{file_name.split('.')[0]}.", "").gsub(".#{file_name.split('.')[-1]}", "")
+csrelog.info("[STATUS] Package Version: #{package_version}")
 api_auth = { api_header => api_key }
 
 # Setup logger
