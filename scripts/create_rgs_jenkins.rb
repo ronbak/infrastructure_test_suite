@@ -50,6 +50,14 @@ end
 
 parse_args(ARGV)
 
+user = @options.user
+environment = @options.environment
+template = @options.template
+token = @options.token
+jenkinsURL = @options.url
+jobName = @options.job
+jobToken = @options.jobtoken
+
 def invoke_webrequest(url, headers, reqmethod = 'GET', body = {})
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port, nil)
