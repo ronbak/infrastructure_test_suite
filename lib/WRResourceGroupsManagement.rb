@@ -18,7 +18,6 @@ class WRResourceGroupsManagement
                 else
                   location
                 end
-    binding.pry
     @name = @config['name']
     @environment = wrenvironmentdata(environment.to_s)['name']
     @landscape = environment.to_s
@@ -119,7 +118,7 @@ class WRResourceGroupsManagement
     else
       location_tag = 'eurw'
     end
-    tags['name'] = "#{@name}-rg-#{location_tag}-#{environment}-wr"
+    tags['name'] = "#{@name}-rg-#{environment}-wr"
     tags['environment'] = environment
     tags['location'] = @location
     tags['RunModel'] = 'm-f' if environment == 'dev'
