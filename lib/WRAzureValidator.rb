@@ -11,7 +11,7 @@ require 'pry-byebug'
 # Main orchestration class for building the deployment object and sending to Azure
 class WRAzureValidator
 
-  def initialize(environment: nil, output: nil, rg_name: nil)
+  def initialize(environment: nil, output: nil, rg_name: nil, config: nil)
     log_level = 'INFO'
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
@@ -21,10 +21,18 @@ class WRAzureValidator
     @landscape = environment
     @rg_name = rg_name
     @output = output
+    @config_manager = config
+    options = {environment: @environment}
+    @credentials = WRAzureCredentials.new(options).authenticate()
+    @client = WRAzureResourceManagement.new(environment: @environment, landscape: @landscape)
+    @resource_group_location = @config_manager.parameters.dig('location', 'value')
+    @resource_group_location = 'WestEurope' if @resource_group_location.nil?
   end
 
   # Main orchestration method
   def validate()
+    @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags(@landscape)
+    @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags(@landscape)) if @config_manager.tags(@landscape)
     arm_template_files = find_params_file(@output)
     templates_to_test = arm_template_files['templates']
     parameters_file = arm_template_files['parameters']
