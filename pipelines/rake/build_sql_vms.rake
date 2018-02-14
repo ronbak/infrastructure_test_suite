@@ -3,7 +3,7 @@ require 'rake/testtask'
 require 'fileutils'
 
 task :build_dev do
-  Dir.mkdir 'output' unless dir.exist?('output')
+  Dir.mkdir 'output' unless Dir.exist?('output')
   ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_NONPRD']
   # Build eurw
   @options = OpenStruct.new
