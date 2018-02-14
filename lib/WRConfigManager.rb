@@ -58,7 +58,13 @@ class WRConfigManager
     elsif File.exist?(config)
       # file path given, read it and parse
       @csrelog.debug("object exists as a file: #{config}")
-      config_hash = JSON.parse(File.read(config))
+      if valid_json?(File.read(config))
+        config_hash = JSON.parse(File.read(config))
+      else
+        @csrelog.fatal("We encountered a problem parsing your file, check it's valid json?
+          #{config}")
+        exit 1
+      end 
     elsif valid_json?(config)
       # the config object is a json string, parse it.
       @csrelog.debug("object is a valid json string, parsing now")

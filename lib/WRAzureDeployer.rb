@@ -69,25 +69,25 @@ class WRAzureDeployer
       @csrelog.info("Building deployment object and saving to #{@output}")
       prepare_linked_templates() if @prep_templates
       deployment_name = deploy()
-    when 'validate'
-      files_path = File.dirname(@output)
-      files = Dir["#{files_path}/*.json"]
-      templates_to_test = files.select { |file| !file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
-      parameters_file = files.select { |file| file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
-      parameters_file = parameters_file[0] if parameters_file.count.eql?(1)
-      parameters_file = parameters_file.find { |file| file.include?(@landscape) } if parameters_file.class.eql?(Array)
-      results = {}
-      @csrelog.debug("Testing the following templates: #{templates_to_test}\nUsing the following parameters file: #{parameters_file}\n")
-      templates_to_test.each do |template|
-        @csrelog.debug("\nTesting template: #{template}")
-        result = WRAzureTemplateValidator.new(template: template, parameters: parameters_file, environment: @environment, rg_name: @rg_name).valid_template?
-        @csrelog.debug("Result: #{result}\n")
-        results[template] = result
-      end
-      @csrelog.fatal("One or mpore of your templates failed validation: #{results}") if results.values.include?(false)
-      exit 1 if results.values.include?(false)
-      @csrelog.debug("Your templates passed validation: #{results}")
-      return results
+    # when 'validate'
+    #   files_path = File.dirname(@output)
+    #   files = Dir["#{files_path}/*.json"]
+    #   templates_to_test = files.select { |file| !file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
+    #   parameters_file = files.select { |file| file.include?('.parameters.') && file.split('/')[-1].split('.')[0].eql?(@output.split('/')[-1].split('.')[0])}
+    #   parameters_file = parameters_file[0] if parameters_file.count.eql?(1)
+    #   parameters_file = parameters_file.find { |file| file.include?(@landscape) } if parameters_file.class.eql?(Array)
+    #   results = {}
+    #   @csrelog.debug("Testing the following templates: #{templates_to_test}\nUsing the following parameters file: #{parameters_file}\n")
+    #   templates_to_test.each do |template|
+    #     @csrelog.debug("\nTesting template: #{template}")
+    #     result = WRAzureTemplateValidator.new(template: template, parameters: parameters_file, environment: @environment, rg_name: @rg_name).valid_template?
+    #     @csrelog.debug("Result: #{result}\n")
+    #     results[template] = result
+    #   end
+    #   @csrelog.fatal("One or more of your templates failed validation: #{results}") if results.values.include?(false)
+    #   exit 1 if results.values.include?(false)
+    #   @csrelog.debug("Your templates passed validation: #{results}")
+    #   return results
     end
   end
       

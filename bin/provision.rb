@@ -81,7 +81,7 @@ class Provisioner
         config_manager = WRConfigManager.new(config: @opts[:config])
         rg_name = config_manager.rg_name(@opts[:environment].to_s)
       end
-      WRAzureValidator.new(environment: @opts[:environment].to_s, output: @opts[:output], rg_name: rg_name).validate
+      WRAzureValidator.new(environment: @opts[:environment].to_s, output: @opts[:output], rg_name: rg_name, config: config_manager).validate
     else
       @csrelog.debug(@opts[:config])
       # Create the configuration object from the supplied configuration
