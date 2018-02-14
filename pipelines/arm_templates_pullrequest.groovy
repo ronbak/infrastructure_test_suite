@@ -24,6 +24,29 @@ try {
                 echo 'testing policies'
                 //sh "cd arm_templates && ruby ../infrastructure_test_suite/tests/template/policies_test.rb"
             }
+            if (filesChanged.contains('vms/sql/')) {
+                echo 'testing SQL templates'
+                withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+                string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+                string(credentialsId: 'prd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+                    env.CSRE_LOG_LEVEL = "${log_level}"
+                    dir ('prd_test_files') {
+                        writeFile file:'dummy', text:''
+                    }
+                    sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./prd_test_files/sql_iaasvms.json --environment prd --config arm_templates/vms/sql/sql_iaasvms.config.json --complete --no_upload"      
+                    sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./prd_test_files/sql_iaasvms.json --config arm_templates/vms/sql/sql_iaasvms.config.json --environment prd"
+                }
+                withCredentials([string(credentialsId: 'Github_PAC_csreautomation', variable: 'GIT_ACCESS_TOKEN'),
+                string(credentialsId: 'octopus-csre-app-wr', variable: 'AZURE_CLIENT_SECRET'),
+                string(credentialsId: 'nonprd-storage-account-key', variable: 'AZURE_STORAGE_ACCOUNT_KEY'),]) {
+                    env.CSRE_LOG_LEVEL = "${log_level}"
+                    dir ('nonprd_test_files') {
+                        writeFile file:'dummy', text:''
+                    }
+                    sh "ruby infrastructure_test_suite/bin/provision.rb --action output --output ./nonprd_test_files/sql_iaasvms.json --environment dev --config arm_templates/vms/sql/sql_iaasvms.config.json --complete --no_upload"      
+                    sh "ruby infrastructure_test_suite/bin/provision.rb --action validate --output ./nonprd_test_files/sql_iaasvms.json --config arm_templates/vms/sql/sql_iaasvms.config.json --environment dev"
+                }
+            }
             echo 'these are what the groovy code thinks has changed'
             println filesChanged
             if (filesChanged.contains('networks/')) {
