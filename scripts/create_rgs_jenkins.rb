@@ -62,7 +62,7 @@ def invoke_webrequest(url, headers, reqmethod = 'GET', body = {})
   uri = URI(url)
   https = Net::HTTP.new(uri.host, uri.port, nil)
   https.use_ssl = true
-  https.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  https.verify_mode = OpenSSL::SSL::VERIFY_NONE
   case reqmethod
   when 'POST'
     req = Net::HTTP::Post.new(uri.request_uri)
