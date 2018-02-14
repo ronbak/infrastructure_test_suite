@@ -32,15 +32,15 @@ step_name = options[:step_name]
 
 step_names = step_name.split(' ')
 
-package_version = file_name.gsub("#{file_name.split('.')[0]}.", "").gsub(".#{file_name.split('.')[-1]}", "")
-csrelog.info("[STATUS] Package Version: #{package_version}")
-api_auth = { api_header => api_key }
-
 # Setup logger
 log_level = 'INFO'
 log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
 csrelog = CSRELogger.new(log_level, 'STDOUT')
 
+
+package_version = file_name.gsub("#{file_name.split('.')[0]}.", "").gsub(".#{file_name.split('.')[-1]}", "")
+csrelog.info("[STATUS] Package Version: #{package_version}")
+api_auth = { api_header => api_key }
 
 csrelog.info("[STATUS] Uploading package #{file_name}...")
 
