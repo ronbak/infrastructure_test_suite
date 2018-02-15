@@ -1,15 +1,15 @@
 require_relative '../../bin/provision.rb'
 require 'rake/testtask'
 require 'fileutils'
-
+require 'pry-byebug'
 
 Dir.mkdir 'output' unless Dir.exist?('output')
 @config = JSON.parse(File.read('arm_templates/vms/sql/sql_iaasvms.config.json'))
 
 task :build_envs do
-  @config['environments'].each do |environment|
+  @config['environments'].each do |env_name, environment|
     if environment.dig('parameters', 'environment')
-      env_name = environment.dig('parameters', 'environment')
+      #env_name = environment.dig('parameters', 'environment')
       if env_name.eql?('core')
         ENV['AZURE_STORAGE_ACCOUNT_KEY'] = ENV['SA_KEY_CORE']
       elsif env_name.eql?('prd')
@@ -37,9 +37,9 @@ task :build_envs do
 end
 
 task :validate_templates do
-  @config['environments'].each do |environment|
+  @config['environments'].each do |env_name, environment|
     if environment.dig('parameters', 'environment')
-      env_name = environment.dig('parameters', 'environment')
+     # env_name = environment.dig('parameters', 'environment')
       ENV['CSRE_LOG_LEVEL'] = 'DEBUG'
       puts `pwd`
       puts `ls -lah`.split("\n")
