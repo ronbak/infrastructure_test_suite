@@ -31,8 +31,14 @@ class WRAzureValidator
 
   # Main orchestration method
   def validate()
-    @csrelog.debug("Creating or updating the resource group: #{@rg_name}") if @config_manager.tags(@landscape)
-    @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags(@landscape)) if @config_manager.tags(@landscape)
+    # creates RG if environment specific tags exist, and permits access to octopus-dev-app-wr SPN as custom contributor role
+    if @config_manager.tags(@landscape)
+      @csrelog.debug("Creating or updating the resource group: #{@rg_name}")
+      @client.create_resource_group(@resource_group_location, @rg_name, @config_manager.tags(@landscape))
+      rg_client = WRResourceGroupsManagement.new(config: @config_manager.config, environment: @environment)
+      au_client = rg_client.create_azure_au_client(@environment)
+      rg_client.assign_usergroup_rg(au_client, wrmetadata().dig('global', 'service_principals', 'octopus-dev-app-wr'), @rg_name, 'cust-Contributor-no-pip-sa-rg')
+    end
     arm_template_files = find_params_file(@output)
     templates_to_test = arm_template_files['templates']
     parameters_file = arm_template_files['parameters']
