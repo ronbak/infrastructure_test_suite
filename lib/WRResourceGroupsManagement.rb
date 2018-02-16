@@ -13,15 +13,17 @@ class WRResourceGroupsManagement
     log_level = ENV['CSRE_LOG_LEVEL'] unless ENV['CSRE_LOG_LEVEL'].nil?
     @csrelog = CSRELogger.new(log_level, 'STDOUT')
     @config = WRConfigManager.new(config: config).config
-    @location = if @config['tags']['Location']
-                  @config['tags']['Location']
+    @location = if @config.dig('tags', 'Location')
+                  @config.dig('tags', 'Location')
+                elsif @config.dig('environments', environment, 'parameters', 'tags', 'value', 'Location')
+                  @config.dig('environments', environment, 'parameters', 'tags', 'value', 'Location')
                 else
                   location
                 end
-    @name = @config['name']
+    @name = @config.dig('name')
     @environment = wrenvironmentdata(environment.to_s)['name']
     @landscape = environment.to_s
-    @config['universal'] = true unless @config['universal'].eql?(false)
+    @config['universal'] = true unless @config.dig('universal').eql?(false)
   end
 
   def process_groups()
