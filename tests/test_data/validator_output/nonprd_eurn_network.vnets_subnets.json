@@ -1,0 +1,870 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object",
+      "defaultValue": {
+      }
+    },
+    "subnets_array": {
+      "type": "array",
+      "defaultValue": [
+
+      ]
+    },
+    "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "description": "Default tags required, passed in as a hash"
+      },
+      "defaultValue": {
+      }
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    },
+    "environment": {
+      "type": "String",
+      "defaultValue": ""
+    },
+    "routeTableName": {
+      "type": "String",
+      "defaultValue": "custom_udr_1"
+    },
+    "gatewayPublicIpAddressName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "gatewayName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "gatewayType": {
+      "type": "string",
+      "defaultValue": "Vpn"
+    },
+    "vpnType": {
+      "type": "string",
+      "defaultValue": "RouteBased"
+    },
+    "vpnSku": {
+      "type": "string",
+      "defaultValue": "VpnGw1"
+    },
+    "localGatewayName": {
+      "type": "string",
+      "defaultValue": "WR-BG-OnPrem-core-wr"
+    },
+    "localGatewayAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.1.0.0/16"
+    },
+    "localGatewayIpAddress": {
+      "type": "string",
+      "defaultValue": "80.169.91.85"
+    },
+    "connectionName": {
+      "type": "string",
+      "defaultValue": "core-to-bg-onprem"
+    },
+    "sharedKey": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "localGatewayName_barracuda": {
+      "type": "string",
+      "defaultValue": "wr-asm-barracuda-core-wr"
+    },
+    "localGatewayAddressPrefix_barracuda": {
+      "type": "string",
+      "defaultValue": "10.10.0.0/16"
+    },
+    "localGatewayIpAddress_barracuda": {
+      "type": "string",
+      "defaultValue": "52.233.195.6"
+    },
+    "connectionName_barracuda": {
+      "type": "string",
+      "defaultValue": "core-to-asm-barracuda"
+    },
+    "sharedKey_barracuda": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPsk": {
+      "type": "securestring",
+      "defaultvalue": "notarealstring",
+      "defaultValue": "notakey"
+    },
+    "DNSServerAddresses": {
+      "type": "array",
+      "metadata": {
+        "Description": "The DNS address(es) of the DNS Server(s) used by the VNET"
+      },
+      "defaultValue": [
+
+      ]
+    },
+    "create_peers": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "vpnPskAsm": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPskUkfast": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    }
+  },
+  "variables": {
+    "inject_subnets_here": true,
+    "vNetToCorevNetPeeringName": "[concat(parameters('vNetName'), '-CoreServicesVNet')]",
+    "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+    "gatewaySubnetId": "[concat(resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('vNetName')), '/subnets/GatewaySubnet')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('vNetName')]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/routeTables/', parameters('location_tag'), '-', parameters('environment'), '-routetable-01')]"
+      ],
+      "comments": "VNet for WR [parameters('environment') Subscription in [resourceGroup().location].",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vNet').addressSpacePrefix]"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": "[parameters('DNSServerAddresses')]"
+        },
+        "subnets": [
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "10.25.0.0/27"
+            }
+          },
+          {
+            "name": "nonprd-external",
+            "properties": {
+              "addressPrefix": "10.25.2.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-nonprd-eurn-external')]"
+              }
+            }
+          },
+          {
+            "name": "dev-private",
+            "properties": {
+              "addressPrefix": "10.25.16.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-dev-eurn-private')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "dev-privatepartner",
+            "properties": {
+              "addressPrefix": "10.25.18.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-dev-eurn-privatepartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "dev-publicclient",
+            "properties": {
+              "addressPrefix": "10.25.20.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-dev-eurn-publicclient')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "dev-publicpartner",
+            "properties": {
+              "addressPrefix": "10.25.22.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-dev-eurn-publicpartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "tst-private",
+            "properties": {
+              "addressPrefix": "10.25.32.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-tst-eurn-private')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "tst-privatepartner",
+            "properties": {
+              "addressPrefix": "10.25.34.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-tst-eurn-privatepartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "tst-publicclient",
+            "properties": {
+              "addressPrefix": "10.25.36.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-tst-eurn-publicclient')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "tst-publicpartner",
+            "properties": {
+              "addressPrefix": "10.25.38.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-tst-eurn-publicpartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "uat-private",
+            "properties": {
+              "addressPrefix": "10.25.48.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-uat-eurn-private')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "uat-privatepartner",
+            "properties": {
+              "addressPrefix": "10.25.50.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-uat-eurn-privatepartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "uat-publicclient",
+            "properties": {
+              "addressPrefix": "10.25.52.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-uat-eurn-publicclient')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "uat-publicpartner",
+            "properties": {
+              "addressPrefix": "10.25.54.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-uat-eurn-publicpartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "int-private",
+            "properties": {
+              "addressPrefix": "10.25.64.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-int-eurn-private')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "int-privatepartner",
+            "properties": {
+              "addressPrefix": "10.25.66.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-int-eurn-privatepartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "int-publicclient",
+            "properties": {
+              "addressPrefix": "10.25.68.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-int-eurn-publicclient')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "int-publicpartner",
+            "properties": {
+              "addressPrefix": "10.25.70.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-int-eurn-publicpartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ci-private",
+            "properties": {
+              "addressPrefix": "10.25.80.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ci-eurn-private')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ci-privatepartner",
+            "properties": {
+              "addressPrefix": "10.25.82.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ci-eurn-privatepartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ci-publicclient",
+            "properties": {
+              "addressPrefix": "10.25.84.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ci-eurn-publicclient')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ci-publicpartner",
+            "properties": {
+              "addressPrefix": "10.25.86.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ci-eurn-publicpartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ppd-private",
+            "properties": {
+              "addressPrefix": "10.25.96.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ppd-eurn-private')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ppd-privatepartner",
+            "properties": {
+              "addressPrefix": "10.25.98.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ppd-eurn-privatepartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ppd-publicclient",
+            "properties": {
+              "addressPrefix": "10.25.100.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ppd-eurn-publicclient')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          },
+          {
+            "name": "ppd-publicpartner",
+            "properties": {
+              "addressPrefix": "10.25.102.0/23",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg01-ppd-eurn-publicpartner')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01'))]"
+              }
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "apiVersion": "2016-06-01",
+          "type": "virtualNetworkPeerings",
+          "name": "[variables('vNetToCorevNetPeeringName')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Network/virtualNetworks/', parameters('vNetName'))]"
+          ],
+          "condition": "[and(not(equals(parameters('environment'), 'core')), equals(parameters('create_peers'), bool('true')))]",
+          "comments": "This is the peering from vNet 1 to vNet 2",
+          "properties": {
+            "allowVirtualNetworkAccess": "true",
+            "allowForwardedTraffic": "true",
+            "allowGatewayTransit": "false",
+            "useRemoteGateways": "true",
+            "remoteVirtualNetwork": {
+              "id": "[resourceId('d6073f2a-c097-48ab-a61f-b7f158c8ad4f', if(equals(parameters('location'), 'westeurope'), 'networking-rg-core-wr', concat('networking-rg-',parameters('location_tag'),'-core-wr')), 'Microsoft.Network/virtualNetworks', parameters('vNet').landscapes.core.vNetName)]"
+            }
+          }
+        },
+        {
+          "apiVersion": "2016-06-01",
+          "type": "virtualNetworkPeerings",
+          "name": "core-nonprod",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Network/virtualNetworks/', parameters('vNetName'))]"
+          ],
+          "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('create_peers'), bool('true')))]",
+          "comments": "This is the peering from vNet 1 to vNet 2",
+          "properties": {
+            "allowVirtualNetworkAccess": "true",
+            "allowForwardedTraffic": "true",
+            "allowGatewayTransit": "true",
+            "useRemoteGateways": "false",
+            "remoteVirtualNetwork": {
+              "id": "[resourceId('9c255757-a7c8-4c88-8476-0d7bf926dd6a', if(equals(parameters('location'), 'westeurope'), 'networking-rg-nonprd-wr', concat('networking-rg-',parameters('location_tag'),'-nonprd-wr')), 'Microsoft.Network/virtualNetworks', concat(parameters('location_tag'), '-nonprd-vnt-01'))]"
+            }
+          }
+        },
+        {
+          "apiVersion": "2016-06-01",
+          "type": "virtualNetworkPeerings",
+          "name": "core-prod",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Network/virtualNetworks/', parameters('vNetName'))]"
+          ],
+          "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('create_peers'), bool('true')))]",
+          "comments": "This is the peering from vNet 1 to vNet 2",
+          "properties": {
+            "allowVirtualNetworkAccess": "true",
+            "allowForwardedTraffic": "true",
+            "allowGatewayTransit": "true",
+            "useRemoteGateways": "false",
+            "remoteVirtualNetwork": {
+              "id": "[resourceId('f602e3c0-bb9d-467b-8d41-f589477956ab', if(equals(parameters('location'), 'westeurope'), 'networking-rg-prd-wr', concat('networking-rg-',parameters('location_tag'),'-prd-wr')), 'Microsoft.Network/virtualNetworks', concat(parameters('location_tag'), '-prd-vnt-01'))]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Name": "[concat(parameters('location_tag'), '-', parameters('environment'), '-routetable-01')]",
+        "Team": "CSRE",
+        "OwnerContact": "csre@worldremit.com",
+        "RunModel": "247",
+        "Location": "[resourceGroup().location]",
+        "Environment": "[parameters('environment')]",
+        "Project": "CSRE-1223 - ARM Environments"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "RouteToInternet",
+            "properties": {
+              "addressPrefix": "0.0.0.0/0",
+              "nextHopType": "Internet"
+            }
+          },
+          {
+            "name": "RouteToLocalVnet",
+            "properties": {
+              "addressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "RouteToDenver",
+            "properties": {
+              "addressPrefix": "38.140.32.226/29",
+              "nextHopType": "Internet"
+            }
+          },
+          {
+            "name": "RouteToBG-temp",
+            "properties": {
+              "addressPrefix": "80.169.91.80/29",
+              "nextHopType": "Internet"
+            }
+          },
+          {
+            "name": "RouteToGit1-temp",
+            "properties": {
+              "addressPrefix": "192.30.252.0/22",
+              "nextHopType": "Internet"
+            }
+          },
+          {
+            "name": "RouteToGit2-temp",
+            "properties": {
+              "addressPrefix": "185.199.108.0/22",
+              "nextHopType": "Internet"
+            }
+          },
+          {
+            "name": "RouteToOctopus-temp",
+            "properties": {
+              "addressPrefix": "52.169.111.159/32",
+              "nextHopType": "Internet"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-06-01",
+      "name": "[parameters('gatewayName')]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "location": "[parameters('location')]",
+      "condition": "[equals(parameters('environment'), 'core')]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('gatewayPublicIpAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('vNetName'))]"
+      ],
+      "properties": {
+        "gatewayType": "[parameters('gatewayType')]",
+        "ipConfigurations": [
+          {
+            "name": "default",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('gatewaySubnetId')]"
+              },
+              "publicIpAddress": {
+                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIPAddresses', parameters('gatewayPublicIpAddressName'))]"
+              }
+            }
+          }
+        ],
+        "vpnType": "[parameters('vpnType')]",
+        "sku": {
+          "name": "[parameters('vpnSku')]",
+          "tier": "[parameters('vpnSku')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-08-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('gatewayPublicIpAddressName')]",
+      "condition": "[equals(parameters('environment'), 'core')]",
+      "tags": "[parameters('tags')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "[parameters('localGatewayName')]",
+      "condition": "[equals(parameters('environment'), 'core')]",
+      "tags": "[parameters('tags')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "addressPrefixes": [
+            "[parameters('localGatewayAddressPrefix')]"
+          ]
+        },
+        "gatewayIpAddress": "[parameters('localGatewayIpAddress')]"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "[parameters('connectionName')]",
+      "type": "Microsoft.Network/connections",
+      "location": "[resourceGroup().location]",
+      "condition": "[equals(parameters('environment'), 'core')]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkGateways/', parameters('gatewayName'))]",
+        "[concat('Microsoft.Network/localNetworkGateways/', parameters('localGatewayName'))]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('gatewayName'))]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', parameters('localGatewayName'))]"
+        },
+        "connectionType": "IPsec",
+        "routingWeight": 10,
+        "sharedKey": "[parameters('sharedKey')]"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "denver-lng-core-wr",
+      "condition": "[equals(parameters('environment'), 'core')]",
+      "tags": "[parameters('tags')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "addressPrefixes": [
+            "10.2.0.0/16"
+          ]
+        },
+        "gatewayIpAddress": "38.140.32.226"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "name": "core-to-denver",
+      "type": "Microsoft.Network/connections",
+      "location": "[resourceGroup().location]",
+      "condition": "[equals(parameters('environment'), 'core')]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkGateways/', parameters('gatewayName'))]",
+        "[concat('Microsoft.Network/localNetworkGateways/', 'denver-lng-core-wr')]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('gatewayName'))]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'denver-lng-core-wr')]"
+        },
+        "connectionType": "IPsec",
+        "usePolicyBasedTrafficSelectors": true,
+        "ipsecPolicies": [
+          {
+            "saLifeTimeSeconds": "3600",
+            "saDataSizeKilobytes": "102400000",
+            "ipsecEncryption": "AES256",
+            "ipsecIntegrity": "SHA1",
+            "ikeEncryption": "AES256",
+            "ikeIntegrity": "SHA1",
+            "dhGroup": "DHGroup24",
+            "pfsGroup": "PFS24"
+          }
+        ],
+        "routingWeight": 10,
+        "sharedKey": "[parameters('vpnPsk')]"
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "azure-legacy-lng-core-wr",
+      "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('location'), 'westeurope'))]",
+      "tags": "[parameters('tags')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "addressPrefixes": [
+            "10.10.10.64/26",
+            "10.10.10.128/25",
+            "10.10.11.0/24",
+            "10.10.12.0/24",
+            "10.10.13.0/24"
+          ]
+        },
+        "gatewayIpAddress": "52.174.66.67"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "core-to-legacy",
+      "type": "Microsoft.Network/connections",
+      "location": "[resourceGroup().location]",
+      "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('location'), 'westeurope'))]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkGateways/', parameters('gatewayName'))]",
+        "[concat('Microsoft.Network/localNetworkGateways/', 'azure-legacy-lng-core-wr')]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('gatewayName'))]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'azure-legacy-lng-core-wr')]"
+        },
+        "connectionType": "IPsec",
+        "routingWeight": 10,
+        "sharedKey": "[parameters('vpnPsk')]"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "ukfast-lng-core-wr",
+      "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('location'), 'westeurope'))]",
+      "tags": "[parameters('tags')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "addressPrefixes": [
+            "172.29.10.0/25",
+            "172.29.10.128/25"
+          ]
+        },
+        "gatewayIpAddress": "37.220.89.168"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "name": "core-to-ukfast",
+      "type": "Microsoft.Network/connections",
+      "location": "[resourceGroup().location]",
+      "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('location'), 'westeurope'))]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkGateways/', parameters('gatewayName'))]",
+        "[concat('Microsoft.Network/localNetworkGateways/', 'ukfast-lng-core-wr')]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('gatewayName'))]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'ukfast-lng-core-wr')]"
+        },
+        "connectionType": "IPsec",
+        "usePolicyBasedTrafficSelectors": true,
+        "ipsecPolicies": [
+          {
+            "saLifeTimeSeconds": "27000",
+            "saDataSizeKilobytes": "102400000",
+            "ipsecEncryption": "AES256",
+            "ipsecIntegrity": "SHA256",
+            "ikeEncryption": "AES256",
+            "ikeIntegrity": "SHA256",
+            "dhGroup": "DHGroup2",
+            "pfsGroup": "PFS2"
+          }
+        ],
+        "routingWeight": 10,
+        "sharedKey": "[parameters('vpnPskUkfast')]"
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "azure-asm-prd-lng-core-wr",
+      "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('location'), 'westeurope'))]",
+      "tags": "[parameters('tags')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "addressPrefixes": [
+            "192.168.10.0/24",
+            "192.168.12.0/24"
+          ]
+        },
+        "gatewayIpAddress": "52.174.67.209"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "core-to-asm-prd",
+      "type": "Microsoft.Network/connections",
+      "location": "[resourceGroup().location]",
+      "condition": "[and(equals(parameters('environment'), 'core'), equals(parameters('location'), 'westeurope'))]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkGateways/', parameters('gatewayName'))]",
+        "[concat('Microsoft.Network/localNetworkGateways/', 'azure-asm-prd-lng-core-wr')]"
+      ],
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('gatewayName'))]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'azure-asm-prd-lng-core-wr')]"
+        },
+        "connectionType": "IPsec",
+        "routingWeight": 10,
+        "sharedKey": "[parameters('vpnPskAsm')]"
+      }
+    }
+  ]
+}

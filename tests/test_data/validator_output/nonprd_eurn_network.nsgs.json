@@ -1,0 +1,4397 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object",
+      "defaultValue": {
+      }
+    },
+    "subnets_array": {
+      "type": "array",
+      "defaultValue": [
+
+      ]
+    },
+    "environment": {
+      "type": "String",
+      "defaultValue": ""
+    },
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "description": "Default tags required, passed in as a hash"
+      },
+      "defaultValue": {
+      }
+    },
+    "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    },
+    "gatewayPublicIpAddressName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "gatewayName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "sharedKey": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "sharedKey_barracuda": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPsk": {
+      "type": "securestring",
+      "defaultvalue": "notarealstring",
+      "defaultValue": "notakey"
+    },
+    "DNSServerAddresses": {
+      "type": "array",
+      "metadata": {
+        "Description": "The DNS address(es) of the DNS Server(s) used by the VNET"
+      },
+      "defaultValue": [
+
+      ]
+    },
+    "create_peers": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "vpnPskAsm": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPskUkfast": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    }
+  },
+  "variables": {
+    "inject_rules_here": true
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-dev-eurn-private",
+      "condition": "[not(equals('private', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.private]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.private]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-from-privpartner",
+            "properties": {
+              "description": "Rule to allow SQL in to private subnet from CIDR to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "213.57.32.1/32",
+              "destinationAddressPrefix": "10.25.16.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public-partner to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.22.0/23",
+              "destinationAddressPrefix": "10.25.16.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-publicclient",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.20.0/23",
+              "destinationAddressPrefix": "10.25.16.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "ssh-from-BG",
+            "properties": {
+              "description": "Rule to allow SSH in to private subnet from WR BG Office to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.16.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "int-only-test-rule",
+            "properties": {
+              "description": "Rule to allow correspondent in to public IP - should only exist in integrations environment to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "32.145.89.53/32",
+              "destinationAddressPrefix": "10.25.16.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-dev-eurn-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.privatepartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.privatepartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-dev-eurn-publicclient",
+      "condition": "[not(equals('publicclient', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.publicclient]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.publicclient]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-to-pub-cli",
+            "properties": {
+              "description": "Rule to allow SQL in to public-client subnet from private to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "10.25.18.0/23",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to public-partner subnet from private to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.16.0/23",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-private",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.22.0/23",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-https",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-http4",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf1",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf2",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "softtek1-sf-dev",
+            "properties": {
+              "description": "Rule to allow Softtek in to dev ServiceFabric Cluster to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "212.170.207.251/32",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 207,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "softtek2-sf-dev",
+            "properties": {
+              "description": "Rule to allow Softtek in to dev ServiceFabric Cluster to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "178.60.39.157/32",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 208,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "octopus-backoffice",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to dev",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "52.169.111.159",
+              "destinationAddressPrefix": "10.25.20.0/23",
+              "access": "Allow",
+              "priority": 216,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-dev-eurn-publicpartner",
+      "condition": "[not(equals('publicpartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.publicpartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.dev.subnets.publicpartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-tst-eurn-private",
+      "condition": "[not(equals('private', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.private]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.private]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-from-privpartner",
+            "properties": {
+              "description": "Rule to allow SQL in to private subnet from CIDR to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "213.57.32.1/32",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public-partner to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.38.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-publicclient",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.36.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "ssh-from-BG",
+            "properties": {
+              "description": "Rule to allow SSH in to private subnet from WR BG Office to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "int-only-test-rule",
+            "properties": {
+              "description": "Rule to allow correspondent in to public IP - should only exist in integrations environment to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "32.145.89.53/32",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports1",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "10.25.36.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports2",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "10.25.36.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.36.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 207,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.36.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 208,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.36.0/23",
+              "destinationAddressPrefix": "10.25.32.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-tst-eurn-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.privatepartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.privatepartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-tst-eurn-publicclient",
+      "condition": "[not(equals('publicclient', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.publicclient]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.publicclient]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-to-pub-cli",
+            "properties": {
+              "description": "Rule to allow SQL in to public-client subnet from private to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "10.25.34.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to public-partner subnet from private to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.32.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-private",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.38.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-https",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-http4",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf1",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf2",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow sf cluster node types to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.32.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.32.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 210,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.32.0/23",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 211,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "octopus-backoffice",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to tst",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "52.169.111.159",
+              "destinationAddressPrefix": "10.25.36.0/23",
+              "access": "Allow",
+              "priority": 216,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-tst-eurn-publicpartner",
+      "condition": "[not(equals('publicpartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.publicpartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.tst.subnets.publicpartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-uat-eurn-private",
+      "condition": "[not(equals('private', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.private]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.private]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-from-privpartner",
+            "properties": {
+              "description": "Rule to allow SQL in to private subnet from CIDR to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "213.57.32.1/32",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public-partner to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.54.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-publicclient",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.52.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "ssh-from-BG",
+            "properties": {
+              "description": "Rule to allow SSH in to private subnet from WR BG Office to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "int-only-test-rule",
+            "properties": {
+              "description": "Rule to allow correspondent in to public IP - should only exist in integrations environment to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "32.145.89.53/32",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports1",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "10.25.52.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports2",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "10.25.52.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.52.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 207,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.52.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 208,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.52.0/23",
+              "destinationAddressPrefix": "10.25.48.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-uat-eurn-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.privatepartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.privatepartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-uat-eurn-publicclient",
+      "condition": "[not(equals('publicclient', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.publicclient]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.publicclient]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-to-pub-cli",
+            "properties": {
+              "description": "Rule to allow SQL in to public-client subnet from private to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "10.25.50.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to public-partner subnet from private to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.48.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-private",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.54.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-https",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-http4",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf1",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf2",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow sf cluster node types to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.48.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.48.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 210,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.48.0/23",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 211,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "octopus-backoffice",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to uat",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "52.169.111.159",
+              "destinationAddressPrefix": "10.25.52.0/23",
+              "access": "Allow",
+              "priority": 216,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-uat-eurn-publicpartner",
+      "condition": "[not(equals('publicpartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.publicpartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.uat.subnets.publicpartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-int-eurn-private",
+      "condition": "[not(equals('private', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.int.subnets.private]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.int.subnets.private]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-from-privpartner",
+            "properties": {
+              "description": "Rule to allow SQL in to private subnet from CIDR to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "213.57.32.1/32",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public-partner to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.70.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-publicclient",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.68.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "ssh-from-BG",
+            "properties": {
+              "description": "Rule to allow SSH in to private subnet from WR BG Office to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports1",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "10.25.68.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports2",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "10.25.68.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.68.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 207,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.68.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 208,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.68.0/23",
+              "destinationAddressPrefix": "10.25.64.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-int-eurn-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.int.subnets.privatepartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.int.subnets.privatepartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-int-eurn-publicclient",
+      "condition": "[not(equals('publicclient', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.int.subnets.publicclient]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.int.subnets.publicclient]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-to-pub-cli",
+            "properties": {
+              "description": "Rule to allow SQL in to public-client subnet from private to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "10.25.66.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to public-partner subnet from private to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.64.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-private",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.70.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-https",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-http4",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf1",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf2",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow sf cluster node types to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.64.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.64.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 210,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.64.0/23",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 211,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "octopus-backoffice",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to int",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "52.169.111.159",
+              "destinationAddressPrefix": "10.25.68.0/23",
+              "access": "Allow",
+              "priority": 216,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-int-eurn-publicpartner",
+      "condition": "[not(equals('publicpartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.int.subnets.publicpartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.int.subnets.publicpartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ci-eurn-private",
+      "condition": "[not(equals('private', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.private]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.private]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-from-privpartner",
+            "properties": {
+              "description": "Rule to allow SQL in to private subnet from CIDR to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "213.57.32.1/32",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public-partner to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.86.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-publicclient",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.84.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "ssh-from-BG",
+            "properties": {
+              "description": "Rule to allow SSH in to private subnet from WR BG Office to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "int-only-test-rule",
+            "properties": {
+              "description": "Rule to allow correspondent in to public IP - should only exist in integrations environment to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "32.145.89.53/32",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports1",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "10.25.84.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports2",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "10.25.84.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.84.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 207,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.84.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 208,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.84.0/23",
+              "destinationAddressPrefix": "10.25.80.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ci-eurn-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.privatepartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.privatepartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ci-eurn-publicclient",
+      "condition": "[not(equals('publicclient', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.publicclient]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.publicclient]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-to-pub-cli",
+            "properties": {
+              "description": "Rule to allow SQL in to public-client subnet from private to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "10.25.82.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to public-partner subnet from private to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.80.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-private",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.86.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-https",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-http4",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf1",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf2",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow sf cluster node types to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.80.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.80.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 210,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.80.0/23",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 211,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "octopus-backoffice",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to ci",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "52.169.111.159",
+              "destinationAddressPrefix": "10.25.84.0/23",
+              "access": "Allow",
+              "priority": 216,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ci-eurn-publicpartner",
+      "condition": "[not(equals('publicpartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.publicpartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ci.subnets.publicpartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ppd-eurn-private",
+      "condition": "[not(equals('private', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.private]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.private]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-from-privpartner",
+            "properties": {
+              "description": "Rule to allow SQL in to private subnet from CIDR to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "213.57.32.1/32",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public-partner to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.102.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-from-publicclient",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.100.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "ssh-from-BG",
+            "properties": {
+              "description": "Rule to allow SSH in to private subnet from WR BG Office to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "int-only-test-rule",
+            "properties": {
+              "description": "Rule to allow correspondent in to public IP - should only exist in integrations environment to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "32.145.89.53/32",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports1",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "10.25.100.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports2",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "10.25.100.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.100.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 207,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.100.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 208,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.100.0/23",
+              "destinationAddressPrefix": "10.25.96.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ppd-eurn-privatepartner",
+      "condition": "[not(equals('privatepartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.privatepartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.privatepartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ppd-eurn-publicclient",
+      "condition": "[not(equals('publicclient', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.publicclient]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.publicclient]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sql-to-pub-cli",
+            "properties": {
+              "description": "Rule to allow SQL in to public-client subnet from private to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "10.25.98.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-pub-part",
+            "properties": {
+              "description": "Rule to allow HTTPS in to public-partner subnet from private to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.96.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "https-to-private",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from public client to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.102.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-https",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-http4",
+            "properties": {
+              "description": "Rule to allow HTTPS in to private subnet from external subnet / netscalers to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "10.25.2.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 204,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf1",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19000",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 205,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "external-to-publicclient-sf2",
+            "properties": {
+              "description": "Rule to allow access to SF cluster to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "19080",
+              "sourceAddressPrefix": "80.169.91.80/29",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 206,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-ephemeral",
+            "properties": {
+              "description": "Rule to allow sf cluster node types to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "49152-65534",
+              "sourceAddressPrefix": "10.25.96.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 209,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-smb",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "10.25.96.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 210,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "sfports-cluster",
+            "properties": {
+              "description": "Rule to allow public node tpyes to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1025-1027",
+              "sourceAddressPrefix": "10.25.96.0/23",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 211,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "octopus-backoffice",
+            "properties": {
+              "description": "Rule to allow public node types to talk to service fabric to ppd",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "52.169.111.159",
+              "destinationAddressPrefix": "10.25.100.0/23",
+              "access": "Allow",
+              "priority": 216,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "nsg01-ppd-eurn-publicpartner",
+      "condition": "[not(equals('publicpartner', parameters('vNet').landscapes.gateway.name))]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-bg-onprem-out",
+            "properties": {
+              "description": "Allow access to BG OnPrem network",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "10.1.0.0/16",
+              "access": "Allow",
+              "priority": 4093,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-vnets-out",
+            "properties": {
+              "description": "Allow access to all vNets",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 4095,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-internet-out",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow-core-networking-in",
+            "properties": {
+              "description": "Allow core network in",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.core.subnets.private]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-local-subnet-in",
+            "properties": {
+              "description": "Allow local subnet in",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.publicpartner]",
+              "destinationAddressPrefix": "[parameters('vNet').landscapes.ppd.subnets.publicpartner]",
+              "access": "Allow",
+              "priority": 105,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "allow-gateway-in",
+            "properties": {
+              "description": "Allow access from gateway subnet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').landscapes.gateway.addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "deny-dev-landscapes",
+            "properties": {
+              "description": "block all traffic from other dev landscapes",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('vNet').addressSpacePrefix]",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

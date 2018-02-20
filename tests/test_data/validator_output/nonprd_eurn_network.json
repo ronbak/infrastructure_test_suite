@@ -1,0 +1,279 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object",
+      "defaultValue": {
+      }
+    },
+    "subnets_array": {
+      "type": "array",
+      "defaultValue": [
+
+      ]
+    },
+    "environment": {
+      "type": "String",
+      "defaultValue": ""
+    },
+    "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    },
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "description": "Default tags required, passed in as a hash"
+      },
+      "defaultValue": {
+      }
+    },
+    "gatewayPublicIpAddressName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "gatewayName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "sharedKey": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "sharedKey_barracuda": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPsk": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPskAsm": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPskUkfast": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "DNSServerAddresses": {
+      "type": "array",
+      "metadata": {
+        "Description": "The DNS address(es) of the DNS Server(s) used by the VNET"
+      },
+      "defaultValue": [
+
+      ]
+    },
+    "create_peers": {
+      "type": "bool",
+      "defaultValue": false
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "apiVersion": "2014-04-01-preview",
+      "name": "nsgs-linked-template",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "./arm_templates/networks/nsgs.json",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vNetName": {
+            "value": "[parameters('vNetName')]"
+          },
+          "vNet": {
+            "value": "[parameters('vNet')]"
+          },
+          "subnets_array": {
+            "value": "[parameters('subnets_array')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "location_tag": {
+            "value": "[parameters('location_tag')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          },
+          "gatewayPublicIpAddressName": {
+            "value": "[parameters('gatewayPublicIpAddressName')]"
+          },
+          "gatewayName": {
+            "value": "[parameters('gatewayName')]"
+          },
+          "sharedKey": {
+            "value": "[parameters('sharedKey')]"
+          },
+          "sharedKey_barracuda": {
+            "value": "[parameters('sharedKey_barracuda')]"
+          },
+          "vpnPsk": {
+            "value": "[parameters('vpnPsk')]"
+          },
+          "vpnPskAsm": {
+            "value": "[parameters('vpnPskAsm')]"
+          },
+          "vpnPskUkfast": {
+            "value": "[parameters('vpnPskUkfast')]"
+          },
+          "DNSServerAddresses": {
+            "value": "[parameters('DNSServerAddresses')]"
+          },
+          "create_peers": {
+            "value": "[parameters('create_peers')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2014-04-01-preview",
+      "name": "external-nsgs-linked-template",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "./arm_templates/networks/external_nsgs.json",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vNetName": {
+            "value": "[parameters('vNetName')]"
+          },
+          "vNet": {
+            "value": "[parameters('vNet')]"
+          },
+          "subnets_array": {
+            "value": "[parameters('subnets_array')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "location_tag": {
+            "value": "[parameters('location_tag')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          },
+          "gatewayPublicIpAddressName": {
+            "value": "[parameters('gatewayPublicIpAddressName')]"
+          },
+          "gatewayName": {
+            "value": "[parameters('gatewayName')]"
+          },
+          "sharedKey": {
+            "value": "[parameters('sharedKey')]"
+          },
+          "sharedKey_barracuda": {
+            "value": "[parameters('sharedKey_barracuda')]"
+          },
+          "vpnPsk": {
+            "value": "[parameters('vpnPsk')]"
+          },
+          "vpnPskAsm": {
+            "value": "[parameters('vpnPskAsm')]"
+          },
+          "vpnPskUkfast": {
+            "value": "[parameters('vpnPskUkfast')]"
+          },
+          "DNSServerAddresses": {
+            "value": "[parameters('DNSServerAddresses')]"
+          },
+          "create_peers": {
+            "value": "[parameters('create_peers')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2014-04-01-preview",
+      "name": "vnets-linked-template",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "nsgs-linked-template",
+        "external-nsgs-linked-template"
+      ],
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "./arm_templates/networks/vnets_subnets.json",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vNetName": {
+            "value": "[parameters('vNetName')]"
+          },
+          "vNet": {
+            "value": "[parameters('vNet')]"
+          },
+          "subnets_array": {
+            "value": "[parameters('subnets_array')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "location_tag": {
+            "value": "[parameters('location_tag')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          },
+          "gatewayPublicIpAddressName": {
+            "value": "[parameters('gatewayPublicIpAddressName')]"
+          },
+          "gatewayName": {
+            "value": "[parameters('gatewayName')]"
+          },
+          "sharedKey": {
+            "value": "[parameters('sharedKey')]"
+          },
+          "sharedKey_barracuda": {
+            "value": "[parameters('sharedKey_barracuda')]"
+          },
+          "vpnPsk": {
+            "value": "[parameters('vpnPsk')]"
+          },
+          "vpnPskAsm": {
+            "value": "[parameters('vpnPskAsm')]"
+          },
+          "vpnPskUkfast": {
+            "value": "[parameters('vpnPskUkfast')]"
+          },
+          "DNSServerAddresses": {
+            "value": "[parameters('DNSServerAddresses')]"
+          },
+          "create_peers": {
+            "value": "[parameters('create_peers')]"
+          }
+        }
+      }
+    }
+  ]
+}

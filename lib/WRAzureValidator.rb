@@ -6,6 +6,7 @@ require_relative 'WRAzureNsgRulesMgmt'
 require_relative 'WRAzureTemplateManagement'
 require_relative 'WRSubnetsArrayBuilder'
 require_relative 'WRAzureTemplateValidator'
+require_relative 'WRResourceGroupsManagement'
 require 'pry-byebug'
 
 # Main orchestration class for building the deployment object and sending to Azure

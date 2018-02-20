@@ -1,0 +1,117 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vNetName": {
+      "type": "string",
+      "defaultValue": "vNet1",
+      "metadata": {
+        "description": "Name for vNet 1"
+      }
+    },
+    "vNet": {
+      "type": "object",
+      "defaultValue": {
+      }
+    },
+    "subnets_array": {
+      "type": "array",
+      "defaultValue": [
+
+      ]
+    },
+    "environment": {
+      "type": "String",
+      "defaultValue": ""
+    },
+    "location": {
+      "type": "String",
+      "defaultValue": "WestEurope"
+    },
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "description": "Default tags required, passed in as a hash"
+      },
+      "defaultValue": {
+      }
+    },
+    "location_tag": {
+      "type": "String",
+      "defaultValue": "eurw"
+    },
+    "gatewayPublicIpAddressName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "gatewayName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "sharedKey": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "sharedKey_barracuda": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPsk": {
+      "type": "securestring",
+      "defaultvalue": "notarealstring",
+      "defaultValue": "notakey"
+    },
+    "DNSServerAddresses": {
+      "type": "array",
+      "metadata": {
+        "Description": "The DNS address(es) of the DNS Server(s) used by the VNET"
+      },
+      "defaultValue": [
+
+      ]
+    },
+    "create_peers": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "vpnPskAsm": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    },
+    "vpnPskUkfast": {
+      "type": "securestring",
+      "defaultValue": "notakey"
+    }
+  },
+  "variables": {
+    "vNetToCorevNetPeeringName": "[concat(parameters('vNetName'), '-CoreServicesVNet')]",
+    "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', parameters('vNetName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat('nsg01-', parameters('environment'), '-', parameters('location_tag'), '-external')]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-internet-in",
+            "properties": {
+              "description": "Allow access to internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 4096,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
