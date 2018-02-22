@@ -18,7 +18,7 @@
 
 ## Usage
 
-### Deploy
+### Deploasdfy
 
   Main script takes command line arguments:-  
   * `--action`  (deploy,deploy_resource_group,deploy_policy,deploy_policy_set,assign_policy,delete,output,validate)
