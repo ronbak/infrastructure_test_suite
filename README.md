@@ -1,8 +1,8 @@
-# Azure Infrastructure Deployment and Test suite
+# Azure Infrastructure Deployment and Test suite asdf
 
 - Provide configuration as JSON file.
 
-- Provide ARM templates
+- Provide ARM templatesasdfasdf
 
 - Builds completed ARM template copying multiple nested resources (not currently possible in ARM functionality)
 
@@ -25,7 +25,7 @@
   * `--config`  (path to file, URL or config as a JSON string)
   * `--environment`  (dev,prd,nonprd,core,tst,uat,int,ci,ppd)
   * `--complete` (deployment mode, boolean switch) - optional
-  * `--prep_templates` (upload any linked templates to Azure Storage, inject resources if specified, boolean switch) - optional
+  * `--prep_templates` (upload any linked templates to Azure Stoasdfrage, inject resources if specified, boolean switch) - optional
   * `--output` (path to save built template and params to) - optional
   * `--rules` (specify path to an arm template with rules) - optional
   * `--resource-group` (specify the resource group to validate against if no config file available) - optional
